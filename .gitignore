@@ -1,0 +1,6 @@
+.env
+node_modules
+mynotes.txt
+webpack.config.js
+documentation.js
+docs
