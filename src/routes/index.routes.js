@@ -2,9 +2,10 @@ const {Router} = require('express');
 const router = Router();
 
 const { 
-    funcionControlador1,
+    
     _testrole,
     intercambiador,
+    logout,
     render_signin,
     user_auth
     
@@ -14,9 +15,9 @@ const {isAuthenticated, isAdmin} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
 
-router.get('/rutaServidor', funcionControlador1);
+router.get('/logout', logout);
 
-router.get('/testrole',_testrole)
+router.get('/testrole',isAdmin,_testrole)
 router.get('/index/signin', render_signin);
 router.get('/index/intercambiador', intercambiador);
 

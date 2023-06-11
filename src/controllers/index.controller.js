@@ -3,33 +3,23 @@ const passport = require('passport');
 //const Note = require('../models/Note');
 
 
-indexCtrl.funcionControlador1 = async (req, res, next) => {
+indexCtrl.logout = async (req, res, next) => {
     try {     
-      consoles.log('todo bien')
-      res.status(200).json({ message: 'Operación exitosa' });
+        req.logout(function(err) {
+            if (err) { return ; }
+        res.redirect('/');
+        });
+        req.flash('success_msg','Ha cerrado su sesión.');
+        res.redirect('/index/signin')
     } catch (error) {
       next(error);
     }
   };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 indexCtrl._testrole = async (req, res) => {
     console.log({'role:':'aceptado'})
+    console.log(req.user)
     res.json({'role:':'aceptado'})
       
 };
