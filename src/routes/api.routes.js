@@ -1,12 +1,14 @@
-const express = require('express');
-const router = express.Router();
+const {Router} = require('express');
+const router = Router();
 
-// Aquí puedes definir tus rutas y configuraciones de API
+const { 
+    test
+    
+} = require('../controllers/api.controller');
+const {isAuthenticated, isAdmin} = require('../helpers/auth');
 
-// Ejemplo de ruta de API
-router.get('/users', (req, res) => {
-  // Lógica de manejo de la ruta '/users'
-});
+router.get('/api/test',  test);
+//router.get('/notes', isAuthenticated, test);
 
-// Exporta el router para que pueda ser utilizado como middleware
+
 module.exports = router;
