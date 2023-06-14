@@ -6,7 +6,7 @@ helpers.isAuthenticated = (req, res, next) => {
         return next();
     }
     //req.flash('error_msg','No authorized');
-    res.redirect('/index/signin');
+    res.redirect('/signin');
 }
 
 helpers.isAdmin = (req, res, next) => {
@@ -23,7 +23,7 @@ helpers.isAdmin = (req, res, next) => {
 
     
     req.flash('error_msg','No es administrador');
-    res.redirect('/index/signin');
+    res.redirect('/signin');
 }
 module.exports = helpers;
 

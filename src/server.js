@@ -76,8 +76,7 @@ app.use((req, res, next)=>{
 //routes 
 
 app.use(require('./routes/api.routes'));
-
-app.use(require('./routes/index.routes'));
+app.use(require('./routes/core.routes'));
 
 //static files 
 app.use(express.static(path.join(__dirname, 'public')));

@@ -1,14 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="title-main">appobq</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  <!--toastr - alerts-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <!-- FONT AWESOME-->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- custom CSS-->
+  <link rel="stylesheet" href="/css/main.css">
 </head>
+
+
+
 <body>
+  <!-- NAVEGACION SUPERIOR -->
+  <div class="nav-bar-top-container mx-0 p-0 d-flex ">
+    <div id="nav-menu" class="text-white  d-inline-flex">
+      <a class="btn align-self-center text-white btnmenu" id="btn-menu">
+        <i class="fa fa-bars " aria-hidden="true"></i>
+        <strong class="px-1">Mana</strong>
+      </a>
 
-        {{>messages}}
-        {{>errors}}
-        {{{body}}}
+    </div>
+    <div id="nav-t" class=" ">
+      {{>botones-navbartop}}
+    </div>
+  </div>
 
-  
+  {{>messages}}
+  {{>errors}}
+  {{{body}}}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+    crossorigin="anonymous"></script>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="/js/main.js"></script>  
 </body>
+
 </html>

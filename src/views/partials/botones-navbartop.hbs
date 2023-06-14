@@ -1,0 +1,121 @@
+<div id="nav-bar-top" class="navbar navbar-dark bg-dark d-flex justify-content-start px-2">
+      {{#if panel.boton-opciones}}
+      <div class="dropdown">
+            <a class="btn btn-dark dropdown-toggle py-0 " type="button" id="btnOpciones" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  Herramientas
+            </a>
+            <ul id="listOpciones" class="dropdown-menu">
+                  <li class="nav-item">
+                        <a id="btnNuevo" class="dropdown-item" href="#">
+                              <i class="fa fa-plus-square "></i> Nuevo
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-upload" class="dropdown-item" href="#">
+                              <i class="fa fa-download"></i> Importar
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-download" class="dropdown-item" href="#">
+                              <i class="fa fa-file-excel-o"></i> Exportar
+                        </a>
+                  </li>
+
+            </ul>
+      </div>
+      <div class="dropdown">
+            <a id="btnChose" type="button" class="btn btn-dark dropdown-toggle py-0 " data-bs-toggle="dropdown" >Documento</a>
+            <ul id="listDocuments" class="dropdown-menu">
+            </ul>
+      </div>
+      {{/if}}
+      {{#if panel.boton-herramientas}}
+      <div class="dropdown">
+            <a class="btn btn-dark dropdown-toggle py-0 " type="button" id="btnOpciones" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  Herramientas
+            </a>
+            <ul id="listOpciones" class="dropdown-menu">
+                  <li class="nav-item">
+                        <a id="btnArchivar" class="dropdown-item" href="#">
+                        <i class="fa fa-folder"></i> Archivar</a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-upload" class="dropdown-item" href="#">
+                              <i class="fa fa-upload"></i> Exportar
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-download" class="dropdown-item" href="#">
+                              <i class="fa fa-file-excel-o"></i> Importar
+                        </a>
+                  </li>
+
+            </ul>
+      </div>
+      
+      {{/if}}
+
+
+
+
+
+
+
+      {{#if panel.boton-nuevo}}
+      <a id="btnNuevo" class="nav-link py-1 text-light px-2 " href="#">
+            <i class="fa fa-plus-square "></i> Nuevo
+      </a>
+      {{/if}}
+      {{#if panel.boton-editar}}
+      <a id="btnEditar" class="nav-link py-1 text-light px-2 " href="#">
+            <i class="fa fa-pencil-square"></i> Editar
+      </a>
+      {{/if}}
+      {{#if panel.boton-vista}}
+      <a id="btnVista" class="nav-link py-1 text-light px-2 " href="#">
+            <i class="fa fa-binoculars "></i> Vista previa
+      </a>
+      {{/if}}
+      {{#if panel.boton-guardar}}
+      <div id="step07" >
+      <a id="btnSave" class="nav-link py-1 text-light px-2" href="#" >
+            <i class="fa fa-cloud-upload"></i> Guardar
+      </a>
+      </div>
+      {{/if}}
+      {{#if panel.boton-borrar}}
+      <a id="btnBorrar" class="nav-link py-1 text-light px-2 " href="#">
+            <i class="fa fa-minus-square"></i> Borrar
+      </a>
+      {{/if}}
+      
+      {{#if panel.boton-facturados}}
+      <div class="form-check form-switch mt-1">
+            <input id="check_estado" class="form-check-input" type="checkbox" role="switch" checked>
+            <label id="lbl_estado" class="form-check-label text-light" for="check_estado">Pedidos sin
+                  facturar</label><label id="lbl_resultsH"></label>
+      </div>
+      {{/if}}
+      {{#if panel.boton-filtro}}
+      <a id="btnFiltro" class="nav-link py-1 text-light px-2 " href="#">
+            <i class="fa fa-filter "></i> Filtro
+      </a>
+      {{/if}}
+      {{#if user}}
+      <a id="btnSalir" class="nav-link py-1 text-light px-2 ml-2 ms-auto" href="/logout">Salir</a>
+      {{else}}
+      <a id="btnRegistrarse" class="nav-link py-1 text-light px-2 ms-auto" href="/signup">Registrarse</a>
+      <a id="btnIngresar" class="nav-link py-1 text-light px-2 ml-2 " href="/signin">Ingresar</a>
+
+      {{/if}}
+
+
+
+
+
+
+
+
+</div>

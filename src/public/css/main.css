@@ -1,0 +1,192 @@
+body {
+    background: #eeebe5;
+    
+}
+
+
+
+.nav-bar-top-container {
+    position: sticky;
+    top: 0;
+    display: flex;
+    width: 100%;
+    z-index: 9999; /* Asegurar que el elemento se muestre por encim*/
+}
+
+#nav-t {
+    flex-grow: 1;
+    max-height: 48px;
+    height: 48px;
+}
+
+#nav-menu {
+
+    transition: all 0.2s;
+    margin-left: 0px;
+    max-width: 240px;
+    max-height: 48px;
+    width: 240px;
+    height: 48px;
+    background-color: rgb(241, 47, 33);
+    overflow-y: auto;
+}
+
+.main-container {
+    padding: 0;
+    margin: 0;
+    
+
+     height: 100vh; /*Establecer la altura deseada para la sección principal */
+    overflow: auto; /* Agregar desplazamiento vertical */
+}
+
+.menu-container {
+    position: fixed;
+    top: 48;
+    
+    left: 0;
+    width: 100%; /* Ajusta el ancho según tus necesidades */
+    overflow-y: auto; /* Hace que el contenedor sea desplazable verticalmente */
+  }
+
+
+
+
+.sidebar {
+    background: rgb(218, 218, 218);
+    opacity: 100%;
+    min-width: 240px;
+    transition: all 0.2s;
+
+    width: 240px; /* Ajustar el ancho de la barra lateral según tus necesidades */
+    height: 100%; /* Establecer la altura para ocupar todo el espacio disponible */
+    overflow-y: auto; /* Agregar desplazamiento vertical solo si es necesario */
+  }
+
+.container {
+    /* margin-top: 60px; Ajustar el valor según la altura del nav-bar-top-container */
+
+    flex: 1; /* Hacer que el contenido principal ocupe el espacio restante */
+    
+    
+    height: 100%; /* Establecer la altura para ocupar todo el espacio disponible */
+    overflow-y: auto; /* Agregar desplazamiento vertical solo si es necesario */
+  }
+
+
+
+
+
+
+
+.sidebar.active{
+    margin-left: -240px;
+    position :fixed;
+    min-height: 100vh;
+    z-index: 1;
+} 
+
+.sidebar{
+    margin-left: 0px;
+}
+
+
+
+.header-item{
+    color: rgb(88, 86, 86);
+}
+
+#btnRegistrarse{
+    color:blue;
+}
+
+.item-menu{
+    color:rgb(0, 14, 145);
+}
+
+nav ul{
+    
+    height: 100%;
+    width: 100%;
+}
+nav ul li{
+    line-height: 35px;
+    border-bottom:  1px solid rgb(88, 86, 86);
+}
+nav ul li a{
+    padding-left: 10px;
+}
+nav ul li {
+    width: 100%;
+    border-left: 5px solid transparent;
+    
+
+}
+nav ul li:hover{
+    background: rgb(216, 213, 213);
+    border-left-color:rgb(241, 47, 33);
+}
+
+hr.h-color{
+    background: rgb(39, 38, 38)  ;
+}
+.header-item{
+    color: rgb(88, 86, 86);
+}
+.sidebar li.active{
+    background: rgb(216, 213, 213);
+    border-radius: 2px;
+    border-left-color:rgb(241, 47, 33);
+}
+
+footer {
+    background-color: #f2f2f2;
+    padding: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    
+  bottom: 0;
+  }
+
+@media(max-width:767px) {
+
+    
+    .content-w.active {
+        background: rgba(0, 0, 0, 0.534);
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+
+    }
+
+    .content-w {
+        width: 0px;
+        height: 100%;
+        position: fixed;
+    }
+
+    .sidebar {
+        margin-left: -240px;
+        position: fixed;
+        min-height: 100vh;
+        z-index: 2;
+    }
+
+    .sidebar.active {
+        margin-left: 0px;
+        z-index: 2;
+    }
+
+    #nav-menu {
+        margin-left: -20px;
+        width: 100px;
+        height: 48px;
+    }
+
+    #nav-menu.active {
+        margin-left: 0px;
+
+    }
+
+}
