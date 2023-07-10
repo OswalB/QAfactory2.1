@@ -2,6 +2,7 @@ const {Router} = require('express');
 const router = Router();
 
 const { 
+    gc,
     test,
     intercambiador,
     logout,
@@ -19,7 +20,7 @@ router.get('/intercambiador', intercambiador);
 router.get('/logout', logout);
 router.get('/signin', render_signin);
 
-
+router.post('/api/gen_count', gc);
 router.post('/signin', user_auth);
 
 

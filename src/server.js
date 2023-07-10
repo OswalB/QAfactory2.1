@@ -6,8 +6,7 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
 const MongoStore = require("connect-mongo");
-
-   
+const fs = require('fs');
 const MONGODB_URI = process.env.MONGODB_URI;
 
 //initializations
@@ -18,18 +17,41 @@ require('./config/passport');
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'))
 app.engine('.hbs', exphbs.engine({
-    defaultlayout: 'main',
+    defaultLayout: 'main',
     layoutsDir : path.join(app.get('views'), 'layouts'),
     partialsDir : path.join(app.get('views'), 'partials'),
-    extname : '.hbs'
+    extname : '.hbs',
+    helpers: {
+        
+    }
 }));
 
 app.set('view engine', '.hbs');
 //middlewares
 
+
+
+
+
 app.use(morgan('dev')); 
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+
+const Handlebars = require('handlebars');
+
+
+
+
+const configData = JSON.parse(fs.readFileSync('./src/config/config.json'));
+
+Handlebars.registerHelper('config', function(key) {
+  return configData[key];
+});
+
+
+
+
 
 const oneWeek = 7 * 24 * 60 * 60 * 1000; // 
 

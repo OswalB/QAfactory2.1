@@ -12,7 +12,7 @@ helpers.isAuthenticated = (req, res, next) => {
 helpers.isAdmin = (req, res, next) => {
     if (req.isAuthenticated()) {
         const user = req.user;
-        if(user.vendedor){
+        if(user.administrador){
             return next();
         }else {
             // Si el usuario no tiene la combinación de roles adecuada, mostrar un mensaje de error o redirigirlo a una página de acceso denegado

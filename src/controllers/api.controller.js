@@ -3,10 +3,16 @@ const passport = require('passport');
 //const Note = require('../models/Note');
 const DvService = require('../services/serv.db');
 
+apiCtrl.gc = async (req, res) => {
+    const panel = { "titulo":"TEST","boton-nuevo":true, "boton-pagination":true};
+    res.json([{'countTotal':11}])   
+};
 
 apiCtrl.test = async (req, res) => {
-    res.json({'respuesta':'test de API'})    
+    const panel = { "titulo":"TEST","boton-nuevo":true, "boton-pagination":true};
+    res.render('test',{panel})   
 };
+
 
 
 apiCtrl.intercambiador = async (req, res, next) => {

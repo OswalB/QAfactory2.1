@@ -2,18 +2,16 @@ bcryp = require('bcryptjs');
 const {Schema, model} = require('mongoose');
 
 const UserSchema = new Schema({ 
-    name: {
-        type:'String', 
-        require: true,
-        alias: 'Usuario'
-    },
+    name:           {type:'String',require: true,alias: 'Usuario'},
     alias:          {type:'String', alias: 'Alias'},
-    phone:          {type:'String', require: true, unique: true, alias: 'Cedula'},
+    ccnit:          {type:'String', require: true, unique: true, alias: 'C.C./Nit.'},
+    phone:          {type:'String', require: true, alias: 'Teléfono'},
     salesGroup:     {type:'String', alias: 'Grupo ventas'},
-    pin:            {type:'String', unique: true, alias: 'Pin'},
+    pin:            {type:'Number', unique: true, alias: 'Pin'},
     sesion:         {type:'Number', default: 30, alias: 'Dias sesion'},
     password:       {type:'String', require: true, alias: 'Password'},
-    cliente:        {type: 'Boolean', require: true, alias: 'Cliente'},
+    cliente:        {type: 'Boolean', alias: 'Cliente'},
+    proveedor:      {type: 'Boolean', alias: 'Proveedor'},
     operario:       {type: 'Boolean', default: false, require: true, alias: 'Operario'},
     vendedor:       {type: 'Boolean', require: true, alias: 'Vendedor'},
     despachador:    {type: 'Boolean', require: true, alias: 'Despachador'},
