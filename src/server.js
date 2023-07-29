@@ -7,6 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const MongoStore = require("connect-mongo");
 const fs = require('fs');
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 //initializations
@@ -22,7 +23,7 @@ app.engine('.hbs', exphbs.engine({
     partialsDir : path.join(app.get('views'), 'partials'),
     extname : '.hbs',
     helpers: {
-        
+       
     }
 }));
 
