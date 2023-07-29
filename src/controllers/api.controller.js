@@ -37,6 +37,14 @@ apiCtrl.logout = async (req, res, next) => {
     }
 };
 
+apiCtrl.renderIndex = async (req, res, next) => {
+    try {     
+        res.render('index/index')
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.render_signin = async (req, res, next) => {
     try {     
         res.render('users/signin')

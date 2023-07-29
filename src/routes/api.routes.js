@@ -6,6 +6,7 @@ const {
     test,
     intercambiador,
     logout,
+    renderIndex,
     render_signin,
     user_auth
     
@@ -14,7 +15,7 @@ const {
 const {isAuthenticated, isAdmin} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
-
+router.get('/', renderIndex);
 router.get('/api/test',  test);
 router.get('/intercambiador', intercambiador);
 router.get('/logout', logout);

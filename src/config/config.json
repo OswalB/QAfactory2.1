@@ -1,5 +1,6 @@
 {
     "appName": "Mi Aplicación obq config dell",
     "baseUrl": "https://www.example.com",
-    "apiKey": "1234567890"
+    "apiKey": "1234567890",
+    "quienes_somos": "Somos una empresa nariñence"
   }
