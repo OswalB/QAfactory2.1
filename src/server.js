@@ -57,7 +57,7 @@ Handlebars.registerHelper('config', function(key) {
 const oneWeek = 7 * 24 * 60 * 60 * 1000; // 
 
 app.use(session({
-    secret: 'secret',
+    secret: 'cathyca82',
     resave: true,
     saveUninitialized: true,
     cookie: { maxAge: oneWeek * 2},
