@@ -4,6 +4,7 @@ const router = Router();
 const { 
     content,
     gc,
+    getKeys,
     test,
     intercambiador,
     listCollections,
@@ -27,7 +28,8 @@ router.get('/logout', logout);
 router.get('/signin', render_signin);
 
 //router.post('/api/gen_count', gc);
-router.post('/api/gen_count', content);
+router.post('/api/content', content);
+router.post('/editor/keys', getKeys);
 router.post('/signin', user_auth);
 
 
