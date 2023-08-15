@@ -12,7 +12,8 @@ const {
     renderEditor,
     renderIndex,
     render_signin,
-    user_auth
+    user_auth,
+    saveDocument
     
 } = require('../controllers/api.controller');
 
@@ -31,6 +32,8 @@ router.get('/signin', render_signin);
 router.post('/api/content', content);
 router.post('/editor/keys', getKeys);
 router.post('/signin', user_auth);
+
+router.put('/editor/save', saveDocument);
 
 
 router.use(errorHandler);

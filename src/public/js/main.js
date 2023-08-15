@@ -1,4 +1,4 @@
-var currentKeys =[], backFilter ={}, workFilter={}, tgg = true;
+var currentKeys =[], backFilter ={}, workFilter={}, tgg = true, role;
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_sortBy, k_sortOder, k_valorBoolean;
 
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await footer();
     await renderTable();
     renderFilter();
+    afterLoad();
 })
 
 document.getElementById('pagination_container').addEventListener('click',async e =>{
@@ -70,7 +71,6 @@ function paintFilter() {
     const filtroPor = currentKeys.find(actuales => actuales.campo === k_filterBy.value);
     
     const tipoSelected = filtroPor?filtroPor.tipo:'0';
-    console.log(tipoSelected);
     const tipoEstiloMap = {
         '0': ['none', 'none', 'none', 'none'],
         'string': ['block', 'none', 'none', 'none'],
@@ -90,7 +90,7 @@ function paintFilter() {
 
 
 function renderFilter(){
-    console.log(currentKeys);
+
     addOptionsToSelect('in-sortBy', currentKeys);
     addOptionsToSelect('in-filterBy', currentKeys);
 
@@ -142,12 +142,24 @@ function loadFilter(){
     workFilter.valorBoolean = k_valorBoolean.offsetParent?k_valorBoolean.value:'';
     workFilter.otrosMatch = backFilter.otrosMatch;
     workFilter.proyectar = backFilter.proyectar;
-
-    console.log(workFilter);
             
             
 }
 
+function applyValidation(){
+    let validate = true
+    const form = document.querySelector('.needs-validation');
+              if (form.checkValidity()) {
+                // El formulario es válido, puedes realizar acciones aquí
+                console.log('Formulario válido, realizar acciones...');
+              } else {
+                validate = false;
+                // El formulario no es válido, aplicar estilos de validación
+                form.classList.add('was-validated');
+              }
+    return validate;
+           
+}
 
 function showAlertFilter() {
     const alerta = document.getElementById('alertFilter');
@@ -235,7 +247,6 @@ async function footer(npage){
         body: JSON.stringify(workFilter)
     })
     let data = await response.json();
-    console.log(data)
     sizeCollection = data[0].countTotal;
 
     let winL, winR, winMax;
@@ -270,5 +281,102 @@ function addPag(pagContainer,i){
         lipag.innerHTML = `<a class="page-link " _id=${i} href="#" id="page${i}">${i}</a>`;
     }
     pagContainer.appendChild(lipag);
+}
+
+function fadeInputs(){
+    const fadeInputs = document.querySelectorAll('.fade-input');
+
+fadeInputs.forEach(input => {
+  input.addEventListener('input', () => {
+    input.classList.add('changed'); // Aplica el color de fondo cambiado
+    clearTimeout(input.fadeTimeout); // Cancela el timeout anterior (si existe)
+  });
+
+  input.addEventListener('blur', () => {
+    input.fadeTimeout = setTimeout(() => {
+      input.classList.remove('changed'); // Remueve el color de fondo cambiado después de un tiempo
+    }, 1000); 
+  });
+});
+
+}
+
+async function renderModalEditor() {
+    const cambio = document.getElementById('btn_reset');
+    cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
+    
+    const ind = role === 'edit' ? currentContent.findIndex(content => content._id === currentDocumentId) : 0;
+    document.getElementById('btn_borrar').style.display = role === 'edit' ? '' : 'none';
+
+    const bodyTable = document.getElementById('bodyTable');
+    bodyTable.innerHTML = '';
+
+    currentKeys.forEach(item => {
+        console.log
+        const contenido = role === 'edit' ? currentContent[ind][item.campo] : (item.default !== undefined ? item.default : '');
+
+        const inputType = getInputType(item.tipo);
+        const inputClass = getInputClass(item.tipo);
+        
+        const tr = document.createElement('tr');
+        const tdLabel = document.createElement('td');
+        tdLabel.innerHTML = `<span class="input-group-text" id="addon-wrapping">${item.alias}:</span>`;
+        tr.appendChild(tdLabel);
+
+        const tdInput = document.createElement('td');
+        const input = document.createElement('input');
+        input.id = item.campo;
+        input.type = inputType;
+        input.classList.add(inputClass, 'form-snd');
+        input.value = contenido;
+        input.required = item.require;
+        if (item.minlength !== undefined) {
+            input.minLength = item.minlength;
+        }
+        
+        if (item.maxlength !== undefined) {
+            input.maxLength = item.maxlength;
+        }
+        
+        if (item.min !== undefined) {
+            input.min = item.min;
+        }
+        
+        if (item.max !== undefined) {
+            input.max = item.max;
+        }
+        tdInput.appendChild(input);
+
+        const invalidFeedback = document.createElement('div');
+        invalidFeedback.classList.add('invalid-feedback');
+        invalidFeedback.textContent = item.failMsg;
+        tdInput.appendChild(invalidFeedback);
+
+        tr.appendChild(tdInput);
+        bodyTable.appendChild(tr);
+
+        if (item.tipo === 'boolean' && contenido) {
+            input.checked = true;
+        }
+    });
+
+    $('#modalEditor').modal('show');
+}
+
+function getInputType(tipo) {
+    switch (tipo) {
+        case 'boolean':
+            return 'checkbox';
+        case 'date':
+            return 'date';
+        case 'number':
+            return 'number';
+        default:
+            return 'text';
+    }
+}
+
+function getInputClass(tipo) {
+    return tipo === 'boolean' ? 'form-check-input' : 'form-control';
 }
 

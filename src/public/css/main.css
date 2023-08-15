@@ -4,6 +4,18 @@ body {
 }
 
 
+.fade-input {
+    transition: background-color 0.9s, opacity 0.9s;
+    opacity: 1;
+  }
+  
+  .changed {
+    
+    background-color: lightyellow;
+    
+  }
+
+
 
 .nav-bar-top-container {
     position: sticky;

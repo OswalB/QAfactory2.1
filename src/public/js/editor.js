@@ -1,5 +1,58 @@
 let currentCollection
 
+
+document.getElementById("btn_guardar").addEventListener('click', async e => {
+    const submit = document.getElementsByClassName("form-snd");
+    const objeto = {
+        _id: currentDocumentId,
+    };
+
+    for (const element of submit) {
+        if (element.type === 'text') {
+            objeto[element.id] = element.value;
+        } else if (element.type === 'checkbox') {
+            objeto[element.id] = element.checked;
+        }
+    }
+    if (!applyValidation()) {
+        alert('El formulario tiene campos no válidos, por favor revise la información e intente nuevamente.');
+        return; 
+    }
+    const result = window.confirm('¿Seguro que desea CREAR un NUEVO documento?');
+    if (!result) {
+        return;
+    }
+
+    const res = await fetch('/editor/save', {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "PUT",
+        body: JSON.stringify({ 'documentos': [objeto], 'modelo': currentCollection.modelo })
+    });
+
+    const data = await res.json();
+    if (data.fail) {
+        toastr.error(data.message);
+        return;
+    }
+
+    toastr.info(data.message);
+    $('#modalEditor').modal('hide');
+    renderTable();
+});
+
+
+document.getElementById('btnNuevo').addEventListener('click',async e =>{
+    role = 'nuevo';
+    currentDocumentId = null;
+    let titulo = document.getElementById('modal-title');
+    titulo.innerHTML = `Nuevo ${currentCollection.titulo}` ;
+    renderModalEditor();
+    applyValidation();
+    
+})
+
 document.getElementById('listDocuments').addEventListener('click',async e =>{
     workFilter.currentPage = 1;
     let m =e.target.getAttribute('_modelo');
@@ -19,6 +72,10 @@ document.getElementById('listDocuments').addEventListener('click',async e =>{
     paintFilter();
 })
 
+
+
+
+
 //=========================== FUNCTIONS =============================================
 async function init(){
     document.getElementById('title-main').innerHTML='Editor';
@@ -30,7 +87,7 @@ async function init(){
     backFilter.limitar = 10;
     backFilter.max = '';
     backFilter.min = '';
-    backFilter.otrosMatch = [{'state':0}];
+    backFilter.otrosMatch = [];
     backFilter.proyectar = [];
     backFilter.saltar = 0;
     backFilter.sortBy = '0';
@@ -39,11 +96,16 @@ async function init(){
     
     
     await loadList();
+
 };
 
 function afterLoad(){
-
+    fadeInputs();
 };
+
+
+
+
 
 async function renderTable(){
     let response = await fetch("/editor/keys",{

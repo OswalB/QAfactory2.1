@@ -34,7 +34,21 @@ apiCtrl.getKeys = async (req, res, next) => {
         }).map(key => {
         const alias = listk[key].alias || '';
         const tipo = listk[key].type.toLowerCase();
-        return { "campo": key, "alias": alias, "tipo": tipo };
+        return { 
+            "campo": key, 
+            "alias": alias, 
+            "tipo": tipo, 
+            "default": listk[key].default, 
+            "require": listk[key].require,
+            "max": listk[key].max,
+            "min": listk[key].min,
+            "maxlength": listk[key].maxlength,
+            "minlength": listk[key].minlength,
+            "enum": listk[key].enum,
+            "match": listk[key].match,
+            "failMsg": listk[key].failMsg
+           
+        };
     }).sort((a, b) => (a.alias > b.alias) ? 1 : -1);
 
     res.json(listaCampos);
@@ -211,6 +225,51 @@ apiCtrl.render_signin = async (req, res, next) => {
         next(error);
     }
 };
+
+apiCtrl.saveDocument = async (req, res, next) => {
+    try {
+        const { modelo, documentos } = req.body;
+        console.log(req.body);
+        if (!modelo || !documentos || !Array.isArray(documentos)) {
+            return res.json({ fail: true, message: 'Se requiere el modelo y un array de documentos.' });
+        }
+
+        const dynamicModel = mongoose.model(modelo);
+        const savedDocuments = [];
+
+        for (const documento of documentos) {
+            try {
+                if (documento._id) {
+                    // Si el documento tiene un _id, actualiza el documento existente
+                    const updatedDocument = await dynamicModel.findByIdAndUpdate(
+                        documento._id,
+                        documento,
+                        { new: true }
+                    );
+                    savedDocuments.push(updatedDocument);
+                } else {
+                    // Si el documento no tiene _id, crea un nuevo registro
+                    const newDocument = await dynamicModel.create(documento);
+                    savedDocuments.push(newDocument);
+                }
+            } catch (error) {
+                if (error.code === 11000) {
+                    // Error de clave duplicada
+                    return res.json({ fail: true, message: 'Error de clave duplicada.' });
+                } else {
+                    // Otro tipo de error
+                    throw error; // Pasar al manejador de errores
+                }
+            }
+        }
+
+        res.json({ success: true, message: 'Documentos guardados.', data: savedDocuments });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 apiCtrl.user_auth = passport.authenticate('local',{
    

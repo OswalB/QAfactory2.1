@@ -59,6 +59,41 @@
                 No ha iniciado sesión
             {{/if}}
           </span>
+          <!-- Modal editor -->
+<div class="modal fade" id="modalEditor" tabindex="-1" aria-labelledby="modalEditorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title"></h5>
+        
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form class="needs-validation" novalidate>
+        <table class="table table-success table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Campo</th>
+              <th scope="col">Valor</th>
+            </tr>
+          </thead>
+          
+          <tbody id="bodyTable">
+            
+          </tbody>
+          
+        </table>
+      </form>
+      </div>
+      <div class="modal-footer">
+        <a id="btn_reset" class="btn btn-secondary" href="#"><i class="fa fa-wrench fa-lg" aria-hidden="true"></i> Reset pass</a>
+        <a id="btn_borrar" class="btn btn-danger" href="#"><i class="fa fa-times-circle fa-lg" aria-hidden="true"></i> Delete</a>
+        <a id="btn_guardar" class="btn btn-success" href="#"><i class="fa fa-floppy-o fa-lg" aria-hidden="true"></i> Guardar</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Salir</button>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
       
         {{>messages}}
