@@ -87,12 +87,18 @@ async function init(){
     backFilter.limitar = 10;
     backFilter.max = '';
     backFilter.min = '';
+    backFilter.datemax = '';
+    backFilter.datemin = '';
     backFilter.otrosMatch = [];
     backFilter.proyectar = [];
     backFilter.saltar = 0;
     backFilter.sortBy = '0';
     backFilter.sortOrder = 1;
     backFilter.valorBoolean = 'false';
+    backFilter.group='mespp';
+    backFilter.datepp = formatDate(new Date());
+    backFilter.keyGroup = 'createdAt'
+    //backFilter.keyGroup = 'delivery';
     
     
     await loadList();

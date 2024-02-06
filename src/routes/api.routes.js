@@ -3,6 +3,7 @@ const router = Router();
 
 const { 
     content,
+    deleteDocument,
     gc,
     getKeys,
     test,
@@ -19,6 +20,8 @@ const {
 
 const {isAuthenticated, isAdmin} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
+
+router.delete('/editor/deleteDocument',isAdmin, deleteDocument);
 
 router.get('/', renderIndex);
 router.get('/api/editor',  renderEditor);

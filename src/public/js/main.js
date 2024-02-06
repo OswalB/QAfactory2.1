@@ -1,6 +1,9 @@
 var currentKeys =[], backFilter ={}, workFilter={}, tgg = true, role;
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
-let k_sortBy, k_sortOder, k_valorBoolean;
+let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
+let k_group, k_datepp;
+
+
 
 document.addEventListener('DOMContentLoaded', async () => {
    
@@ -9,10 +12,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     k_limitar= document.getElementById('in-limitar');
     k_max= document.getElementById('in-max');
     k_min= document.getElementById('in-min');
+    k_datemin= document.getElementById('in-datemin');
+    k_datemax= document.getElementById('in-datemax');
     k_sortBy= document.getElementById('in-sortBy');
     k_checkAsc= document.getElementById('checkAsc');
     k_checkDsc= document.getElementById('checkDsc');
     k_valorBoolean= document.getElementById('in-valorBoolean');
+    k_group= document.getElementById('in-group');
+    k_datepp= document.getElementById('in-datepp');
    
     workFilter.filterStatus = 'off';
     workFilter.funcion = 'count';
@@ -21,10 +28,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await init();
     setFilter();
     loadFilter();
+    paintFilter();
     await footer();
     await renderTable();
     renderFilter();
     afterLoad();
+
 })
 
 document.getElementById('pagination_container').addEventListener('click',async e =>{
@@ -38,22 +47,33 @@ document.getElementById('alertFilter').addEventListener('click', async (e) => {
     const frole = e.target.getAttribute('id');
 
     if (frole === 'alertCancelar') {
-        workFilter.filterStatus = 'off';
+        //workFilter.filterStatus = 'off';
         setFilter();
-        loadFilter();
-        await footer();
-        await renderTable();
-        paintFilter();
+        refreshFilter('off')
+        //loadFilter();
+        //await footer();
+        //await renderTable();
+        //paintFilter();
     } else if (frole === 'alertAplicar') {
-        workFilter.filterStatus = 'active';
-        loadFilter();
-        await footer();
-        await renderTable();
+        refreshFilter('active')
+        //workFilter.filterStatus = 'active';
+        //loadFilter();
+        //await footer();
+        //await renderTable();
     }
-
-    showAlertFilter();
+    
+    //showAlertFilter();
 });
 
+async function refreshFilter(strFilterStatus) {
+    workFilter.currentPage = 1
+    workFilter.filterStatus = strFilterStatus;
+    loadFilter();
+    await footer();
+    await renderTable();
+    paintFilter();
+    showAlertFilter();
+}
 
 
 document.getElementById('form-filtro').addEventListener('change',async e =>{
@@ -72,18 +92,29 @@ function paintFilter() {
     
     const tipoSelected = filtroPor?filtroPor.tipo:'0';
     const tipoEstiloMap = {
-        '0': ['none', 'none', 'none', 'none'],
-        'string': ['block', 'none', 'none', 'none'],
-        'number': ['none', 'block', 'block', 'none'],
-        'boolean': ['none', 'none', 'none', 'block']
+        '0':        ['none', 'none', 'none', 'none', 'none', 'none'],
+        'string':   ['block', 'none', 'none', 'none', 'none', 'none'],
+        'number':   ['none', 'block', 'block', 'none', 'none', 'none'],
+        'boolean':  ['none', 'none', 'none', 'block', 'none', 'none'],
+        'date':     ['none', 'none', 'none', 'none', 'block', 'block']
     };
 
-    const [filterTxtStyle, minStyle, maxStyle, valorBooleanStyle] = tipoEstiloMap[tipoSelected];
+    const [filterTxtStyle, minStyle, maxStyle, valorBooleanStyle, dateminStyle, datemaxStyle] = tipoEstiloMap[tipoSelected];
 
     k_filterTxt.style.display = filterTxtStyle;
     k_min.style.display = minStyle;
     k_max.style.display = maxStyle;
     k_valorBoolean.style.display = valorBooleanStyle;
+    k_datemin.style.display = dateminStyle;
+    k_datemax.style.display = datemaxStyle;
+
+    if(k_group.value === 'itemspp'){
+        k_limitar.style.display = 'block';
+        k_datepp.style.display = 'none'
+    }else{
+        k_limitar.style.display = 'none';
+        k_datepp.style.display = 'block'
+    }  
 }
 
 
@@ -122,11 +153,16 @@ function setFilter() {
     k_limitar.value = backFilter.limitar ;
     k_max.value = backFilter.max ;
     k_min.value = backFilter.min ;
+    k_datemax.value = backFilter.datemax ;
+    k_datemin.value = backFilter.datemin ;
     workFilter.saltar = backFilter.saltar;
     k_sortBy.value = backFilter.sortBy;
     k_checkAsc.checked = backFilter.sortOrder === 1;
     k_checkDsc.checked = backFilter.sortOrder === -1;
     k_valorBoolean.value = backFilter.valorBoolean;
+    k_group.value = backFilter.group;
+    k_datepp.value = backFilter.datepp;
+    
     
 }  
 
@@ -135,15 +171,46 @@ function loadFilter(){
     workFilter.filterBy = k_filterBy.value === '0'?'':k_filterBy.value;
     workFilter.filterTxt = k_filterTxt.offsetParent?k_filterTxt.value:'';
     workFilter.limitar = k_limitar.value;
+    workFilter.datepp = k_datepp.value;
+    workFilter.group = k_group.value;
     workFilter.max = k_max.offsetParent?parseInt(k_max.value):'';
     workFilter.min = k_min.offsetParent?parseInt(k_min.value):'';
+    workFilter.datemax = k_datemax.offsetParent?k_datemax.value:'';
+    workFilter.datemin = k_datemin.offsetParent?k_datemin.value:'';
     workFilter.sortBy = k_sortBy.value === '0'?'':k_sortBy.value;
     workFilter.sortOrder = k_checkAsc.checked?1:-1;
     workFilter.valorBoolean = k_valorBoolean.offsetParent?k_valorBoolean.value:'';
     workFilter.otrosMatch = backFilter.otrosMatch;
     workFilter.proyectar = backFilter.proyectar;
-            
-            
+
+    if(k_group.value === 'itemspp'){
+        workFilter.keyGroup = '';
+        workFilter.limitar = k_limitar.value;
+    }
+
+    if(k_group.value === 'diapp'){
+        workFilter.datemax = k_datepp.value;
+        workFilter.datemin = k_datepp.value;
+        workFilter.keyGroup = backFilter.keyGroup;
+        workFilter.limitar = 0;
+    }
+
+    if(k_group.value === 'semanapp'){
+        const range = getRange('ww',k_datepp.value);
+        workFilter.datemax = range.end;
+        workFilter.datemin = range.start;
+        workFilter.keyGroup = backFilter.keyGroup;
+        workFilter.limitar = 0;
+    }
+
+    if(k_group.value === 'mespp'){
+        const range = getRange('mm',k_datepp.value);
+        workFilter.datemax = range.end;
+        workFilter.datemin = range.start;
+        workFilter.keyGroup = backFilter.keyGroup;
+        workFilter.limitar = 0;
+    }
+        
 }
 
 function applyValidation(){
@@ -160,6 +227,53 @@ function applyValidation(){
     return validate;
            
 }
+
+document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
+    let idt = e.target.getAttribute('_id');
+    //userId = idt;
+    role = 'edit';
+    currentDocumentId = idt;
+    let titulo = document.getElementById('modal-title');
+    titulo.innerHTML = `Editar ${currentCollection.titulo}` ;
+    renderModalEditor();
+    applyValidation();
+    
+});
+
+document.getElementById("btn_borrar").addEventListener('click', async e => {
+    const result = window.confirm('Seguro que desea BORRAR el documento?');
+    
+    if (!result) {
+        return;
+    }
+
+    try {
+        const objeto = {
+            _id: currentDocumentId,
+            modelo: currentCollection.modelo
+        };
+
+        const res = await fetch('/editor/deleteDocument', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "DELETE",
+            body: JSON.stringify(objeto)
+        });
+
+        const data = await res.json();
+        
+        if (data.fail) {
+            return;
+        }
+        toastr.info(data.message);
+        $('#modalEditor').modal('hide');
+        renderTable();
+    } catch (error) {
+        // Manejar el error de manera adecuada
+    }
+});
+
 
 function showAlertFilter() {
     const alerta = document.getElementById('alertFilter');
@@ -182,12 +296,15 @@ function showAlertFilter() {
 }
 
 
-//***********     pendientes por aprobacion */
-
 document.getElementById('btn-refrescar').addEventListener('click',async e =>{
-    workFilter.currentPage =1
-    await footer(); 
-    renderTable(); 
+    /*workFilter.currentPage =1
+    workFilter.filterStatus = 'active';
+    loadFilter();
+    await footer();
+    await renderTable();
+    showAlertFilter();*/
+    refreshFilter('active');   
+        
 })
 
 
@@ -228,9 +345,43 @@ $(".content-w").on('click', function () {
     tgg = !tgg
 })
 
-//-------------------------- FUNCIONES  --------------------------------------
+//-------------------------- FUNCIONES GENERALES  --------------------------------------
 
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+}
 
+function getRange(type, dateString) {
+    const fechaConvertida = dateString.replace(/-/g, '/');
+    const date = new Date(fechaConvertida);
+    let start, end;
+
+    if (type === 'ww') {
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+        start = new Date(date.setDate(diff));
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);   // deberia ser 6 no 5, pero es necesario restar 1 dia a 'end'
+    } else if (type === 'mm') {
+        start = new Date(date.getFullYear(), date.getMonth(), 1);
+        end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        //end.setDate(end.getDate() - 1);
+    } else {
+        return 'Tipo no válido';
+    }
+
+    return {
+        start: formatDate(start),
+        end: formatDate(end)
+    };
+}
+
+  
+  
 //-------------------------- PAGINATION AND FILTER  --------------------------------------
 
 
@@ -247,10 +398,11 @@ async function footer(npage){
         body: JSON.stringify(workFilter)
     })
     let data = await response.json();
+    console.log(data);
     sizeCollection = data[0].countTotal;
 
     let winL, winR, winMax;
-    let pags = Math.trunc(sizeCollection/workFilter.limitar);
+    let pags = Math.trunc(sizeCollection/workFilter.limitar === 0?1:workFilter.limitar );
     if(sizeCollection%workFilter.limitar != 0){pags += 1;}
     document.getElementById('lbl_results').innerHTML=`Resultados: ${sizeCollection}`;
     const pagContainer = document.getElementById('pagination_container');
@@ -349,7 +501,7 @@ async function renderModalEditor() {
 
         const invalidFeedback = document.createElement('div');
         invalidFeedback.classList.add('invalid-feedback');
-        invalidFeedback.textContent = item.failMsg;
+        invalidFeedback.textContent = item.failMsg || 'Campo Requerido';
         tdInput.appendChild(invalidFeedback);
 
         tr.appendChild(tdInput);

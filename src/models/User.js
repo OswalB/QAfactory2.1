@@ -22,19 +22,17 @@ const UserSchema = new Schema({
         require: true, 
         unique: true, 
         alias: 'C.C./Nit.',
-        failMsg:'Campo requerido'
+        
     },
     phone:{
         type:'String', 
         require: true, 
         alias: 'Teléfono', 
-        failMsg: 'Campo requerido'
     },
     salesGroup:{
         type:'String', 
         alias: 'Grupo ventas', 
         require: true,
-        failMsg: 'Campo requerido',
         default: '0'
     },
     pin:{
@@ -42,7 +40,6 @@ const UserSchema = new Schema({
         alias: 'Pin', 
         default: 0,
         require: true,
-        failMsg: 'Campo requerido',
         unique:false
     },
     sesion:{
@@ -50,7 +47,6 @@ const UserSchema = new Schema({
         default: 30, 
         alias: 'Dias sesion',
         require: true,
-        failMsg: 'Campo requerido'
     },
     password:{
         type:'String', 

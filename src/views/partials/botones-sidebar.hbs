@@ -1,79 +1,99 @@
 <h6 class="header-item">Ventas</h6>
-    <ul class="list-unstyled px-2 ">
-        
-        <li class=" "><a href="/ventas/pedidos" class="text-decoration-none   item-menu"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Pedidos</a></li>
-        
-        {{#if admin}}
-            <li class=""><a href="/ventas/despachos" class="text-decoration-none item-menu"><i class="fa fa-shopping-basket" aria-hidden="true"></i> Despachos</a></li>
-            <li class=""><a href="/orders/resum" class="text-decoration-none item-menu"><i class="fa fa-cogs" aria-hidden="true"></i> Pendientes</a></li>
-        {{/if}}
-        {{#if false}}
-            <li class=""><a href="#" class="text-decoration-none d-flex justify-content-between item-menu">
-              <span><i class="fa fa-comment-o" aria-hidden="true"></i> Mesages</span>
-              <span id="lblMsg" class="bg-dark rounded-pill text-white py-0 px-2">20</span>
-              </a>
-            </li>
-        {{/if}}
-    </ul>
+<ul class="list-unstyled px-2 ">
+
+    <li class=" "><a href="/ventas/pedidos" class="text-decoration-none   item-menu"><i class="fa fa-shopping-cart"
+                aria-hidden="true"></i> Pedidos</a></li>
+
+    {{#if admin}}
+    <li class=""><a href="/ventas/despachos" class="text-decoration-none item-menu"><i class="fa fa-shopping-basket"
+                aria-hidden="true"></i> Despachos</a></li>
+    <li class=""><a href="/orders/resum" class="text-decoration-none item-menu"><i class="fa fa-cogs"
+                aria-hidden="true"></i> Pendientes</a></li>
+    {{/if}}
+    {{#if false}}
+    <li class=""><a href="#" class="text-decoration-none d-flex justify-content-between item-menu">
+            <span><i class="fa fa-comment-o" aria-hidden="true"></i> Mesages</span>
+            <span id="lblMsg" class="bg-dark rounded-pill text-white py-0 px-2">20</span>
+        </a>
+    </li>
+    {{/if}}
+</ul>
 {{#if admin}}
 <h6 class="header-item">Admin</h6>
-    <ul class="list-unstyled px-2 ">
-        <li class=""><a href="/api/editor" class="text-decoration-none item-menu"><i class="fa fa-book" aria-hidden="true"></i> Editar docs.</a></li>
-        <li class=""><a href="/api/reports" class="text-decoration-none item-menu"><i class="fa fa-list-ul" aria-hidden="true"></i> Informes</a></li>
-        
-    </ul>
+<ul class="list-unstyled px-2 ">
+    <li class=""><a href="/api/editor" class="text-decoration-none item-menu"><i class="fa fa-book"
+                aria-hidden="true"></i> Editar docs.</a></li>
+    <li class=""><a href="/api/reports" class="text-decoration-none item-menu"><i class="fa fa-list-ul"
+                aria-hidden="true"></i> Informes</a></li>
+
+</ul>
 
 
 {{/if}}
 {{#if operario }}
 
 <h6 class="header-item">Fabrica</h6>
-    <ul class="list-unstyled px-2 ">
-        <li class=""><a href="/produccion/almacen" class="text-decoration-none item-menu"><i class="fa fa-sitemap" aria-hidden="true"></i> Almacen</a></li>
+<ul class="list-unstyled px-2 ">
+    <li class=""><a href="/produccion/almacen" class="text-decoration-none item-menu"><i class="fa fa-sitemap"
+                aria-hidden="true"></i> Almacen</a></li>
 
-        <li class=""><a href="/produccion/planillas" class="text-decoration-none item-menu"><i class="fa fa-calculator" aria-hidden="true"></i> Producción</a></li>
-        
-        <li class=""><a href="/produccion/formulas" class="text-decoration-none item-menu"><i class="fa fa-flask" aria-hidden="true"></i> Formulas</a></li>
+    <li class=""><a href="/produccion/planillas" class="text-decoration-none item-menu"><i class="fa fa-calculator"
+                aria-hidden="true"></i> Producción</a></li>
 
-        <li class=""><a href="/produccion/trazabilidad" class="text-decoration-none item-menu"><i class="fa fa-puzzle-piece" aria-hidden="true"></i> Trazabilidad</a></li>
-    </ul>
+    <li class=""><a href="/produccion/formulas" class="text-decoration-none item-menu"><i class="fa fa-flask"
+                aria-hidden="true"></i> Formulas</a></li>
+
+    <li class=""><a href="/produccion/trazabilidad" class="text-decoration-none item-menu"><i class="fa fa-puzzle-piece"
+                aria-hidden="true"></i> Trazabilidad</a></li>
+</ul>
 
 {{/if}}
-{{#if panel.boton-pagination}}   
+{{#if panel.boton-pagination}}
 
 <form id="form-filtro">
-    <a id="btn-refrescar"class="btn btn-sm btn-success d-block" href="#"><i class="fa fa-refresh"></i> Refrescar</a>
+    <a id="btn-refrescar" class="btn btn-sm btn-success d-block" href="#"><i class="fa fa-refresh"></i> Refrescar</a>
     <div id="seccOrdenar">
-    <h6 class="header-item mt-2">Ordenar por</h6>  
-    <ul class="list-unstyled px-2 ">
-        <select id="in-sortBy" class="form-select" >
-        </select>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="flexRadioDefault" id="checkAsc" checked>
-            <label class="form-check-label" for="checkAsc">Ascendente</label>
-        </div>
-        <div class="form-check">
-              <input class="form-check-input" type="radio" name="flexRadioDefault" id="checkDsc" >
-              <label class="form-check-label" for="checkDsc">Descendente</label>
-        </div>
-    </ul>
+        <h6 class="header-item mt-2">Ordenar por:</h6>
+        <ul class="list-unstyled px-2 ">
+            <select id="in-sortBy" class="form-select">
+            </select>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDefault" id="checkAsc" checked>
+                <label class="form-check-label" for="checkAsc">Ascendente</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDefault" id="checkDsc">
+                <label class="form-check-label" for="checkDsc">Descendente</label>
+            </div>
+        </ul>
 </form>
-<h6 class="header-item">Filtrar por</h6>  
-    <ul class="list-unstyled px-2 ">
-        <select id="in-filterBy" class="form-select"  >
-        </select>
-        <input id="in-filterTxt" class="form-control me-1" type="search" placeholder="texto de filtro" aria-label="Search" style="display:none">
-        <input type="number"  id="in-min" placeholder="Mínimo" class="form-control me-1"style="display:none">
-        <input type="number"  id="in-max" placeholder="Máximo" class="form-control me-1"style="display:none">
-        <select name="in-valorBoolean" id="in-valorBoolean" style="display:none" class="form-select me-2">
-            <option value='true'>Verdadero</option>
-            <option value='false'>Falso</option>
-        </select>
-        <hr class="dropdown-divider">
-        <div class="input-group mb-3">
-          <span class="input-group-text" id="basic-addon1">Items por pág.</span>
-          <input id="in-limitar" type="text" class="form-control" aria-label="Username" aria-describedby="basic-addon1">
-        </div>
-    </ul>
-</div>    
-{{/if}}   
+<h6 class="header-item">Filtrar por:</h6>
+<ul class="list-unstyled px-2 ">
+    <select id="in-filterBy" class="form-select">
+    </select>
+    <input id="in-filterTxt" class="form-control me-1" type="search" placeholder="texto de filtro" aria-label="Search"
+        style="display:none">
+    <input type="number" id="in-min" placeholder="Mínimo" class="form-control me-1" style="display:none">
+    <input type="number" id="in-max" placeholder="Máximo" class="form-control me-1" style="display:none">
+    <input type="date" id="in-datemin" placeholder="Mínimo" class="form-control me-1" style="display:none">
+    <input type="date" id="in-datemax" placeholder="Máximo" class="form-control me-1" style="display:none">
+    <select name="in-valorBoolean" id="in-valorBoolean" style="display:none" class="form-select me-2">
+        <option value='true'>Verdadero</option>
+        <option value='false'>Falso</option>
+    </select>
+    <hr class="dropdown-divider">
+    
+</ul>
+<h6 class="header-item">Agrupar en:</h6>
+<select id="in-group" class="form-select">
+  <option value="itemspp">Items por pág.</option>
+  <option value="diapp">Dia</option>
+  <option value="semanapp">Semana</option>
+  <option value="mespp">Mes</option>
+</select>
+<input type="date" id="in-datepp" placeholder="Fecha " class="form-control me-1" style="display:none">
+<input id="in-limitar" type="text" class="form-control me-1" aria-label="Username" aria-describedby="basic-addon1">
+
+</div>
+
+{{/if}}
