@@ -170,7 +170,7 @@ function loadFilter(){
 
     workFilter.filterBy = k_filterBy.value === '0'?'':k_filterBy.value;
     workFilter.filterTxt = k_filterTxt.offsetParent?k_filterTxt.value:'';
-    workFilter.limitar = k_limitar.value;
+    workFilter.limitar = parseInt(k_limitar.value);
     workFilter.datepp = k_datepp.value;
     workFilter.group = k_group.value;
     workFilter.max = k_max.offsetParent?parseInt(k_max.value):'';
@@ -185,7 +185,7 @@ function loadFilter(){
 
     if(k_group.value === 'itemspp'){
         workFilter.keyGroup = '';
-        workFilter.limitar = k_limitar.value;
+        workFilter.limitar = parseInt(k_limitar.value);
     }
 
     if(k_group.value === 'diapp'){
@@ -402,7 +402,7 @@ async function footer(npage){
     sizeCollection = data[0].countTotal;
 
     let winL, winR, winMax;
-    let pags = Math.trunc(sizeCollection/workFilter.limitar === 0?1:workFilter.limitar );
+    let pags = Math.ceil(sizeCollection / (workFilter.limitar === 0 ? sizeCollection : workFilter.limitar))-1;
     if(sizeCollection%workFilter.limitar != 0){pags += 1;}
     document.getElementById('lbl_results').innerHTML=`Resultados: ${sizeCollection}`;
     const pagContainer = document.getElementById('pagination_container');

@@ -2,6 +2,7 @@ let currentCollection
 
 
 document.getElementById("btn_guardar").addEventListener('click', async e => {
+   
     const submit = document.getElementsByClassName("form-snd");
     const objeto = {
         _id: currentDocumentId,
@@ -18,7 +19,9 @@ document.getElementById("btn_guardar").addEventListener('click', async e => {
         alert('El formulario tiene campos no válidos, por favor revise la información e intente nuevamente.');
         return; 
     }
-    const result = window.confirm('¿Seguro que desea CREAR un NUEVO documento?');
+    let msg = '¿CREAR este NUEVO documento?'
+    if(role == 'edit') msg = 'Guardar CAMBIOS?'
+    const result = window.confirm(msg);
     if (!result) {
         return;
     }
@@ -95,7 +98,7 @@ async function init(){
     backFilter.sortBy = '0';
     backFilter.sortOrder = 1;
     backFilter.valorBoolean = 'false';
-    backFilter.group='mespp';
+    backFilter.group='itemspp';
     backFilter.datepp = formatDate(new Date());
     backFilter.keyGroup = 'createdAt'
     //backFilter.keyGroup = 'delivery';
