@@ -100,7 +100,7 @@ apiCtrl.content = async (req, res, next) => {
             if (esNumero(data.max)) numericQuery['$lte'] = data.max;
             pipeline.push({ $match: { [data.filterBy]: numericQuery } });
         }
-        console.log(data)
+        //console.log(data)
         if ((data.filterBy && !data.keyGroup) && (esFecha(data.datemin) || esFecha(data.datemax))) {
             const dateQuery = {};
             if (esFecha(data.datemin)) {
@@ -227,6 +227,7 @@ apiCtrl.logout = async (req, res, next) => {
 
 apiCtrl.renderEditor = async (req, res, next) => {
     const panel = {
+        "boton-xls":true,
         "boton-pagination":true,
         "boton-opciones":true,
         "titulo":"Editor de documentos"

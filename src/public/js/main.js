@@ -380,8 +380,8 @@ function getRange(type, dateString) {
     };
 }
 
-  
-  
+
+
 //-------------------------- PAGINATION AND FILTER  --------------------------------------
 
 
@@ -398,7 +398,6 @@ async function footer(npage){
         body: JSON.stringify(workFilter)
     })
     let data = await response.json();
-    console.log(data);
     sizeCollection = data[0].countTotal;
 
     let winL, winR, winMax;
