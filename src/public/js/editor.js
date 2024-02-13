@@ -75,6 +75,18 @@ document.getElementById('listDocuments').addEventListener('click',async e =>{
     paintFilter();
 })
 
+document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
+    let idt = e.target.getAttribute('_id');
+    //userId = idt;
+    role = 'edit';
+    currentDocumentId = idt;
+    let titulo = document.getElementById('modal-title');
+    titulo.innerHTML = `Editar ${currentCollection.titulo}` ;
+    renderModalEditor();
+    applyValidation();
+    
+});
+
 
 
 

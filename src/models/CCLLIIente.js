@@ -1,4 +1,3 @@
-bcryp = require('bcryptjs');
 const {Schema, model} = require('mongoose');
 
 const UserSchema = new Schema({ 
@@ -14,7 +13,6 @@ const UserSchema = new Schema({
         type:'String', 
         alias: 'Alias',
         failMsg:'Máximo 4 caracteres',
-        minlength: 4,
         maxlength: 4
         
     },
@@ -53,7 +51,16 @@ const UserSchema = new Schema({
         type:'String', 
         alias: 'Password'
     },
-    
+    cliente:{
+        type: 'Boolean', 
+        alias: 'Cliente',
+        default: false
+    },
+    proveedor:{
+        type: 'Boolean', 
+        alias: 'Proveedor',
+        default: false
+    },
     operario:{
         type: 'Boolean', 
         default: false, 
@@ -79,14 +86,7 @@ const UserSchema = new Schema({
 });
 
 
-UserSchema.methods.encryptPassword = async password => {
-    const salt = await bcryp.genSalt(10);
-    return await bcryp.hash(password, salt);
-};
 
-UserSchema.methods.matchPassword =  async function(password) {
-    return await bcryp.compare(password, this.password);
-}
   
 
-module.exports = model('User', UserSchema);
+module.exports = model('Client', UserSchema);

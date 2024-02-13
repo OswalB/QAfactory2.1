@@ -1,4 +1,3 @@
-console.log('xls acticado')
 document.getElementById('btn-download').addEventListener('click', async e =>{
     xlsDownload();
  });

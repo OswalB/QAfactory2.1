@@ -1,0 +1,128 @@
+<hr>
+<!-- Modal clientes -->
+<div class="modal fade" id="clientesModal" tabindex="-1" aria-labelledby="modalEditorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+      <h5 class="modal-title" id="modal-title">Seleccione el cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Buscar</span>
+          <input id="inSearch" class="form-control me-2  inpedido" type="search" placeholder="cliente" aria-label="Search">
+      </div>
+
+        
+        <div id="listClientes" class="list-group">
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Modal vista previa-->
+
+<div class="modal fade" id="vistadrop" tabindex="-1" aria-labelledby="vistaLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-dialog-scrollable" >
+    <div class="modal-content">
+      <div class="modal-header">
+              <h6 class="modal-title" id="vistaLabel"></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table id="previa" class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Producto</th>
+              <th scope="col">Cantidad</th>
+            </tr>
+          </thead>
+          <tbody id="vistaPrevia">
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="btnSend" type="button" class="btn btn-success" > <i class="fa fa-paper-plane" aria-hidden="true"></i> Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>  
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------- Input group ------>
+<div id="step01" class="input-group mb-2 mt-2" >
+  <span class="input-group-text" >Cliente:</span>
+  <input id="nombre" type="text" class="inpedido form-control" readonly>
+</div>
+<div id="step02" class="input-group mb-2" >
+  <span class="input-group-text" id="basic-addon1">O.C#:</span>
+  <input id="compra" type="text" class="inpedido form-control" placeholder="Orden de compra" >
+</div>
+<div id="alertPlazo" class="alert alert-danger" role="alert" style="display:none;">
+  El plazo es muy corto!, consulte disponibilidad.
+</div>
+<div id="step03" class="input-group mb-2" >
+  <span class="flex-fill input-group-text" id="basic-addon1">Horas para la entrega:</span>
+  <a id="btnMenos" class="btn btn-primary" href="#">
+  <i class="fa fa-chevron-circle-left fa-lg"></i></a>
+  <input id="inHoras" type="number" class="inpedido form-control text-center" min="0" >
+  <a id="btnMas" class="btn btn-primary" href="#">
+  <i class="fa fa-chevron-circle-right fa-lg"></i></a>
+</div>
+<div id="step04" class="input-group mb-2" >
+  <span class="input-group-text" id="basic-addon1">Fecha:</span>
+  <input id="dateOrder" type="text"   class="inpedido form-control" readonly>
+</div>
+<div id="step05" class="input-group mb-2" >
+  <textarea name="notes" id="notes" cols="30" rows="2" placeholder="Notas:"  class="inpedido form-control"></textarea>
+</div>
+<div class="accordion  accordion-flush" id="accordionItems">
+</div>
+<hr size="2px" color="black" />
+
+<table id="misPedidosList" class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">Entrega</th>
+      <th scope="col">Cliente</th>
+      <th scope="col">Estado</th>
+    </tr>
+  </thead>
+  <tbody id="misPedidosBody"  >
+  
+  </tbody>
+</table>
+
+<!-- Modal vista previa historico pedido-->
+
+<div class="modal fade" id="pedidodrop" tabindex="-1" aria-labelledby="pedidoLabel" aria-hidden="true">
+  <div class="modal-dialog  modal-dialog-scrollable">
+    <div class="modal-content" id="headerPedido">
+      <div class="modal-header">
+        <h5 class="modal-title" id="pedidoLabel">Titulo:</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="card my-2" id="cardBody"></div>
+      </div>
+      <div class="modal-footer">
+        <a id="btnCopiar" class="btn btn-success" href="#">
+          <i class="fa fa-files-o"></i> Copiar todo</a>
+        <a id="btnFaltantes" class="btn btn-primary" href="#">
+          <i class="fa fa-undo"></i> Pedir faltantes</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="/js/pedidos.js"></script>

@@ -12,13 +12,14 @@ const {
     logout,
     renderEditor,
     renderIndex,
+    render_pedidos,
     render_signin,
     user_auth,
     saveDocument
     
 } = require('../controllers/api.controller');
 
-const {isAuthenticated, isAdmin} = require('../helpers/auth');
+const {isAuthenticated, isAdmin, authorization} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
 router.delete('/editor/deleteDocument',isAdmin, deleteDocument);
@@ -30,11 +31,12 @@ router.get('/api/test',  test);
 router.get('/intercambiador', intercambiador);
 router.get('/logout', logout);
 router.get('/signin', render_signin);
+router.get('/ventas/pedidos',isAuthenticated, render_pedidos);
 
-//router.post('/api/gen_count', gc);
 router.post('/api/content', content);
 router.post('/editor/keys', getKeys);
 router.post('/signin', user_auth);
+router.post('/api/testaccess',authorization,gc );
 
 router.put('/editor/save', saveDocument);
 

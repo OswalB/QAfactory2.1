@@ -228,17 +228,7 @@ function applyValidation(){
            
 }
 
-document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
-    let idt = e.target.getAttribute('_id');
-    //userId = idt;
-    role = 'edit';
-    currentDocumentId = idt;
-    let titulo = document.getElementById('modal-title');
-    titulo.innerHTML = `Editar ${currentCollection.titulo}` ;
-    renderModalEditor();
-    applyValidation();
-    
-});
+
 
 document.getElementById("btn_borrar").addEventListener('click', async e => {
     const result = window.confirm('Seguro que desea BORRAR el documento?');
@@ -378,6 +368,18 @@ function getRange(type, dateString) {
         start: formatDate(start),
         end: formatDate(end)
     };
+}
+
+async function access(){
+    console.log('test de acceso');
+    workFilter.funcion = 'content'
+    let response = await fetch("/api/testaccess",{
+        headers: {'content-type': 'application/json'},
+        method: 'POST',
+        body: JSON.stringify(workFilter)
+    })
+    let data = await response.json();
+    console.log(data)
 }
 
 

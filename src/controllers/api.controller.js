@@ -9,9 +9,11 @@ const passport = require('passport');
 //const Note = require('../models/Note');
 const DvService = require('../services/serv.db');
 
+const {isAuthenticated, isAdmin} = require('../helpers/auth');
+
 apiCtrl.gc = async (req, res) => {
     const panel = { "titulo":"TEST","boton-nuevo":true, "boton-pagination":true};
-    res.json([{'countTotal':13}])   
+    res.json([{'countTotal':1333}])   
 };
 
 apiCtrl.test = async (req, res) => {
@@ -66,6 +68,7 @@ apiCtrl.getKeys = async (req, res, next) => {
 apiCtrl.content = async (req, res, next) => {
     try {
         const data = req.body;
+        
         //console.log(data);
         if (!data.modelo) {
             res.json([{ 'countTotal': 0 }]);
@@ -243,6 +246,21 @@ apiCtrl.renderEditor = async (req, res, next) => {
 apiCtrl.renderIndex = async (req, res, next) => {
     try {     
         res.render('index/index')
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.render_pedidos = async (req, res, next) => {
+    const panel = {
+        "boton-xls":false,
+        "boton-pagination":true,
+        "boton-opciones":true,
+        "titulo":"Pedidos"
+    };
+
+    try {     
+        res.render('ventas/pedidos',{panel});
     } catch (error) {
         next(error);
     }
