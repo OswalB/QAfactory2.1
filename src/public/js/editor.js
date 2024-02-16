@@ -26,7 +26,7 @@ document.getElementById("btn_guardar").addEventListener('click', async e => {
         return;
     }
 
-    const res = await fetch('/editor/save', {
+    const res = await fetch('/core/save', {
         headers: {
             'Content-Type': 'application/json'
         },
@@ -124,18 +124,14 @@ function afterLoad(){
     fadeInputs();
 };
 
-
-
-
-
 async function renderTable(){
-    let response = await fetch("/editor/keys",{
+    let response = await fetch("/core/keys",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify({'modelo':workFilter.modelo})
     })
     let data = await response.json();
-    if(data.fail){
+    if(data.message){
         toastr.error(data.message);
         return;
     }
@@ -154,7 +150,7 @@ async function renderTable(){
 
     //crea la cuadricula con los datos:
     workFilter.funcion = 'content';
-    response = await fetch("/api/content",{
+    response = await fetch("/core/content",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify(workFilter)
@@ -202,7 +198,7 @@ async function renderTable(){
 }
 
 async function loadList(){
-    let listaEditables =  await fetch("/api/editor/listCollections");
+    let listaEditables =  await fetch("/core/list-collections");
     listaEditables = await listaEditables.json();
     const container = document.getElementById('listDocuments');
     container.innerHTML='';

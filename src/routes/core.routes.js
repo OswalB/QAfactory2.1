@@ -2,16 +2,36 @@ const {Router} = require('express');
 const router = Router();
 
 const { 
-    test
+    content,
+    deleteDocument,
+    getKeys,
+    listCollections,
+    logout,
+    renderEditor,
+    renderIndex,
+    renderSignin,
+    saveDocument,
+    userAuth,
+    
     
 } = require('../controllers/core.controller');
-const {isAuthenticated, isAdmin} = require('../helpers/auth');
+
+const {isAuthenticated, isAdmin, authorization} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
-router.get('/core/test',  test);
+router.delete('/core/document',authorization, deleteDocument);
 
+router.get('/', renderIndex);
+router.get('/core/editor', isAdmin,  renderEditor);
+router.get('/core/list-collections',isAdmin, listCollections);
+router.get('/logout', logout);
+router.get('/signin', renderSignin);
 
+router.post('/core/content',authorization, content);
+router.post('/core/keys',authorization, getKeys);
+router.post('/signin', userAuth);
 
+router.put('/core/save', authorization, saveDocument);
 
 
 router.use(errorHandler);

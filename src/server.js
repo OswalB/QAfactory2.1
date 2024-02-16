@@ -98,7 +98,7 @@ app.use((req, res, next)=>{
 
 //routes 
 
-app.use(require('./routes/api.routes'));
+app.use(require('./routes/domain.routes'));
 app.use(require('./routes/core.routes'));
 
 //static files 

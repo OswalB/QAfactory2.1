@@ -32,7 +32,7 @@ helpers.authorization  = (req, res, next) => {
     if (uniqueModels.includes(modelName)) {
         return next();
     } else {
-        return res.status(403).send({msg:'Acceso  no autorizado :-('});
+        return res.status(403).send({message:'Acceso  no autorizado :-('});
     }
 
 
@@ -56,7 +56,7 @@ helpers.isAdmin = (req, res, next) => {
             return next();
         }else {
             // Si el usuario no tiene la combinación de roles adecuada, mostrar un mensaje de error o redirigirlo a una página de acceso denegado
-            return res.status(403).send('Acceso denegado');
+            return res.status(403).send({message:'Acceso  no autorizado :-('});
         }
 
     }

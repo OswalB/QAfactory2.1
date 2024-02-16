@@ -243,7 +243,7 @@ document.getElementById("btn_borrar").addEventListener('click', async e => {
             modelo: currentCollection.modelo
         };
 
-        const res = await fetch('/editor/deleteDocument', {
+        const res = await fetch('/core/document', {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -370,17 +370,7 @@ function getRange(type, dateString) {
     };
 }
 
-async function access(){
-    console.log('test de acceso');
-    workFilter.funcion = 'content'
-    let response = await fetch("/api/testaccess",{
-        headers: {'content-type': 'application/json'},
-        method: 'POST',
-        body: JSON.stringify(workFilter)
-    })
-    let data = await response.json();
-    console.log(data)
-}
+
 
 
 
@@ -394,7 +384,7 @@ async function footer(npage){
     workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
     workFilter.funcion = 'count';
   //consultar tamaño de coleccion
-    let response = await fetch("/api/content",{
+    let response = await fetch("/core/content",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify(workFilter)
