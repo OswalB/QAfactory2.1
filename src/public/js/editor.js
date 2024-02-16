@@ -150,7 +150,7 @@ async function renderTable(){
 
     //crea la cuadricula con los datos:
     workFilter.funcion = 'content';
-    response = await fetch("/core/content",{
+    response = await fetch("/core/editor-content",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify(workFilter)

@@ -2,8 +2,10 @@ const {Router} = require('express');
 const router = Router();
 
 const { 
-    content,
+    
     deleteDocument,
+    editContent,
+    genCount,
     getKeys,
     listCollections,
     logout,
@@ -27,7 +29,8 @@ router.get('/core/list-collections',isAdmin, listCollections);
 router.get('/logout', logout);
 router.get('/signin', renderSignin);
 
-router.post('/core/content',authorization, content);
+router.post('/core/gen-count',authorization, genCount);
+router.post('/core/editor-content',authorization, editContent);
 router.post('/core/keys',authorization, getKeys);
 router.post('/signin', userAuth);
 

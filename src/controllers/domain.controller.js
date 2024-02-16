@@ -10,22 +10,6 @@ const User = require('../models/User');
 
 const DvService = require('../services/serv.db');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   apiCtrl.intercambiador = async (req, res, next) => {
     try {     
         res.render('interc');
@@ -33,11 +17,6 @@ const DvService = require('../services/serv.db');
       next(error);
     }
 };
-
-
-
-
-
 
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {
@@ -53,24 +32,5 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         next(error);
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-esFecha = (valor) => {
-    const dateObject = new Date(valor);
-    return dateObject instanceof Date && !isNaN(dateObject.getTime());
-}
-
-esNumero = (valor) => {
-    return typeof valor === 'number';
-}
 
 module.exports = apiCtrl  ;

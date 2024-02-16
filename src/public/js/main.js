@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     k_datepp= document.getElementById('in-datepp');
    
     workFilter.filterStatus = 'off';
-    workFilter.funcion = 'count';
+    //workFilter.funcion = 'count';
     workFilter.currentPage = 1;
 
     await init();
@@ -382,9 +382,10 @@ async function footer(npage){
     workFilter.currentPage = npage?npage:1; 
 
     workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
-    workFilter.funcion = 'count';
+    //workFilter.funcion = 'count';
   //consultar tamaño de coleccion
-    let response = await fetch("/core/content",{
+  console.log(workFilter)
+    let response = await fetch("/core/gen-count",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify(workFilter)
