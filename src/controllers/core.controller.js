@@ -63,18 +63,6 @@ coreCtrl.deleteDocument  = async(req, res, next) => {
     }
 }
 
-coreCtrl.genCount = async (req, res, next) => {
-    try {
-        const data = req.body;
-        //console.log(data);
-        data.funcion = 'count';
-        
-        const result = await contenido(data);
-        res.json(result);
-    } catch (error) {
-        next(error);
-    }
-}
 
 coreCtrl.getKeys = async (req, res, next) => {
     try{
@@ -151,8 +139,6 @@ coreCtrl.logout = async (req, res, next) => {
         next(error);
     }
 };
-
-
 
 coreCtrl.renderEditor = async (req, res, next) => {
     const panel = {

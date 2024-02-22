@@ -29,8 +29,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setFilter();
     loadFilter();
     paintFilter();
-    await footer();
+    
     await renderTable();
+    await footer();
     renderFilter();
     afterLoad();
 
@@ -38,9 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('pagination_container').addEventListener('click',async e =>{
     let i =e.target.getAttribute('_id');
-    
-    await footer(i); 
     renderTable(); 
+    await footer(i); 
+    
 })
 
 document.getElementById('alertFilter').addEventListener('click', async (e) => {
@@ -63,8 +64,9 @@ async function refreshFilter(strFilterStatus) {
     workFilter.currentPage = 1
     workFilter.filterStatus = strFilterStatus;
     loadFilter();
-    await footer();
+    
     await renderTable();
+    await footer();
     paintFilter();
     showAlertFilter();
 }
@@ -370,13 +372,15 @@ async function footer(npage){
 
     workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
     
-    let response = await fetch("/core/gen-count",{
+    /*let response = await fetch("/core/gen-count",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
         body: JSON.stringify(workFilter)
     })
     let data = await response.json();
-    sizeCollection = data[0].countTotal;
+    sizeCollection = data[0].countTotal;*/
+
+
 
     let winL, winR, winMax;
     let pags = Math.ceil(sizeCollection / (workFilter.limitar === 0 ? sizeCollection : workFilter.limitar))-1;

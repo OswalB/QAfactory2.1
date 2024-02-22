@@ -77,6 +77,10 @@ async function renderTable(){
     })
     const data = await res.json();
     console.log(data)
+   
+    sizeCollection = data[0].countTotal;
+    data.shift();       //elimina el dato contador
+    console.log(sizeCollection);
     if(data.fail) {
         toastr.error('Reintente!','No se ha podido recibir.','Pedido');
             return false;

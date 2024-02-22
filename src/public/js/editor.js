@@ -156,7 +156,8 @@ async function renderTable(){
         body: JSON.stringify(workFilter)
     })
     const dataList = await response.json();
-    
+    sizeCollection = dataList[0].countTotal;
+    dataList.shift();
     if(data.fail){
         toastr.error(data.message);
         return;

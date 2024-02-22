@@ -62,15 +62,22 @@ async function contenido(data) {
         });
     }
 
-    let funcionok = false;
+    //let funcionok = false;
 
-    if (data.funcion === 'count') {
+    /*if (data.funcion === 'count') {
         funcionok = true;
         pipeline.push({ $count: 'countTotal' });
-    }
-
-    if (data.funcion === 'content') {
-        funcionok = true;
+    }*/
+    
+    const pipecount = pipeline.slice();
+    pipecount.push({ $count: 'countTotal' });
+    let counter = await dynamicModel.aggregate(pipecount);
+    if(counter.length < 1)  counter = [{countTotal: 0}];
+    counter = counter[0];
+    console.log('newwww',counter);
+    
+    //if (data.funcion === 'content') {
+        //funcionok = true;
 
         if (data.sortBy !== '') {
             const sortOrder = data.sortOrder === -1 ? -1 : 1;
@@ -96,20 +103,21 @@ async function contenido(data) {
         if (Object.keys(proyeccion).length > 0) {
             pipeline.push({ $project: proyeccion });
         }
-    }
+    //}
 
-    if (!funcionok) {
+    /*if (!funcionok) {
         return  ({ 'fail': true });
         
-    }
+    }*/
 
     for (const cnt in pipeline) {
         console.log(pipeline[cnt]);
     }
 
     let result = await dynamicModel.aggregate(pipeline);
-    if(result.length < 1)  result = [{countTotal: 0}]
-    console.log(result)
+    //if(result.length < 1)  result = [{countTotal: 0}]
+    result.unshift(counter);
+    //console.log(result);
     return result
 }
 

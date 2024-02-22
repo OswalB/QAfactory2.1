@@ -39,10 +39,11 @@ apiCtrl.pedidos = async (req, res, next) => {
         if(user.administrador || user.despachador){
             console.log('tods')
         }else if(user.vendedor){
-            data.otrosMatch.push({seller:user.salesGroup})
-            }else if(user.cliente){
-
+            console.log('vendedor');
+            data.otrosMatch.push({seller:user.salesGroup});
             }else{
+                console.log('cliente');
+                data.otrosMatch.push({nit:user.ccnit})
 
         }
         response = await contenido(data);
@@ -50,8 +51,7 @@ apiCtrl.pedidos = async (req, res, next) => {
         return;
        }
         
-        const result = await contenido(data);
-        res.json(result);
+        
     } catch (error) {
         next(error);
     }
