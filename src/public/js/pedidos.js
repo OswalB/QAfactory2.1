@@ -1,11 +1,29 @@
-let currentCollection;
+
+
+
+
+
+
+
+
+
+
+
 
 //=========================== FUNCTIONS =============================================
+
+
+
+//*-*-*-*-*-*-*-*-*-*-*      pendientes por revisar y aprobar   * * * * 
+
+
+let currentCollection;
+
+
 async function init(){
     document.getElementById('title-main').innerHTML='Pedidos';
 
     workFilter.modelo = 'Order';
-    
     backFilter.filterBy = '0';
     backFilter.filterTxt = '';
     backFilter.limitar = 15;
@@ -23,16 +41,14 @@ async function init(){
     backFilter.datepp = formatDate(new Date());
     backFilter.keyGroup = 'createdAt'
     //backFilter.keyGroup = 'delivery';
-    
-    workFilter.modelo = 'Order';
 
-    let response = await fetch("/editor/keys",{
+    let response = await fetch("/domain/pedidos",{
         headers: {'content-type': 'application/json'},
         method: 'POST',
-        body: JSON.stringify({'modelo':workFilter.modelo})
+        body: JSON.stringify({fx:'k'})
     })
     let data = await response.json();
-    if(data.fail){
+    if(data.message){
         toastr.error(data.message);
         return;
     }
@@ -51,7 +67,8 @@ async function renderTable(){
 
     workFilter.funcion = 'content';
     toastr.info('Recibiendo...','Mis pedidos');
-    const res = await fetch("/api/content",{
+    workFilter.fx = 'c'
+    const res = await fetch("/domain/pedidos",{
             headers: {
                 'Content-Type': 'application/json'
               },
@@ -59,6 +76,7 @@ async function renderTable(){
               body: JSON.stringify(workFilter)
     })
     const data = await res.json();
+    console.log(data)
     if(data.fail) {
         toastr.error('Reintente!','No se ha podido recibir.','Pedido');
             return false;

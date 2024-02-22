@@ -1,6 +1,7 @@
 const { 
-    contenido
-} = require('../utilities/corefunctions')
+    contenido,
+    keys
+} = require('../utilities/corefunctions');
 const coreCtrl = {};
 const mongoose = require('mongoose');
 const Editable = require('../models/Editable');
@@ -18,18 +19,7 @@ const maxUsuarios = config.maxUsuarios;
 /*console.log('Cantidad máxima de productos:', maxProductos);
 console.log('Cantidad máxima de usuarios:', maxUsuarios);*/
 
-coreCtrl.genCount = async (req, res, next) => {
-    try {
-        const data = req.body;
-        //console.log(data);
-        data.funcion = 'count';
-        
-        const result = await contenido(data);
-        res.json(result);
-    } catch (error) {
-        next(error);
-    }
-}
+
 
 coreCtrl.editContent = async (req, res, next) => {
     try {
@@ -68,6 +58,19 @@ coreCtrl.deleteDocument  = async(req, res, next) => {
         } else {
             res.json({ fail: true, message: 'No se encontraron documentos para eliminar.' });
         }
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.genCount = async (req, res, next) => {
+    try {
+        const data = req.body;
+        //console.log(data);
+        data.funcion = 'count';
+        
+        const result = await contenido(data);
+        res.json(result);
     } catch (error) {
         next(error);
     }
@@ -148,6 +151,8 @@ coreCtrl.logout = async (req, res, next) => {
         next(error);
     }
 };
+
+
 
 coreCtrl.renderEditor = async (req, res, next) => {
     const panel = {

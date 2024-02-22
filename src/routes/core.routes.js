@@ -9,6 +9,7 @@ const {
     getKeys,
     listCollections,
     logout,
+    
     renderEditor,
     renderIndex,
     renderSignin,
@@ -32,6 +33,7 @@ router.get('/signin', renderSignin);
 router.post('/core/gen-count',authorization, genCount);
 router.post('/core/editor-content',authorization, editContent);
 router.post('/core/keys',authorization, getKeys);
+
 router.post('/signin', userAuth);
 
 router.put('/core/save', authorization, saveDocument);

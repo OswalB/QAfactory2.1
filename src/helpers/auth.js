@@ -32,6 +32,7 @@ helpers.authorization  = (req, res, next) => {
     if (uniqueModels.includes(modelName)) {
         return next();
     } else {
+        console.log('n/a')
         return res.status(403).send({message:'Acceso  no autorizado :-('});
     }
 

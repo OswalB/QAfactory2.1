@@ -1,4 +1,4 @@
-var currentKeys =[], backFilter ={}, workFilter={}, tgg = true, role;
+var currentKeys =[], backFilter ={}, workFilter={}, tgg = true, role, sizeCollection;
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
 let k_group, k_datepp;
@@ -47,22 +47,16 @@ document.getElementById('alertFilter').addEventListener('click', async (e) => {
     const frole = e.target.getAttribute('id');
 
     if (frole === 'alertCancelar') {
-        //workFilter.filterStatus = 'off';
+        
         setFilter();
         refreshFilter('off')
-        //loadFilter();
-        //await footer();
-        //await renderTable();
-        //paintFilter();
+        
     } else if (frole === 'alertAplicar') {
         refreshFilter('active')
-        //workFilter.filterStatus = 'active';
-        //loadFilter();
-        //await footer();
-        //await renderTable();
+        
     }
     
-    //showAlertFilter();
+   
 });
 
 async function refreshFilter(strFilterStatus) {
@@ -80,9 +74,7 @@ document.getElementById('form-filtro').addEventListener('change',async e =>{
     workFilter.filterStatus = 'change';
     showAlertFilter();
     paintFilter();
-    //setFilter('panel');
-    //await footer(); 
-    //renderTable(); 
+     
 })
 
 
@@ -287,12 +279,7 @@ function showAlertFilter() {
 
 
 document.getElementById('btn-refrescar').addEventListener('click',async e =>{
-    /*workFilter.currentPage =1
-    workFilter.filterStatus = 'active';
-    loadFilter();
-    await footer();
-    await renderTable();
-    showAlertFilter();*/
+   
     refreshFilter('active');   
         
 })
@@ -382,9 +369,7 @@ async function footer(npage){
     workFilter.currentPage = npage?npage:1; 
 
     workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
-    //workFilter.funcion = 'count';
-  //consultar tamaño de coleccion
-  console.log(workFilter)
+    
     let response = await fetch("/core/gen-count",{
         headers: {'content-type': 'application/json'},
         method: 'POST',

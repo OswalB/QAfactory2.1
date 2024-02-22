@@ -109,8 +109,36 @@ async function contenido(data) {
 
     let result = await dynamicModel.aggregate(pipeline);
     if(result.length < 1)  result = [{countTotal: 0}]
-
+    console.log(result)
     return result
+}
+
+async function keys(data) {
+    const eschema = require(`../models/${data.modelo}`);
+        const listk = eschema.schema.obj;
+        const listaCampos = Object.keys(listk).filter(key => {
+            return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && key !== 'createdAt' && listk[key].type;
+        }).map(key => {
+        const alias = listk[key].alias || '';
+        const tipo = listk[key].type.toLowerCase();
+        return { 
+            "campo": key, 
+            "alias": alias, 
+            "tipo": tipo, 
+            "default": listk[key].default, 
+            "require": listk[key].require,
+            "max": listk[key].max,
+            "min": listk[key].min,
+            "maxlength": listk[key].maxlength,
+            "minlength": listk[key].minlength,
+            "enum": listk[key].enum,
+            "match": listk[key].match,
+            "failMsg": listk[key].failMsg
+           
+        };
+    }).sort((a, b) => (a.alias > b.alias) ? 1 : -1);
+    return listaCampos;
+
 }
 
 esFecha = (valor) => {
@@ -122,4 +150,4 @@ esNumero = (valor) => {
     return typeof valor === 'number';
 }
 
-module.exports ={contenido};
+module.exports ={contenido, keys};

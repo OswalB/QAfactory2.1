@@ -2,6 +2,7 @@ const {Router} = require('express');
 const router = Router();
 const { 
     intercambiador,
+    pedidos,
     renderPedidos,
     
     
@@ -13,8 +14,9 @@ const errorHandler = require('../middlewares/errorHandler');
 
 router.get('/domain/intercambiador', intercambiador);
 
-router.get('/domain/ventas-pedidos',isAuthenticated, renderPedidos);
+router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 
+router.post('/domain/pedidos',isAuthenticated, pedidos);
 
 
 
