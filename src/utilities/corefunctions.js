@@ -74,7 +74,6 @@ async function contenido(data) {
     let counter = await dynamicModel.aggregate(pipecount);
     if(counter.length < 1)  counter = [{countTotal: 0}];
     counter = counter[0];
-    console.log('newwww',counter);
     
     //if (data.funcion === 'content') {
         //funcionok = true;

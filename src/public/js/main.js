@@ -22,24 +22,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     k_datepp= document.getElementById('in-datepp');
    
     workFilter.filterStatus = 'off';
-    //workFilter.funcion = 'count';
     workFilter.currentPage = 1;
 
+    
     await init();
+    await renderFilter();
     setFilter();
     loadFilter();
     paintFilter();
     
     await renderTable();
     await footer();
-    renderFilter();
+    
     afterLoad();
 
 })
 
 document.getElementById('pagination_container').addEventListener('click',async e =>{
     let i =e.target.getAttribute('_id');
-    renderTable(); 
+    workFilter.currentPage = i?i:1; 
+    workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
+    await renderTable(); 
     await footer(i); 
     
 })
@@ -71,15 +74,12 @@ async function refreshFilter(strFilterStatus) {
     showAlertFilter();
 }
 
-
 document.getElementById('form-filtro').addEventListener('change',async e =>{
     workFilter.filterStatus = 'change';
     showAlertFilter();
     paintFilter();
      
-})
-
-
+});
 
 function paintFilter() {
     const filtroPor = currentKeys.find(actuales => actuales.campo === k_filterBy.value);
@@ -114,7 +114,7 @@ function paintFilter() {
 
 
 
-function renderFilter(){
+async function renderFilter(){
 
     addOptionsToSelect('in-sortBy', currentKeys);
     addOptionsToSelect('in-filterBy', currentKeys);
@@ -368,9 +368,9 @@ function getRange(type, dateString) {
 
 
 async function footer(npage){
-    workFilter.currentPage = npage?npage:1; 
+    //workFilter.currentPage = npage?npage:1; 
 
-    workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
+    //workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
     
     /*let response = await fetch("/core/gen-count",{
         headers: {'content-type': 'application/json'},
