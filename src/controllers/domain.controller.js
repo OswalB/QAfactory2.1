@@ -50,6 +50,10 @@ apiCtrl.pedidos = async (req, res, next) => {
             if(data._id){   
                 data.saltar = 0;
                 data.otrosMatch.push({_id: new ObjectId(data._id) });
+                data.proyectar.push({client:1},{id_compras:1},{totalReq:1},{TotalDisp:1},
+                    {delivery:1},{createdAt:1},{state:1},{notes:1},{sellerName:1},{vendedor:1},
+                    {'orderItem.product':1},{'orderItem.qty':1},{'orderItem.dispatch':1},
+                    );
             }else{
                 data.proyectar.push({TotalDisp:1},{client:1},{delivery:1},{state:1},{totalReq:1});
 
