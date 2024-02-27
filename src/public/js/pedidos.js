@@ -1,4 +1,28 @@
-let currentCollection;
+let misClientes = null, listProducts = null, currentCollection, docPedido ={};
+
+document.getElementById('btnNuevo').addEventListener('click', async e=>{
+    if(document.getElementById('nombre').value) {
+        toastr.warning('El pedido actual no ha sido enviado','Atencion!')
+        const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
+        if(!resp) return;
+    }
+    clearInputs();
+    docPedido = {};
+    if(!misClientes) await getMisClientes();
+    if(!listProducts) await getProducts();
+    await renderClientes('');
+    document.getElementById('inHoras').value = 2;
+    const fecha = entrega(2);
+    docPedido.delivery = fecha.fechaEntrega;
+    document.getElementById('dateOrder').value = fecha.fechaDisplay;
+    $('#clientesModal').modal('show');
+})
+
+document.getElementById('inSearch').addEventListener('input',async e => {
+    text = document.getElementById('inSearch').value;
+    text = text.toUpperCase();
+    renderClientes(text);
+})
 
 document.getElementById('misPedidosBody').addEventListener('click', async e => {
     toastr.warning('Cargando...', 'Espere');
@@ -67,6 +91,42 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
 
     $('#pedidodrop').modal('show');
 });
+
+document.getElementById('listClientes').addEventListener('click',async e => {
+    let nit = e.target.getAttribute('_nit');
+    let nombre = e.target.innerText;
+    setPaso(1);
+    docPedido.client = nombre;
+    docPedido.nit = nit;
+    document.getElementById('nombre').value = nombre;
+    $('#clientesModal').modal('hide');
+});
+
+document.getElementById('btnMas').addEventListener('click', async e => {
+    const valor = parseInt(document.getElementById('inHoras').value) + 1;
+    document.getElementById('inHoras').value = valor;
+    actualizarFechaEntrega(valor);
+});
+
+document.getElementById('btnMenos').addEventListener('click', async e => {
+    const valor = Math.max(parseInt(document.getElementById('inHoras').value) - 1, 0);
+    document.getElementById('inHoras').value = valor;
+    actualizarFechaEntrega(valor);
+});
+
+document.getElementById('inHoras').addEventListener('input', async e => {
+    let plazo = 0;
+    if (document.getElementById('inHoras').value) {
+        plazo = parseInt(document.getElementById('inHoras').value);
+    }
+    if (plazo < 1) {
+        plazo = 0;
+        document.getElementById('inHoras').value = plazo;
+    }
+    actualizarFechaEntrega(plazo);
+});
+
+
 
 
 //=========================== FUNCTIONS =============================================
@@ -166,18 +226,105 @@ function setPaso(paso) {
 }
 
 async function afterLoad() {
+    setPaso(0);
     fadeInputs();
+    
 };
 
+function clearInputs() {
+    let inputs = document.querySelectorAll('.inpedido');
+    inputs.forEach(input => {
+        input.value = '';
+    });
+}
 
+async function renderClientes(filtro){
+    const container = document.getElementById('listClientes');
+    container.innerHTML = '';
+    misClientes.forEach(item =>{
+        let i = item.nombre.toUpperCase().indexOf(filtro);
+        if(i > -1 ){
+            const a = document.createElement('a');
+            a.setAttribute('href', '#');
+            a.setAttribute('_nit', item.idClient);
+            a.setAttribute('class','list-group-item list-group-item-action list-group-item-secondary')
+            a.innerHTML = `${item.nombre}`;
+            container.appendChild(a);
+        }
+        
+    })
+}
 
+async function getProducts(){
+    let response = await fetch("/domain/ventas/productos",{
+        headers: {'content-type': 'application/json'},
+        method: 'POST',
+        body: JSON.stringify({})
+    })
+    listProducts = await response.json();
+    listProducts.shift();
+    console.log(listProducts);
+}
 
+async function getMisClientes(){
+    let response = await fetch("/domain/mis-clientes",{
+        headers: {'content-type': 'application/json'},
+        method: 'POST',
+        body: JSON.stringify({})
+    })
+    misClientes = await response.json();
+    misClientes.shift();
+    console.log(misClientes);
+}
 
+function entrega(plazo){
+    const nohabil = (horasNoHabiles, hora) => {
+        if (!horasNoHabiles || !Array.isArray(horasNoHabiles) || horasNoHabiles.length === 0) {
+            return false;
+        }
+        return !horasNoHabiles.includes(hora);
+    };
 
+    let sethabiles=[
+        [25],
+        [8,9,10,11,12,14,15,16],
+        [8,9,10,11,12,14,15,16],
+        [8,9,10,11,12,14,15,16],
+        [8,9,10,11,12,14,15,16],
+        [8,9,10,11,12,14,15,16],
+        [8,9,10,11,12],
+        ]
+    let f,h,d ;
+    f = new Date();
+    for(let p=1;p<parseInt(plazo)+1;p++){
+        f.setHours(f.getHours() + 1);
+        h = f.getHours();
+        d = f.getDay();
+        while(nohabil(sethabiles[d],h)){
+            f.setHours(f.getHours() + 1);
+            h = f.getHours();
+            d = f.getDay();
+        }
+    }
 
+    const fechaEntrega = f;
+    const fechaDisplay = f.toLocaleDateString('es-us', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 
+    return { fechaEntrega, fechaDisplay };
+      
+    //  return {"fechaEntrega":f, "fechaDisplay":f.toLocaleDateString('es-us',{weekday: 'short',day:'2-digit',month:'short',hour:'2-digit', minute:'2-digit'})};
+}
 
-
-
-
+function actualizarFechaEntrega(valor) {
+    document.getElementById('alertPlazo').style.display = valor < 2 ? '' : 'none';
+    const fechaEntrega = entrega(valor);
+    document.getElementById('dateOrder').value = fechaEntrega.fechaDisplay;
+    docPedido.delivery = fechaEntrega.fechaEntrega;
+}
 

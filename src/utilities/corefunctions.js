@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
+const Client = require('../models/Client');
 
 async function contenido(data) {
     if (!data.modelo) {
@@ -78,10 +79,24 @@ async function contenido(data) {
     //if (data.funcion === 'content') {
         //funcionok = true;
 
-        if (data.sortBy !== '') {
+        /*if (data.sortBy !== '') {
             const sortOrder = data.sortOrder === -1 ? -1 : 1;
             pipeline.push({ $sort: { [data.sortBy]: sortOrder } });
+        }*/
+        if (data.sortBy) {
+            let sortByCriteria = {};
+            if (Array.isArray(data.sortBy)) {
+                // Si es un array de criterios de ordenamiento
+                data.sortBy.forEach(criteria => {
+                    sortByCriteria[criteria] = data.sortOrder === -1 ? -1 : 1;
+                });
+            } else {
+                // Si es un solo criterio de ordenamiento
+                sortByCriteria[data.sortBy] = data.sortOrder === -1 ? -1 : 1;
+            }
+            pipeline.push({ $sort: sortByCriteria });
         }
+        
         if(data.saltar){
             const skipValue = esNumero(data.saltar) ? data.saltar : 1;
         pipeline.push({ $skip: skipValue });

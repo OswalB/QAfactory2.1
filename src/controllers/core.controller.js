@@ -174,7 +174,7 @@ coreCtrl.renderSignin = async (req, res, next) => {
 coreCtrl.saveDocument = async (req, res, next) => {
     try {
         const { modelo, documentos } = req.body;
-        console.log(req.body);
+        //console.log(req.body);
         if (!modelo || !documentos || !Array.isArray(documentos)) {
             return res.json({ fail: true, message: 'Se requiere el modelo y un array de documentos.' });
         }

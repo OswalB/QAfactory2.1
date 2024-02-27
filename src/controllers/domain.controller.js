@@ -9,7 +9,7 @@ const config = require('../config/settings');
 const mongoose = require('mongoose');
 const Editable = require('../models/Editable');
 const Order = require('../models/Order');
-
+const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
 
@@ -19,6 +19,29 @@ const DvService = require('../services/serv.db');
   apiCtrl.intercambiador = async (req, res, next) => {
     try {     
         res.render('interc');
+    } catch (error) {
+      next(error);
+    }
+};
+
+apiCtrl.misClientes = async (req, res, next) => {
+    try {     
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Client';
+        data.sortBy = 'nombre';
+        data.otrosMatch = [];  
+        data.proyectar =[{nombre:1}, {_id:0}, {idClient:1}]    ;     
+        if(user.administrador || user.despachador){
+            
+        }else if(user.vendedor){
+            data.otrosMatch.push({idSeller:user.salesGroup});
+            }else{
+                data.otrosMatch.push({idClient:user.ccnit});
+        };
+        console.log(data)
+        response = await contenido(data);
+            res.json(response);
     } catch (error) {
       next(error);
     }
@@ -46,7 +69,8 @@ apiCtrl.pedidos = async (req, res, next) => {
                 }else{
                     console.log('cliente');
                     data.otrosMatch.push({nit:user.ccnit});
-            }
+            };
+
             if(data._id){   
                 data.saltar = 0;
                 data.otrosMatch.push({_id: new ObjectId(data._id) });
@@ -83,6 +107,23 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         res.render('ventas/pedidos',{panel});
     } catch (error) {
         next(error);
+    }
+};
+
+apiCtrl.salesProducts= async (req, res, next) => {
+    try {     
+        const data = req.body;
+        let response;
+        data.modelo = 'Product';
+        data.sortBy = ['categoria', 'nombre'];
+        data.otrosMatch = [];  
+        data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}]    ;     
+        
+        console.log(data)
+        response = await contenido(data);
+            res.json(response);
+    } catch (error) {
+      next(error);
     }
 };
 

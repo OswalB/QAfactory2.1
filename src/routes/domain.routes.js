@@ -2,8 +2,10 @@ const {Router} = require('express');
 const router = Router();
 const { 
     intercambiador,
+    misClientes,
     pedidos,
     renderPedidos,
+    salesProducts
     
     
     
@@ -16,8 +18,9 @@ router.get('/domain/intercambiador', intercambiador);
 
 router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 
+router.post('/domain/mis-clientes',isAuthenticated, misClientes);
 router.post('/domain/pedidos',isAuthenticated, pedidos);
-
+router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
 
 

@@ -7,10 +7,10 @@ helpers.authorization  = (req, res, next) => {
     }
 
     const modelPermissions = {
-        admin: ['Editable', 'Errorlxx', 'Order', 'User'],
-        dispatcher: ['Order'],
-        operator: ['', ''],
-        seller: ['Order', ''],
+        admin: ['Editable', 'Errorlxx', 'Order', 'User', 'Client', 'Product'],
+        dispatcher: ['Order', 'Client', 'Product'],
+        operator: ['', '', 'Client', 'Product'],
+        seller: ['Order', '', 'Client', 'Product'],
         
     };
     const modelName = req.body.modelo;
@@ -32,7 +32,7 @@ helpers.authorization  = (req, res, next) => {
     if (uniqueModels.includes(modelName)) {
         return next();
     } else {
-        console.log('n/a')
+        console.log('n/a',modelName);
         return res.status(403).send({message:'Acceso  no autorizado :-('});
     }
 

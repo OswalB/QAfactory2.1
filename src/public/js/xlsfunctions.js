@@ -82,7 +82,7 @@ async function xlsUpload() {
         };
 
         // Enviar los datos parseados al servidor
-        const res = await fetch('/editor/save', {    
+        const res = await fetch('/core/save', {    
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json'
