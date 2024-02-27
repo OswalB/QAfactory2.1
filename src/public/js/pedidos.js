@@ -8,8 +8,13 @@ document.getElementById('btnNuevo').addEventListener('click', async e=>{
     }
     clearInputs();
     docPedido = {};
-    if(!misClientes) await getMisClientes();
-    if(!listProducts) await getProducts();
+    if(!misClientes){
+        await getMisClientes();
+        await getProducts();
+        await renderAccordion();
+
+    } 
+     
     await renderClientes('');
     document.getElementById('inHoras').value = 2;
     const fecha = entrega(2);
@@ -126,10 +131,56 @@ document.getElementById('inHoras').addEventListener('input', async e => {
     actualizarFechaEntrega(plazo);
 });
 
-
-
-
 //=========================== FUNCTIONS =============================================
+
+async function renderAccordion(){
+    const productsContainer = document.getElementById('accordionItems');
+    productsContainer.innerHTML='';
+    var i = 0;
+    const categoriasProcesadas = new Set();
+    listProducts.forEach(itemGroup =>{
+        if (!categoriasProcesadas.has(itemGroup.categoria)) {
+            categoriasProcesadas.add(itemGroup.categoria);
+            const div = document.createElement('div');
+            div.className='accordion-item';
+            div.innerHTML =`
+            
+                <h2 class="accordion-header mb-0" id="heading${i}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}" aria-expanded="false" aria-controls="collapse${i}">
+                        ${itemGroup.categoria}
+                    </button>
+                </h2>
+                <div id="collapse${i}" class="accordion-collapse collapse" aria-labelledby="heading${i}" data-bs-parent="#accordionItems">
+                    <div class="accordion-body">           
+                        <table class="table  table-hover">
+                        <tbody id="item${i}">
+                        </tbody>
+                        </table>            
+                    </div>
+                </div>
+            
+            `;
+            productsContainer.appendChild(div); 
+
+            const itemsContainer = document.getElementById('item'+i);
+            itemsContainer.innerHTML='';
+            listProducts.forEach(product => {
+                if(product.categoria === itemGroup.categoria){
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><label for="${product.codigo}">
+                        ${product.nombre}
+                    </label></td>
+                    <td><input id="${product.codigo}" _idProduct="${product.codigo}" type="number"  min="0"  style="width:80px" class="text-end inpedido"></td>
+                `;
+                itemsContainer.appendChild(tr);
+                }
+            })
+
+            i += 1;
+        }
+    });
+}
 
 async function init() {
     document.getElementById('title-main').innerHTML = 'Pedidos';

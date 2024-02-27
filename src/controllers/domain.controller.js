@@ -117,7 +117,7 @@ apiCtrl.salesProducts= async (req, res, next) => {
         data.modelo = 'Product';
         data.sortBy = ['categoria', 'nombre'];
         data.otrosMatch = [];  
-        data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}]    ;     
+        data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}, {codigo:1}];     
         
         console.log(data)
         response = await contenido(data);
