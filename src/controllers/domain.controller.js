@@ -76,7 +76,7 @@ apiCtrl.pedidos = async (req, res, next) => {
                 data.otrosMatch.push({_id: new ObjectId(data._id) });
                 data.proyectar.push({client:1},{id_compras:1},{totalReq:1},{TotalDisp:1},
                     {delivery:1},{createdAt:1},{state:1},{notes:1},{sellerName:1},{vendedor:1},
-                    {'orderItem.product':1},{'orderItem.qty':1},{'orderItem.dispatch':1},
+                    {'orderItem.product':1},{'orderItem.qty':1},{'orderItem.dispatch':1},{'orderItem.code':1}
                     );
             }else{
                 data.proyectar.push({TotalDisp:1},{client:1},{delivery:1},{state:1},{totalReq:1});
@@ -117,7 +117,7 @@ apiCtrl.salesProducts= async (req, res, next) => {
         data.modelo = 'Product';
         data.sortBy = ['categoria', 'nombre'];
         data.otrosMatch = [];  
-        data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}, {codigo:1}];     
+        data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}, {codigo:1}, {corto:1}];     
         
         console.log(data)
         response = await contenido(data);
