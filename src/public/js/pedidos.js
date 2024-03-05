@@ -1,4 +1,30 @@
-let misClientes = null, listProducts = null, currentCollection, docPedido = {},order;
+let misClientes = null, listProducts = null, currentCollection={}, docPedido = {}, docAverias={}, order, sugeridos;
+let esPedido = true, misAverias=[];
+
+document.getElementById('accordionItems').addEventListener('click', async e=>{
+    
+    let codeSelected = e.target.getAttribute('_idproduct');
+    console.log('acordion',codeSelected);
+    if(!codeSelected || esPedido) return;
+    currentCollection.code = codeSelected;
+
+    const product = listProducts.find(list => list.codigo === codeSelected );
+    currentCollection.product = product.nombre;
+    const res = await fetch("/core/lotes/vigentes", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({code:codeSelected})
+    });
+    const data = await res.json();
+    data.forEach(item => {
+        item.vence = formatDate(new Date(item.vence));
+    })
+    console.log(data);
+    renderModalAverias(codeSelected,data);
+    
+});
 
 document.getElementById('btnFaltantes').addEventListener('click', async e=>{
     await backOrder(true);    //true: faltantes ; false: copia
@@ -10,14 +36,19 @@ document.getElementById('btnCopiar').addEventListener('click', async e=>{
 
 document.getElementById('btnVista').addEventListener('click', async e => {
     renderModalVista();
+    applyValidation();
     $('#vistadrop').modal('show');
     docPedido.id_compras = document.getElementById('compra').value;
     docPedido.notes = document.getElementById('notes').value;
     docPedido.orderItem = jsonPedido;
+    docAverias.notes = document.getElementById('notes').value;
+        console.log(docAverias.notes);
+    
 
 });
 
 document.getElementById('btnNuevo').addEventListener('click', async e => {
+    esPedido = true;
     if (document.getElementById('nombre').value) {
         toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
         const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
@@ -37,6 +68,29 @@ document.getElementById('btnNuevo').addEventListener('click', async e => {
     const fecha = entrega(2);
     docPedido.delivery = fecha.fechaEntrega;
     document.getElementById('dateOrder').value = fecha.fechaDisplay;
+    $('#clientesModal').modal('show');
+});
+
+document.getElementById('btnAverias').addEventListener('click', async e => {
+    esPedido=false;
+    document.getElementById('step03').style.display = 'none';
+    document.getElementById('step04').style.display = 'none';
+    if (document.getElementById('nombre').value) {
+        toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
+        const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
+        if (!resp) return;
+    }
+    clearInputs();
+    docAverias = {};
+    docAverias.orderItem = [];
+    if (!misClientes) {
+        await getMisClientes();
+        await getProducts();
+        await renderAccordion();
+
+    }
+    borrarSugeridos();
+    await renderClientes('');
     $('#clientesModal').modal('show');
 });
 
@@ -121,6 +175,7 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
 });
 
 document.getElementById('listClientes').addEventListener('click', async e => {
+    
     let nit = e.target.getAttribute('_nit');
     let nombre = e.target.innerText;
     setPaso(1);
@@ -128,6 +183,38 @@ document.getElementById('listClientes').addEventListener('click', async e => {
     docPedido.nit = nit;
     document.getElementById('nombre').value = nombre;
     $('#clientesModal').modal('hide');
+
+    const res = await fetch("/domain/pedidos/suggested", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({noc:nit, k:12})
+    });
+    
+    sugeridos = await res.json();
+    
+    console.log(sugeridos);
+    borrarSugeridos();
+    console.log(esPedido);
+    if(esPedido){
+        sugeridos.forEach(item => {
+            const entrada = document.getElementById(item.code);
+            if(entrada){
+                entrada.placeholder = `Rec.:${item.avgQty}`;
+            };
+            
+        });
+        bloquearInputs(false);
+    }else{
+        
+        docAverias.client = nombre;
+        docAverias.nit = nit;
+        
+        bloquearInputs(true);
+    }
+    
+
 });
 
 document.getElementById('btnMas').addEventListener('click', async e => {
@@ -155,25 +242,28 @@ document.getElementById('inHoras').addEventListener('input', async e => {
 });
 
 document.getElementById('btnSend').addEventListener('click', async e => {
-    toastr.info('Enviando...', 'Pedido');
-    const pedido = {};
-    pedido.modelo = 'Order';
-    pedido.documentos = [docPedido];
-    const res = await fetch('/core/save', {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "PUT",
-        body: JSON.stringify(pedido)
-    });
-    const data = await res.json();
-    if (data.fail) {
-        toastr.error('Reintente!', 'No se ha podido enviar.', 'Pedido');
-        return false;
-    }
-    toastr.remove();
-    toastr.success(data.msg, 'Pedido');
+   // if(esPedido){
+        toastr.info('Enviando...', 'Pedido');
+        const pedido = {};
+        pedido.modelo = esPedido?'Order':'Averia';
+        pedido.documentos = esPedido?[docPedido]:[docAverias];
+        const ruta = esPedido?'/core/save':'/domain/averias/save';
 
+    const res = await fetch(ruta, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "PUT",
+            body: JSON.stringify(pedido)
+        });
+        const data = await res.json();
+        if (data.fail) {
+            toastr.error('Reintente!', 'No se ha podido enviar.', 'Pedido');
+            return false;
+        }
+        toastr.remove();
+        toastr.success(data.msg, 'Pedido');
+    
     clearInputs();
 
     setPaso(0);
@@ -181,7 +271,113 @@ document.getElementById('btnSend').addEventListener('click', async e => {
     await renderTable();
 })
 
+document.getElementById('btn_guardar').addEventListener('click', () => {
+    console.log('guardandoooo');
+    const item = {};
+    item.loteVenta = document.getElementById('loteVenta').value;
+    item.qty = parseInt(document.getElementById('qty').value);
+    item.code = currentCollection.code;
+    item.product = currentCollection.product;
+    item.causal = document.getElementById('causal').value;
+    docAverias.orderItem.push(item);
+    console.log(docAverias)
+
+    $('#modalEditor').modal('hide');
+    const resultado = docAverias.orderItem.reduce((acumulador, pedido) => {
+        const { code, qty } = pedido;
+        if (!acumulador[code]) {
+            acumulador[code] = { code, suma: 0 };
+        }
+        acumulador[code].suma += qty;
+        return acumulador;
+    }, {});
+    
+    const arrayResultado = Object.values(resultado);
+    console.log(arrayResultado);
+
+    arrayResultado.forEach(item => {
+        document.getElementById(item.code).value= item.suma
+    })
+
+})
+
+document.getElementById('modalEditor').addEventListener('change', () => {
+    console.log('verif');
+    if(applyValidation()){
+        document.getElementById('btn_guardar').style.display = '';
+    }else{
+        document.getElementById('btn_guardar').style.display = 'none';
+        }
+})
+
+
 //=========================== FUNCTIONS =============================================
+async function renderModalAverias(codeSelected, data){
+    currentCollection.modelo = 'Averia';
+    const avKeys  = [
+        {alias:'Cantidad',campo:'qty', tipo:'number', min:1, require:true},
+        {alias:'Lote', campo:'loteVenta', tipo:'select', require:true, failMsg:'Seleccione un lote'},
+        {alias:'Causal',campo:'causal', tipo:'select', require:true, failMsg:'Seleccione una causal'}
+    ];
+    renderModalEditor(avKeys);
+    document.getElementById('btn_guardar').style.display = 'none';
+    const dataOptions = data.map(objeto => {
+        return {
+            ...objeto,
+            campo: objeto.loteOut,
+            alias: `${objeto.loteOut} ${objeto.vencido?'Vencido':''}`
+        };
+    });
+
+    addOptions('loteVenta', dataOptions)
+    document.getElementById('modal-title').innerHTML=`Averias de ${data.nombre}`;
+    const response = await fetch("/core/editor-content",{
+        headers: {'content-type': 'application/json'},
+        method: 'POST',
+        body: JSON.stringify({
+            modelo:'Reason', 
+            sortObject:{titulo:1},
+            proyectar:[{titulo:1},{_id:0}]
+        })
+    })
+    const dataList = await response.json();
+    dataList.shift();
+    const dataOptions2 = dataList.map(objeto => {
+        return {
+            ...objeto,
+            campo: objeto.titulo,
+            alias: objeto.titulo
+        };
+    });
+    addOptions('causal', dataOptions2);
+
+return;
+    
+    
+    
+
+    $('#modalEditor').modal('show');
+}
+
+function borrarSugeridos(){
+    listProducts.forEach(item => {
+        element = document.getElementById(item.codigo);
+        if(element){
+            element.placeholder = '';
+        }
+    });
+}
+
+function bloquearInputs(bloquear){
+    console.log(bloquear)
+    listProducts.forEach(item => {
+        element = document.getElementById(item.codigo);
+        if(element){
+            element.readOnly = bloquear;
+        }
+    });
+}
+
 function renderModalVista() {
     let client = document.getElementById('nombre').value;
     let delivery = document.getElementById('dateOrder').value;
@@ -299,13 +495,15 @@ async function renderAccordion() {
             const itemsContainer = document.getElementById('item' + i);
             itemsContainer.innerHTML = '';
             listProducts.forEach(product => {
+                const qs = sugeridos
                 if (product.categoria === itemGroup.categoria) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                     <td><label for="${product.codigo}">
                         ${product.nombre}
                     </label></td>
-                    <td><input id="${product.codigo}" _idProduct="${product.codigo}" type="number"  min="0"  style="width:80px" class="text-end inpedido"></td>
+                    <td><input id="${product.codigo}" _idProduct="${product.codigo}" type="number"  min="0"  
+                    style="width:80px" class="text-end inpedido"></td>
                 `;
                     itemsContainer.appendChild(tr);
                 }
@@ -353,8 +551,20 @@ async function init() {
 };
 
 async function renderTable() {
+    workFilter.fx = 'a'
+    const resAv = await fetch("/domain/pedidos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(workFilter)
+    })
+    const dataAv = await resAv.json();
+    dataAv.shift(); 
+    misAverias = dataAv;
+    console.log(misAverias);
 
-    //workFilter.funcion = 'content';
+
     toastr.info('Recibiendo...', 'Mis pedidos');
     workFilter.fx = 'c'
     const res = await fetch("/domain/pedidos", {
@@ -395,26 +605,34 @@ async function renderTable() {
 
 }
 
-function setPaso(paso) {
-    let state = ''
-    if (paso < 1) {
-        state = 'none';
-    }
-    document.getElementById('step01').style.display = state;
-    document.getElementById('step02').style.display = state;
-    document.getElementById('step03').style.display = state;
-    document.getElementById('step04').style.display = state;
-    document.getElementById('step05').style.display = state;
-    document.getElementById('accordionItems').style.display = state;
-    document.getElementById('btnVista').style.display = state;
-    state = '';
-}
-
 async function afterLoad() {
     setPaso(0);
     fadeInputs();
 
 };
+
+function setPaso(paso) {
+    const elementsToShow = ['step01', 'step02','step03', 'step04', 'step05', 'accordionItems', 'btnVista'];
+    const elementsToHide = ['step02', 'step03', 'step04'];
+
+    let state = paso < 1 ? 'none' : '';
+    
+    elementsToShow.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = state;
+        }
+    });
+    
+    if (!esPedido){
+        elementsToHide.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'none';
+        }
+    });
+    }
+}
 
 function clearInputs() {
     let inputs = document.querySelectorAll('.inpedido');

@@ -1,6 +1,7 @@
 const { 
     contenido,
-    keys
+    keys,
+    guardar
 } = require('../utilities/corefunctions')
 
 const apiCtrl = {};
@@ -12,6 +13,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
+const Serial = require('../models/Serial');
 
 
 const DvService = require('../services/serv.db');
@@ -29,7 +31,7 @@ apiCtrl.misClientes = async (req, res, next) => {
         const data = req.body, user = req.user;
         let response;
         data.modelo = 'Client';
-        data.sortBy = 'nombre';
+        data.sortObject = {nombre:1};
         data.otrosMatch = [];  
         data.proyectar =[{nombre:1}, {_id:0}, {idClient:1}]    ;     
         if(user.administrador || user.despachador){
@@ -47,7 +49,104 @@ apiCtrl.misClientes = async (req, res, next) => {
     }
 };
 
+apiCtrl.sugeridos = async (req, res, next) => {
+    try {     
+        const data = req.body, user = req.user;
+        let response;
+        const pipeline =[
+            {
+              $match: {
+                nit: data.noc, 
+                createdAt: {
+                  $gte: new Date(new Date().setMonth(new Date().getMonth() - data.k))
+                }
+              }
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 4 },
+            { $unwind: "$orderItem" },
+            {
+              $group: {
+                _id: "$orderItem.code",
+                avgQty: { $avg: "$orderItem.qty" }
+              }
+            },
+            { $addFields: { avgQty: { $ceil: "$avgQty" } } },
+            { $project: { _id: 0, code: "$_id", product: 1, avgQty: 1 } }
+          ];
+        response = await Order.aggregate(pipeline);  
+
+        res.json(response);
+    } catch (error) {
+      next(error);
+    }
+};
+
 apiCtrl.pedidos = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Order';
+        if(data.fx === 'a'){
+            data.modelo = 'Averia';
+            data.otrosMatch.push({
+                 
+                firmado:false,
+                seller:user.ccnit,
+            })
+            data.sortObject = {consecutivo:1};
+
+            data.proyectar.push({consecutivo:1},{_id:0},{createdAt:1},{client:1})
+
+            response = await contenido(data);
+            res.json(response);
+            return;
+        }
+       if(data.fx === 'k'){
+        response = await keys(data);
+        res.json(response);
+        return;
+       }
+       if(data.fx === 'c'){
+            
+            if(data.sortBy === 'state'){
+                data.sortBy = ['state', 'createdAt'];
+            }
+            console.log(data);
+            if(user.administrador || user.despachador){
+                console.log('tods')
+            }else if(user.vendedor){
+                console.log('vendedor');
+                data.otrosMatch.push({seller:user.salesGroup});
+                }else{
+                    console.log('cliente');
+                    data.otrosMatch.push({nit:user.ccnit});
+            };
+
+            if(data._id){   
+                data.saltar = 0;
+                data.otrosMatch.push({_id: new ObjectId(data._id) });
+                data.proyectar.push({client:1},{id_compras:1},{totalReq:1},{TotalDisp:1},
+                    {delivery:1},{createdAt:1},{state:1},{notes:1},{sellerName:1},{vendedor:1},
+                    {'orderItem.product':1},{'orderItem.qty':1},{'orderItem.dispatch':1},{'orderItem.code':1}
+                    );
+            }else{
+                data.proyectar.push({TotalDisp:1},{client:1},{delivery:1},{state:1},{totalReq:1});
+
+            }
+            
+            response = await contenido(data);
+            res.json(response);
+            return;
+       }
+        
+        
+    } catch (error) {
+        next(error);
+    }
+}
+
+/*apiCtrl.pedidos = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
         let response;
@@ -92,7 +191,7 @@ apiCtrl.pedidos = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+}*/
 
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {
@@ -100,6 +199,7 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         "boton-pagination":true,
         "boton-nuevo":true,
         "boton-vista":true,
+        "boton-averias":true,
         "titulo":"Pedidos"
     };
 
@@ -110,12 +210,34 @@ apiCtrl.renderPedidos = async (req, res, next) => {
     }
 };
 
+apiCtrl.saveAverias = async (req, res, next) => {
+    try { 
+        const data = req.body, user = req.user;
+        let response;
+        lastId = await Serial.findOne();
+        if(!lastId ){
+          let newSerial = await new Serial({'consecutivo':0, serialAverias:0});
+          await newSerial.save();
+          lastId = await Serial.findOne();
+        }
+        let counter = lastId.serialAverias += 1;
+        await Serial.updateOne({"_id": lastId._id},{$set: {'serialAverias': counter}});
+        data.documentos[0].consecutivo = counter;
+        data.documentos[0].seller = user.ccnit;
+        data.documentos[0].sellerName = user.name;
+        response = await guardar(data);
+        res.json(response);
+    }catch(error){
+        next(error);
+    }
+}
+
 apiCtrl.salesProducts= async (req, res, next) => {
     try {     
         const data = req.body;
         let response;
         data.modelo = 'Product';
-        data.sortBy = ['categoria', 'nombre'];
+        data.sortObject = {categoria:1, nombre:1};
         data.otrosMatch = [];  
         data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}, {codigo:1}, {corto:1}];     
         

@@ -4,8 +4,10 @@ const {
 } = require('../utilities/corefunctions');
 const coreCtrl = {};
 const mongoose = require('mongoose');
+const Averia = require('../models/Averia');
 const Editable = require('../models/Editable');
 const Order = require('../models/Order');
+const Planilla = require('../models/Planilla');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
 const passport = require('passport');
@@ -99,6 +101,58 @@ coreCtrl.getKeys = async (req, res, next) => {
     res.json(listaCampos);
 
 
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.getLotesVigentes = async (req, res, next) => {
+    try{
+        const { code } = req.body;
+        let fechaLimite = new Date();
+        fechaLimite.setDate(fechaLimite.getDate() - 30);
+        
+        let limiteVence = new Date();
+        let fechaHoy = new Date();
+        limiteVence.setDate(fechaHoy.getDate() - 6);
+        let pipeline = [
+            {
+                $match: {
+                    codigoProducto: code,
+                    vence: { $gte: fechaLimite }
+                }
+            },
+            {
+                $addFields: {
+                    vencido: {
+                        $cond: { 
+                            if: { $lte: ["$vence", limiteVence] },
+                            then: true,
+                            else: false
+                        }
+                    }
+                }
+            },
+            {
+                $sort: {
+                    vence: 1 // Orden ascendente por loteOut
+                }
+            },
+            {
+                $project: {
+                    _id: 0, // Excluir el campo _id
+                    vencido: 1,
+                    vence: 1,
+                    loteOut: 1
+                }
+            }
+        ];
+
+        response = await Planilla.aggregate(pipeline);
+
+         
+        res.json(response);
+        
     } catch (error) {
         next(error);
     }

@@ -51,8 +51,9 @@ document.getElementById('btnNuevo').addEventListener('click',async e =>{
     currentDocumentId = null;
     let titulo = document.getElementById('modal-title');
     titulo.innerHTML = `Nuevo ${currentCollection.titulo}` ;
-    renderModalEditor();
-    applyValidation();
+    //applyValidation();
+    renderModalEditor(currentKeys);
+    
     
 })
 
@@ -82,8 +83,8 @@ document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
     currentDocumentId = idt;
     let titulo = document.getElementById('modal-title');
     titulo.innerHTML = `Editar ${currentCollection.titulo}` ;
-    renderModalEditor();
-    applyValidation();
+    renderModalEditor(currentKeys);
+    //applyValidation();
     
 });
 

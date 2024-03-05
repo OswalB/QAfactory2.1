@@ -111,9 +111,6 @@ function paintFilter() {
     }  
 }
 
-
-
-
 async function renderFilter(){
 
     addOptionsToSelect('in-sortBy', currentKeys);
@@ -139,6 +136,20 @@ function addOptionsToSelect(selectId, keys) {
     });
 }
 
+function addOptions(selectId, keys) {
+    const container = document.getElementById(selectId);
+    container.innerHTML = '';
+    const op = document.createElement('option');
+    container.appendChild(op);
+
+    keys.forEach(item => {
+        const op = document.createElement('option');
+        op.setAttribute("value", item.campo);
+        op.innerHTML = item.alias;
+        container.appendChild(op);
+    });
+}
+
 
 function setFilter() {  
 
@@ -150,6 +161,7 @@ function setFilter() {
     k_datemax.value = backFilter.datemax ;
     k_datemin.value = backFilter.datemin ;
     workFilter.saltar = backFilter.saltar;
+    workFilter.indSort = backFilter.indSort || 0;
     k_sortBy.value = backFilter.sortBy;
     k_checkAsc.checked = backFilter.sortOrder === 1;
     k_checkDsc.checked = backFilter.sortOrder === -1;
@@ -171,8 +183,9 @@ function loadFilter(){
     workFilter.min = k_min.offsetParent?parseInt(k_min.value):'';
     workFilter.datemax = k_datemax.offsetParent?k_datemax.value:'';
     workFilter.datemin = k_datemin.offsetParent?k_datemin.value:'';
-    workFilter.sortBy = k_sortBy.value === '0'?'':k_sortBy.value;
-    workFilter.sortOrder = k_checkAsc.checked?1:-1;
+    workFilter.sortObject = {[k_sortBy.value]:k_checkAsc.checked?1:-1}
+    if(k_sortBy.value === '0') workFilter.sortObject = {};
+    //workFilter.sortOrder = k_checkAsc.checked?1:-1;
     workFilter.valorBoolean = k_valorBoolean.offsetParent?k_valorBoolean.value:'';
     workFilter.otrosMatch = backFilter.otrosMatch;
     workFilter.proyectar = backFilter.proyectar;
@@ -348,7 +361,6 @@ function getRange(type, dateString) {
     } else if (type === 'mm') {
         start = new Date(date.getFullYear(), date.getMonth(), 1);
         end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        //end.setDate(end.getDate() - 1);
     } else {
         return 'Tipo no válido';
     }
@@ -359,30 +371,10 @@ function getRange(type, dateString) {
     };
 }
 
-
-
-
-
 //-------------------------- PAGINATION AND FILTER  --------------------------------------
 
-
-
 async function footer(npage){
-    //workFilter.currentPage = npage?npage:1; 
-
-    //workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
-    
-    /*let response = await fetch("/core/gen-count",{
-        headers: {'content-type': 'application/json'},
-        method: 'POST',
-        body: JSON.stringify(workFilter)
-    })
-    let data = await response.json();
-    sizeCollection = data[0].countTotal;*/
-
-
-
-    let winL, winR, winMax;
+     let winL, winR, winMax;
     let pags = Math.ceil(sizeCollection / (workFilter.limitar === 0 ? sizeCollection : workFilter.limitar))-1;
     if(sizeCollection%workFilter.limitar != 0){pags += 1;}
     document.getElementById('lbl_results').innerHTML=`Resultados: ${sizeCollection}`;
@@ -434,7 +426,7 @@ fadeInputs.forEach(input => {
 
 }
 
-async function renderModalEditor() {
+async function renderModalEditor(currentk) {
     const cambio = document.getElementById('btn_reset');
     cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
     
@@ -444,8 +436,7 @@ async function renderModalEditor() {
     const bodyTable = document.getElementById('bodyTable');
     bodyTable.innerHTML = '';
 
-    currentKeys.forEach(item => {
-        console.log
+    currentk.forEach(item => {
         const contenido = role === 'edit' ? currentContent[ind][item.campo] : (item.default !== undefined ? item.default : '');
 
         const inputType = getInputType(item.tipo);
@@ -457,7 +448,7 @@ async function renderModalEditor() {
         tr.appendChild(tdLabel);
 
         const tdInput = document.createElement('td');
-        const input = document.createElement('input');
+        const input = document.createElement(inputType==='select' ? 'select' :'input');
         input.id = item.campo;
         input.type = inputType;
         input.classList.add(inputClass, 'form-snd');
@@ -485,12 +476,16 @@ async function renderModalEditor() {
         invalidFeedback.textContent = item.failMsg || 'Campo Requerido';
         tdInput.appendChild(invalidFeedback);
 
+       
+
         tr.appendChild(tdInput);
         bodyTable.appendChild(tr);
 
         if (item.tipo === 'boolean' && contenido) {
             input.checked = true;
         }
+
+        
     });
 
     $('#modalEditor').modal('show');
@@ -506,10 +501,20 @@ function getInputType(tipo) {
             return 'number';
         default:
             return 'text';
+        case 'select':
+            return 'select';
     }
 }
 
 function getInputClass(tipo) {
-    return tipo === 'boolean' ? 'form-check-input' : 'form-control';
+    switch(tipo) {
+        case 'boolean':
+            return 'form-check-input';
+        case 'select':
+            return 'form-select'
+        default:
+            return 'form-control'
+    }
+    //return tipo === 'boolean' ? 'form-check-input' : 'form-control';
 }
 

@@ -3,25 +3,29 @@ const Order = require('../models/Order');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
 const Client = require('../models/Client');
+const Reason = require('../models/Reason');
+const Averia = require('../models/Averia');
+const Serial = require('../models/Serial');
 
 async function contenido(data) {
     if (!data.modelo) {
         return ([{ 'countTotal': 0 }]);
-        
+
     }
 
     const dynamicModel = mongoose.models[data.modelo];
     const pipeline = [];
     const proyeccion = {};
 
-    if (data.keyGroup) {        'si tiene un rango de fecha para arupar en pagina'
+    if (data.keyGroup) {
+        'si tiene un rango de fecha para arupar en pagina'
         const rangeQuery = {};
         const rminDate = new Date(data.datemin);
-        rangeQuery['$gte'] = rminDate; 
+        rangeQuery['$gte'] = rminDate;
         const rmaxDate = new Date(data.datemax);
         rmaxDate.setDate(rmaxDate.getDate() + 1);
-        rangeQuery['$lt'] = rmaxDate; 
-        pipeline.push({ $match: { [data.keyGroup]: rangeQuery}});
+        rangeQuery['$lt'] = rmaxDate;
+        pipeline.push({ $match: { [data.keyGroup]: rangeQuery } });
     }
 
     if (data.filterBy && data.filterTxt && data.filterTxt.trim() !== '') {
@@ -43,16 +47,16 @@ async function contenido(data) {
         const dateQuery = {};
         if (esFecha(data.datemin)) {
             const minDate = new Date(data.datemin);
-            dateQuery['$gte'] = minDate; 
+            dateQuery['$gte'] = minDate;
         }
 
         if (esFecha(data.datemax)) {
             const maxDate = new Date(data.datemax);
             maxDate.setDate(maxDate.getDate() + 1);
-            dateQuery['$lt'] = maxDate; 
+            dateQuery['$lt'] = maxDate;
         }
         //pipeline.push({ $match: { [data.filterBy]: numericQuery } });
-        pipeline.push({ $match: { [data.filterBy]: dateQuery}});
+        pipeline.push({ $match: { [data.filterBy]: dateQuery } });
     }
 
     if (Array.isArray(data.otrosMatch)) {
@@ -63,91 +67,103 @@ async function contenido(data) {
         });
     }
 
-    //let funcionok = false;
-
-    /*if (data.funcion === 'count') {
-        funcionok = true;
-        pipeline.push({ $count: 'countTotal' });
-    }*/
-    
     const pipecount = pipeline.slice();
     pipecount.push({ $count: 'countTotal' });
+    console.log('pipe contador',pipecount);
     let counter = await dynamicModel.aggregate(pipecount);
-    if(counter.length < 1)  counter = [{countTotal: 0}];
+    if (counter.length < 1) counter = [{ countTotal: 0 }];
     counter = counter[0];
+
+    if(Object.keys(data.sortObject).length > 0){
+
+        pipeline.push({ $sort: data.sortObject});
+    }
     
-    //if (data.funcion === 'content') {
-        //funcionok = true;
 
-        /*if (data.sortBy !== '') {
-            const sortOrder = data.sortOrder === -1 ? -1 : 1;
-            pipeline.push({ $sort: { [data.sortBy]: sortOrder } });
-        }*/
-        if (data.sortBy) {
-            let sortByCriteria = {};
-            if (Array.isArray(data.sortBy)) {
-                // Si es un array de criterios de ordenamiento
-                data.sortBy.forEach(criteria => {
-                    sortByCriteria[criteria] = data.sortOrder === -1 ? -1 : 1;
-                });
-            } else {
-                // Si es un solo criterio de ordenamiento
-                sortByCriteria[data.sortBy] = data.sortOrder === -1 ? -1 : 1;
-            }
-            pipeline.push({ $sort: sortByCriteria });
-        }
-        
-        if(data.saltar){
-            const skipValue = esNumero(data.saltar) ? data.saltar : 1;
+    if (data.saltar) {
+        const skipValue = esNumero(data.saltar) ? data.saltar : 1;
         pipeline.push({ $skip: skipValue });
-        }
-        if(data.limitar){
-            const limitValue = esNumero(parseInt(data.limitar)) ? parseInt(data.limitar) : 1;
-            pipeline.push({ $limit: limitValue });
-        }
+    }
+    if (data.limitar) {
+        const limitValue = esNumero(parseInt(data.limitar)) ? parseInt(data.limitar) : 1;
+        pipeline.push({ $limit: limitValue });
+    }
 
-        if (Array.isArray(data.proyectar)) {
-            data.proyectar.forEach((stage) => {
-                if (stage && typeof stage === 'object') {
-                    Object.assign(proyeccion, stage);
-                }
-            });
-        }
+    if (Array.isArray(data.proyectar)) {
+        data.proyectar.forEach((stage) => {
+            if (stage && typeof stage === 'object') {
+                Object.assign(proyeccion, stage);
+            }
+        });
+    }
 
-        if (Object.keys(proyeccion).length > 0) {
-            pipeline.push({ $project: proyeccion });
-        }
-    //}
-
-    /*if (!funcionok) {
-        return  ({ 'fail': true });
-        
-    }*/
+    if (Object.keys(proyeccion).length > 0) {
+        pipeline.push({ $project: proyeccion });
+    }
+   
 
     for (const cnt in pipeline) {
         console.log(pipeline[cnt]);
     }
 
     let result = await dynamicModel.aggregate(pipeline);
-    //if(result.length < 1)  result = [{countTotal: 0}]
+    
     result.unshift(counter);
-    //console.log(result);
+   
     return result
+}
+
+async function guardar(data){
+    const { modelo, documentos } = data;
+    if (!modelo || !documentos || !Array.isArray(documentos)) {
+        return { fail: true, message: 'Se requiere el modelo y un array de documentos.' };
+    }
+
+    const dynamicModel = mongoose.model(modelo);
+    const savedDocuments = [];
+    for (const documento of documentos) {
+        try {
+            if (documento._id) {
+                // Si el documento tiene un _id, actualiza el documento existente
+                const updatedDocument = await dynamicModel.findByIdAndUpdate(
+                    documento._id,
+                    documento,
+                    { new: true }
+                );
+                savedDocuments.push(updatedDocument);
+            } else {
+                // Si el documento no tiene _id, crea un nuevo registro
+                const newDocument = await dynamicModel.create(documento);
+                savedDocuments.push(newDocument);
+            }
+        } catch (error) {
+            if (error.code === 11000) {
+                // Error de clave duplicada
+                return res.json({ fail: true, message: 'Error de clave duplicada.' });
+            } else {
+                // Otro tipo de error
+                throw error; // Pasar al manejador de errores
+            }
+        }
+    }
+
+    return { success: true, message: 'Documentos guardados.', data: savedDocuments };
+
 }
 
 async function keys(data) {
     const eschema = require(`../models/${data.modelo}`);
-        const listk = eschema.schema.obj;
-        const listaCampos = Object.keys(listk).filter(key => {
-            return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && key !== 'createdAt' && listk[key].type;
-        }).map(key => {
+    const listk = eschema.schema.obj;
+    const listaCampos = Object.keys(listk).filter(key => {
+        return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && key !== 'createdAt' && listk[key].type;
+    }).map(key => {
         const alias = listk[key].alias || '';
         const tipo = listk[key].type.toLowerCase();
-        return { 
-            "campo": key, 
-            "alias": alias, 
-            "tipo": tipo, 
-            "default": listk[key].default, 
+        return {
+            "campo": key,
+            "alias": alias,
+            "tipo": tipo,
+            "default": listk[key].default,
             "require": listk[key].require,
             "max": listk[key].max,
             "min": listk[key].min,
@@ -156,7 +172,7 @@ async function keys(data) {
             "enum": listk[key].enum,
             "match": listk[key].match,
             "failMsg": listk[key].failMsg
-           
+
         };
     }).sort((a, b) => (a.alias > b.alias) ? 1 : -1);
     return listaCampos;
@@ -172,4 +188,4 @@ esNumero = (valor) => {
     return typeof valor === 'number';
 }
 
-module.exports ={contenido, keys};
+module.exports = { contenido, keys, guardar };

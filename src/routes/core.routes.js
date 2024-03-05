@@ -6,6 +6,7 @@ const {
     deleteDocument,
     editContent,
     getKeys,
+    getLotesVigentes,
     listCollections,
     logout,
     
@@ -31,7 +32,7 @@ router.get('/signin', renderSignin);
 
 router.post('/core/editor-content',authorization, editContent);
 router.post('/core/keys',authorization, getKeys);
-
+router.post('/core/lotes/vigentes',isAuthenticated, getLotesVigentes);
 router.post('/signin', userAuth);
 
 router.put('/core/save', authorization, saveDocument);
