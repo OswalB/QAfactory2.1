@@ -1,10 +1,13 @@
 let misClientes = null, listProducts = null, currentCollection={}, docPedido = {}, docAverias={}, order, sugeridos;
 let esPedido = true, misAverias=[];
 
+
+
+
+//=========================== sin revisar: =============================================
 document.getElementById('accordionItems').addEventListener('click', async e=>{
     
     let codeSelected = e.target.getAttribute('_idproduct');
-    console.log('acordion',codeSelected);
     if(!codeSelected || esPedido) return;
     currentCollection.code = codeSelected;
 
@@ -21,7 +24,6 @@ document.getElementById('accordionItems').addEventListener('click', async e=>{
     data.forEach(item => {
         item.vence = formatDate(new Date(item.vence));
     })
-    console.log(data);
     renderModalAverias(codeSelected,data);
     
 });
@@ -42,9 +44,6 @@ document.getElementById('btnVista').addEventListener('click', async e => {
     docPedido.notes = document.getElementById('notes').value;
     docPedido.orderItem = jsonPedido;
     docAverias.notes = document.getElementById('notes').value;
-        console.log(docAverias.notes);
-    
-
 });
 
 document.getElementById('btnNuevo').addEventListener('click', async e => {
@@ -100,6 +99,37 @@ document.getElementById('inSearch').addEventListener('input', async e => {
     renderClientes(text);
 });
 
+document.getElementById('misAveriasBody').addEventListener('click', async e => {
+    const idPedido = parseInt(e.target.getAttribute('_idpedido'));
+    
+    currentAveria = misAverias.find(averia => averia.consecutivo === idPedido);
+    document.getElementById('pedidoLabel').innerHTML =`Averias de:${currentAveria.client}` ;
+    document.getElementById('cardBody').innerHTML = `
+        <table class="table table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col" >Cant.</th>
+                    <th scope="col" >Producto / causal</th>
+                </tr>
+            </thead>
+            <tbody id="body1"></tbody>
+        </table>  
+    `;
+    const bodyContainer = document.getElementById('body1');
+    currentAveria.orderItem.forEach(item => {
+        const product = `${item.product} lote: ${item.loteVenta} - ${item.causal}`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+                    <th class=" scope="row">${item.qty}</th>
+                    <td class=" text-right ">${product}</td>
+                    
+                `;
+        bodyContainer.appendChild(tr);
+    });
+    document.getElementById('card-footer').innerHTML = formatDateAgo(currentAveria.createdAt);
+    $('#pedidodrop').modal('show');
+})
+
 document.getElementById('misPedidosBody').addEventListener('click', async e => {
     toastr.warning('Cargando...', 'Espere');
     const idPedido = e.target.getAttribute('_idpedido');
@@ -118,7 +148,7 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
     workFilter._id = '';
     const data = await res.json();
     order = data[1];
-    console.log(order);
+
     const oc = order.id_compras ? `O.C.# ${order.id_compras}` : '';
     const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
     const delivery = new Date(order.delivery);
@@ -164,7 +194,7 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
         bodyContainer.appendChild(tr);
     });
 
-
+    document.getElementById('card-footer').innerHTML = '';//formatDateAgo(currentAveria.createdAt)
     $('#pedidodrop').modal('show');
     if (!misClientes) {
         await getMisClientes();
@@ -193,10 +223,7 @@ document.getElementById('listClientes').addEventListener('click', async e => {
     });
     
     sugeridos = await res.json();
-    
-    console.log(sugeridos);
     borrarSugeridos();
-    console.log(esPedido);
     if(esPedido){
         sugeridos.forEach(item => {
             const entrada = document.getElementById(item.code);
@@ -242,12 +269,11 @@ document.getElementById('inHoras').addEventListener('input', async e => {
 });
 
 document.getElementById('btnSend').addEventListener('click', async e => {
-   // if(esPedido){
         toastr.info('Enviando...', 'Pedido');
         const pedido = {};
         pedido.modelo = esPedido?'Order':'Averia';
         pedido.documentos = esPedido?[docPedido]:[docAverias];
-        const ruta = esPedido?'/core/save':'/domain/averias/save';
+        const ruta = esPedido?'/domain/pedido/save':'/domain/averias/save';
 
     const res = await fetch(ruta, {
             headers: {
@@ -272,7 +298,6 @@ document.getElementById('btnSend').addEventListener('click', async e => {
 })
 
 document.getElementById('btn_guardar').addEventListener('click', () => {
-    console.log('guardandoooo');
     const item = {};
     item.loteVenta = document.getElementById('loteVenta').value;
     item.qty = parseInt(document.getElementById('qty').value);
@@ -280,7 +305,6 @@ document.getElementById('btn_guardar').addEventListener('click', () => {
     item.product = currentCollection.product;
     item.causal = document.getElementById('causal').value;
     docAverias.orderItem.push(item);
-    console.log(docAverias)
 
     $('#modalEditor').modal('hide');
     const resultado = docAverias.orderItem.reduce((acumulador, pedido) => {
@@ -293,8 +317,6 @@ document.getElementById('btn_guardar').addEventListener('click', () => {
     }, {});
     
     const arrayResultado = Object.values(resultado);
-    console.log(arrayResultado);
-
     arrayResultado.forEach(item => {
         document.getElementById(item.code).value= item.suma
     })
@@ -302,7 +324,6 @@ document.getElementById('btn_guardar').addEventListener('click', () => {
 })
 
 document.getElementById('modalEditor').addEventListener('change', () => {
-    console.log('verif');
     if(applyValidation()){
         document.getElementById('btn_guardar').style.display = '';
     }else{
@@ -312,6 +333,112 @@ document.getElementById('modalEditor').addEventListener('change', () => {
 
 
 //=========================== FUNCTIONS =============================================
+async function init() {
+    document.getElementById('title-main').innerHTML = 'Pedidos';
+
+    workFilter.modelo = 'Order';
+    backFilter.filterBy = '0';
+    backFilter.filterTxt = '';
+    backFilter.limitar = 15;
+    backFilter.max = '';
+    backFilter.min = '';
+    backFilter.datemax = '';
+    backFilter.datemin = '';
+    backFilter.otrosMatch = [];
+    backFilter.proyectar = [];
+    backFilter.saltar = 0;
+    backFilter.sortBy = 'state';
+    backFilter.sortOrder = 1;
+    backFilter.valorBoolean = 'false';
+    backFilter.group = 'itemspp';
+    backFilter.datepp = formatDate(new Date());
+    backFilter.keyGroup = 'createdAt'
+
+    let response = await fetch("/domain/pedidos", {
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        body: JSON.stringify({ fx: 'k' })
+    })
+    let data = await response.json();
+    if (data.message) {
+        toastr.error(data.message);
+        return;
+    }
+    currentKeys = data;
+
+};
+
+async function renderTable() {
+    workFilter.fx = 'a'
+    const resAv = await fetch("/domain/pedidos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(workFilter)
+    })
+    const dataAv = await resAv.json();
+    dataAv.shift(); 
+    misAverias = dataAv;
+    const containerAv = document.getElementById('misAveriasBody');
+    containerAv.innerHTML = '';
+    misAverias.forEach(item =>{
+        const tr = document.createElement('tr');
+        const fecha = new Date(item.createdAt)
+        tr.innerHTML = `
+                   <td  _idpedido="${item.consecutivo}">${item.consecutivo}</td>
+                   <td  _idpedido="${item.consecutivo}">${formatDate(fecha)}</td>
+                   <td  _idpedido="${item.consecutivo}">${item.client}</td>
+        `;
+        containerAv.appendChild(tr);
+    })
+
+    workFilter.fx = 'c'
+    const res = await fetch("/domain/pedidos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(workFilter)
+    })
+    const data = await res.json();
+    sizeCollection = data[0].countTotal;
+    data.shift();       //elimina el dato contador
+    
+    if (data.fail) {
+        toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
+        return false;
+    }
+    toastr.remove();
+    misPedidos = data;
+    const container = document.getElementById('misPedidosBody');
+    container.innerHTML = '';
+    
+    
+    misPedidos.forEach(pedido => {
+        const estado = pedido.state === 0 ? 'table-info' : ''
+        const avr = Math.trunc((100 * pedido.TotalDisp) / pedido.totalReq);
+        let entrega = new Date(pedido.delivery);
+        entrega = `${entrega.getDate()}/${(entrega.getMonth() + 1)} ${entrega.getHours()}:${+entrega.getMinutes()}`;
+        const tr = document.createElement('tr');
+        tr.setAttribute("class", estado);
+        tr.innerHTML = `
+                   <td  _idpedido="${pedido._id}">${(entrega)}</td>
+                   <td  _idpedido="${pedido._id}">${pedido.client}</td>
+                   <td  _idpedido="${pedido._id}">${avr}%</td>
+        `;
+        container.appendChild(tr);
+    });
+    setPaso(0);
+
+}
+
+async function afterLoad() {
+    setPaso(0);
+    fadeInputs();
+
+};
+
 async function renderModalAverias(codeSelected, data){
     currentCollection.modelo = 'Averia';
     const avKeys  = [
@@ -369,7 +496,6 @@ function borrarSugeridos(){
 }
 
 function bloquearInputs(bloquear){
-    console.log(bloquear)
     listProducts.forEach(item => {
         element = document.getElementById(item.codigo);
         if(element){
@@ -514,103 +640,6 @@ async function renderAccordion() {
     });
 }
 
-async function init() {
-    document.getElementById('title-main').innerHTML = 'Pedidos';
-
-    workFilter.modelo = 'Order';
-    backFilter.filterBy = '0';
-    backFilter.filterTxt = '';
-    backFilter.limitar = 15;
-    backFilter.max = '';
-    backFilter.min = '';
-    backFilter.datemax = '';
-    backFilter.datemin = '';
-    backFilter.otrosMatch = [];
-    backFilter.proyectar = [];
-    backFilter.saltar = 0;
-    backFilter.sortBy = 'state';
-    backFilter.sortOrder = 1;
-    backFilter.valorBoolean = 'false';
-    backFilter.group = 'itemspp';
-    backFilter.datepp = formatDate(new Date());
-    backFilter.keyGroup = 'createdAt'
-    //backFilter.keyGroup = 'delivery';
-
-    let response = await fetch("/domain/pedidos", {
-        headers: { 'content-type': 'application/json' },
-        method: 'POST',
-        body: JSON.stringify({ fx: 'k' })
-    })
-    let data = await response.json();
-    if (data.message) {
-        toastr.error(data.message);
-        return;
-    }
-    currentKeys = data;
-
-};
-
-async function renderTable() {
-    workFilter.fx = 'a'
-    const resAv = await fetch("/domain/pedidos", {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify(workFilter)
-    })
-    const dataAv = await resAv.json();
-    dataAv.shift(); 
-    misAverias = dataAv;
-    console.log(misAverias);
-
-
-    toastr.info('Recibiendo...', 'Mis pedidos');
-    workFilter.fx = 'c'
-    const res = await fetch("/domain/pedidos", {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify(workFilter)
-    })
-    const data = await res.json();
-
-    sizeCollection = data[0].countTotal;
-    data.shift();       //elimina el dato contador
-    console.log(data);
-    if (data.fail) {
-        toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
-        return false;
-    }
-    toastr.remove();
-    misPedidos = data;
-    const container = document.getElementById('misPedidosBody');
-    container.innerHTML = '';
-    misPedidos.forEach(pedido => {
-        const estado = pedido.state === 0 ? 'table-danger' : ''
-        const avr = Math.trunc((100 * pedido.TotalDisp) / pedido.totalReq);
-        let entrega = new Date(pedido.delivery);
-        entrega = `${entrega.getDate()}/${(entrega.getMonth() + 1)} ${entrega.getHours()}:${+entrega.getMinutes()}`;
-        const tr = document.createElement('tr');
-        tr.setAttribute("class", estado);
-        tr.innerHTML = `
-                   <td  _idpedido="${pedido._id}">${(entrega)}</td>
-                   <td  _idpedido="${pedido._id}">${pedido.client}</td>
-                   <td  _idpedido="${pedido._id}">${avr}%</td>
-        `;
-        container.appendChild(tr);
-    });
-    setPaso(0);
-
-}
-
-async function afterLoad() {
-    setPaso(0);
-    fadeInputs();
-
-};
-
 function setPaso(paso) {
     const elementsToShow = ['step01', 'step02','step03', 'step04', 'step05', 'accordionItems', 'btnVista'];
     const elementsToHide = ['step02', 'step03', 'step04'];
@@ -666,7 +695,6 @@ async function getProducts() {
     })
     listProducts = await response.json();
     listProducts.shift();
-    console.log(listProducts);
 }
 
 async function getMisClientes() {
@@ -677,7 +705,6 @@ async function getMisClientes() {
     })
     misClientes = await response.json();
     misClientes.shift();
-    console.log(misClientes);
 }
 
 function entrega(plazo) {
@@ -721,7 +748,7 @@ function entrega(plazo) {
 
     return { fechaEntrega, fechaDisplay };
 
-    //  return {"fechaEntrega":f, "fechaDisplay":f.toLocaleDateString('es-us',{weekday: 'short',day:'2-digit',month:'short',hour:'2-digit', minute:'2-digit'})};
+    
 }
 
 function actualizarFechaEntrega(valor) {

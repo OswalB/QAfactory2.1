@@ -1,6 +1,6 @@
 const { 
     contenido,
-    keys
+    keys, setNewPass
 } = require('../utilities/corefunctions');
 const coreCtrl = {};
 const mongoose = require('mongoose');
@@ -21,17 +21,38 @@ const maxUsuarios = config.maxUsuarios;
 /*console.log('Cantidad máxima de productos:', maxProductos);
 console.log('Cantidad máxima de usuarios:', maxUsuarios);*/
 
+coreCtrl.changepass = async (req, res, next) => {
+    try {
+        const errors = [];
+        const {password,confirm_password} = req.body;
+        const _id = req.user._id
+        
+        if(password != confirm_password) {
+            errors.push({text: 'Password no coincide.'});
+            
+        };
+        if(password.length < 4) {
+            errors.push({text: 'Password debe tener al menos 4 caracteres'});
+        };
+        if(errors.length > 0) {
+            res.render('index/changepass',{errors});
+        }else{
+                setNewPass(_id, password);
+                req.flash('success_msg','Passwor cambiado exitosamente.');
+                res.redirect('/intercambiador');
+        }
 
+
+    } catch (error){
+        next(error);
+    }
+}
 
 coreCtrl.editContent = async (req, res, next) => {
     try {
         const data = req.body;
-        //console.log(data);
-        //data.funcion = 'count';
-        
         const result = await contenido(data);
         res.json(result);
-
 
     } catch (error){
         next(error);
@@ -158,6 +179,31 @@ coreCtrl.getLotesVigentes = async (req, res, next) => {
     }
 }
 
+coreCtrl.intercambiador = async (req, res, next) => {
+    try{
+        const {administrador, vendedor, password, operario, despachador} = req.user;
+        const obsoletePass =  await req.user.matchPassword('3210');
+        if(obsoletePass){
+            res.redirect('/change-pass');
+            return
+        }
+        if(administrador || despachador){
+            res.redirect('/domain/despachos');
+            return
+        }
+        if(vendedor){
+            res.redirect('/domain/pedidos');
+            return
+        }
+        if(operario){
+            res.redirect('/domain/planillas');
+            return
+        }
+        }catch(error){
+            next(error);
+        }
+}
+
 coreCtrl.listCollections  = async(req, res, next) => {
     try {
       const pipeline =[
@@ -194,6 +240,16 @@ coreCtrl.logout = async (req, res, next) => {
     }
 };
 
+coreCtrl.renderChangepass = async (req, res, next) => {
+    const panel = {"boton-ingresar":true};
+
+    try {     
+        res.render('index/changepass',{panel});
+    } catch (error) {
+        next(error);
+    }
+};
+
 coreCtrl.renderEditor = async (req, res, next) => {
     const panel = {
         "boton-xls":true,
@@ -225,10 +281,21 @@ coreCtrl.renderSignin = async (req, res, next) => {
     }
 };
 
+coreCtrl.resetPass = async (req, res, next) => {
+    try {     
+        const {_id} = req.body;
+        await setNewPass(_id, '3210');  
+        res.json("Nuevo password : 3210"); 
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
 coreCtrl.saveDocument = async (req, res, next) => {
     try {
         const { modelo, documentos } = req.body;
-        console.log(req.body);
         if (!modelo || !documentos || !Array.isArray(documentos)) {
             return res.json({ fail: true, message: 'Se requiere el modelo y un array de documentos.' });
         }

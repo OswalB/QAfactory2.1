@@ -9,7 +9,7 @@ document.getElementById("btn_guardar").addEventListener('click', async e => {
     };
 
     for (const element of submit) {
-        if (element.type === 'text') {
+        if (element.type === 'text' || element.type === 'number') {
             objeto[element.id] = element.value;
         } else if (element.type === 'checkbox') {
             objeto[element.id] = element.checked;
@@ -78,7 +78,7 @@ document.getElementById('listDocuments').addEventListener('click',async e =>{
 
 document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
     let idt = e.target.getAttribute('_id');
-    //userId = idt;
+    userId = idt;
     role = 'edit';
     currentDocumentId = idt;
     let titulo = document.getElementById('modal-title');
@@ -88,7 +88,21 @@ document.getElementById('bodyContainer').addEventListener('dblclick',async e =>{
     
 });
 
-
+document.getElementById("btn_reset").addEventListener('click',async e =>{
+    result = window.confirm('Seguro que desea cambiar el PASSWORD?');
+    if(!result) return;
+    const res = await fetch('/core/reset-pass', {    
+            headers: {
+                'Content-Type': 'application/json'
+              },
+              method: "POST",
+              body: JSON.stringify({"_id": userId})
+            });
+    const data = await res.json();
+    toastr.success(data);
+    $('#modalEditor').modal('hide');
+    
+});
 
 
 

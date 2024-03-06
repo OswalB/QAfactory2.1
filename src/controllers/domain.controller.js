@@ -41,7 +41,6 @@ apiCtrl.misClientes = async (req, res, next) => {
             }else{
                 data.otrosMatch.push({idClient:user.ccnit});
         };
-        console.log(data)
         response = await contenido(data);
             res.json(response);
     } catch (error) {
@@ -89,14 +88,21 @@ apiCtrl.pedidos = async (req, res, next) => {
         data.modelo = 'Order';
         if(data.fx === 'a'){
             data.modelo = 'Averia';
-            data.otrosMatch.push({
-                 
-                firmado:false,
-                seller:user.ccnit,
-            })
+            if(user.administrador || user.despachador){
+                data.otrosMatch.push({
+                    firmado:false,
+                });
+            }else{
+                data.otrosMatch.push({
+                    firmado:false,
+                    seller:user.ccnit,
+                });
+            }
+            data.saltar =0;
+            data.limitar =0;
             data.sortObject = {consecutivo:1};
 
-            data.proyectar.push({consecutivo:1},{_id:0},{createdAt:1},{client:1})
+            data.proyectar.push({consecutivo:1},{createdAt:1},{client:1},{_id:0},{orderItem:1})
 
             response = await contenido(data);
             res.json(response);
@@ -109,17 +115,11 @@ apiCtrl.pedidos = async (req, res, next) => {
        }
        if(data.fx === 'c'){
             
-            if(data.sortBy === 'state'){
-                data.sortBy = ['state', 'createdAt'];
-            }
-            console.log(data);
+            data.sortObject.createdAt = -1;
             if(user.administrador || user.despachador){
-                console.log('tods')
             }else if(user.vendedor){
-                console.log('vendedor');
                 data.otrosMatch.push({seller:user.salesGroup});
                 }else{
-                    console.log('cliente');
                     data.otrosMatch.push({nit:user.ccnit});
             };
 
@@ -146,53 +146,6 @@ apiCtrl.pedidos = async (req, res, next) => {
     }
 }
 
-/*apiCtrl.pedidos = async (req, res, next) => {
-    try {
-        const data = req.body, user = req.user;
-        let response;
-        data.modelo = 'Order';
-        
-       if(data.fx === 'k'){
-        response = await keys(data);
-        res.json(response);
-        return;
-       }
-       if(data.fx === 'c'){
-            console.log(data);
-            
-            if(user.administrador || user.despachador){
-                console.log('tods')
-            }else if(user.vendedor){
-                console.log('vendedor');
-                data.otrosMatch.push({seller:user.salesGroup});
-                }else{
-                    console.log('cliente');
-                    data.otrosMatch.push({nit:user.ccnit});
-            };
-
-            if(data._id){   
-                data.saltar = 0;
-                data.otrosMatch.push({_id: new ObjectId(data._id) });
-                data.proyectar.push({client:1},{id_compras:1},{totalReq:1},{TotalDisp:1},
-                    {delivery:1},{createdAt:1},{state:1},{notes:1},{sellerName:1},{vendedor:1},
-                    {'orderItem.product':1},{'orderItem.qty':1},{'orderItem.dispatch':1},{'orderItem.code':1}
-                    );
-            }else{
-                data.proyectar.push({TotalDisp:1},{client:1},{delivery:1},{state:1},{totalReq:1});
-
-            }
-            
-            response = await contenido(data);
-            res.json(response);
-            return;
-       }
-        
-        
-    } catch (error) {
-        next(error);
-    }
-}*/
-
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {
         "boton-xls":false,
@@ -200,7 +153,7 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         "boton-nuevo":true,
         "boton-vista":true,
         "boton-averias":true,
-        "titulo":"Pedidos"
+        "titulo":""
     };
 
     try {     
@@ -232,6 +185,19 @@ apiCtrl.saveAverias = async (req, res, next) => {
     }
 }
 
+apiCtrl.savePedido = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user; 
+        let response;
+        data.documentos[0].seller = user.salesGroup;
+        data.documentos[0].sellerName = user.name;
+        response = await guardar(data);
+        res.json(response);
+    }catch(error){
+        next(error);
+    }
+}
+
 apiCtrl.salesProducts= async (req, res, next) => {
     try {     
         const data = req.body;
@@ -240,8 +206,6 @@ apiCtrl.salesProducts= async (req, res, next) => {
         data.sortObject = {categoria:1, nombre:1};
         data.otrosMatch = [];  
         data.proyectar =[{nombre:1}, {_id:0}, {categoria:1}, {codigo:1}, {corto:1}];     
-        
-        console.log(data)
         response = await contenido(data);
             res.json(response);
     } catch (error) {

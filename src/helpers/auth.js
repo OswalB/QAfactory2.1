@@ -2,15 +2,14 @@ const helpers = {};
 
 helpers.authorization  = (req, res, next) => {
     if (!req.isAuthenticated()) {
-        console.log('nop')
         return res.redirect('/signin');
     }
 
     const modelPermissions = {
         admin: ['Editable', 'Errorl', 'Order', 'User', 'Client', 'Product','Serial', 'Averia', 'Planilla', 'Reason'],
-        dispatcher: ['Order', 'Client', 'Product','Serial', 'Averia', 'Planilla'],
+        dispatcher: ['Order', 'Client', 'Product','Serial', 'Averia', 'Planilla', 'Reason'],
         operator: ['', '', 'Client', 'Product','Serial', 'Planilla'],
-        seller: ['Order', '', 'Client', 'Product','Serial'],
+        seller: ['Order', '', 'Client', 'Product','Serial', '', 'Reason'],
         
     };
     const modelName = req.body.modelo;

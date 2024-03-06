@@ -85,7 +85,11 @@ UserSchema.methods.encryptPassword = async password => {
 };
 
 UserSchema.methods.matchPassword =  async function(password) {
-    return await bcryp.compare(password, this.password);
+    if(!this.password){
+        console.log('este pass'.password)
+        return false;
+    }
+        return await bcryp.compare(password, this.password);
 }
   
 

@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 })
 
+
+
 document.getElementById('pagination_container').addEventListener('click',async e =>{
     let i =e.target.getAttribute('_id');
     workFilter.currentPage = i?i:1; 
@@ -185,7 +187,6 @@ function loadFilter(){
     workFilter.datemin = k_datemin.offsetParent?k_datemin.value:'';
     workFilter.sortObject = {[k_sortBy.value]:k_checkAsc.checked?1:-1}
     if(k_sortBy.value === '0') workFilter.sortObject = {};
-    //workFilter.sortOrder = k_checkAsc.checked?1:-1;
     workFilter.valorBoolean = k_valorBoolean.offsetParent?k_valorBoolean.value:'';
     workFilter.otrosMatch = backFilter.otrosMatch;
     workFilter.proyectar = backFilter.proyectar;
@@ -225,7 +226,7 @@ function applyValidation(){
     const form = document.querySelector('.needs-validation');
               if (form.checkValidity()) {
                 // El formulario es válido, puedes realizar acciones aquí
-                console.log('Formulario válido, realizar acciones...');
+                
               } else {
                 validate = false;
                 // El formulario no es válido, aplicar estilos de validación
@@ -369,6 +370,15 @@ function getRange(type, dateString) {
         start: formatDate(start),
         end: formatDate(end)
     };
+}
+
+function formatDateAgo(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return `Hace ${diffDays} dia${diffDays === 1 ? '':'s'}`;
 }
 
 //-------------------------- PAGINATION AND FILTER  --------------------------------------
@@ -515,6 +525,5 @@ function getInputClass(tipo) {
         default:
             return 'form-control'
     }
-    //return tipo === 'boolean' ? 'form-check-input' : 'form-control';
 }
 

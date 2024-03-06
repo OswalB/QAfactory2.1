@@ -42,7 +42,6 @@ async function contenido(data) {
         if (esNumero(data.max)) numericQuery['$lte'] = data.max;
         pipeline.push({ $match: { [data.filterBy]: numericQuery } });
     }
-    //console.log(data)
     if ((data.filterBy && !data.keyGroup) && (esFecha(data.datemin) || esFecha(data.datemax))) {
         const dateQuery = {};
         if (esFecha(data.datemin)) {
@@ -55,7 +54,6 @@ async function contenido(data) {
             maxDate.setDate(maxDate.getDate() + 1);
             dateQuery['$lt'] = maxDate;
         }
-        //pipeline.push({ $match: { [data.filterBy]: numericQuery } });
         pipeline.push({ $match: { [data.filterBy]: dateQuery } });
     }
 
@@ -69,7 +67,6 @@ async function contenido(data) {
 
     const pipecount = pipeline.slice();
     pipecount.push({ $count: 'countTotal' });
-    console.log('pipe contador',pipecount);
     let counter = await dynamicModel.aggregate(pipecount);
     if (counter.length < 1) counter = [{ countTotal: 0 }];
     counter = counter[0];
@@ -179,6 +176,16 @@ async function keys(data) {
 
 }
 
+async function setNewPass(iduser, newPass){
+    const {ObjectId} = require('mongodb');
+    if(iduser){
+          iduser= new ObjectId(iduser);
+          usuario = await User.findOne({_id : iduser});
+      const password = await usuario.encryptPassword(newPass);
+      await User.updateOne({_id : iduser},{password : password});
+      }
+}
+
 esFecha = (valor) => {
     const dateObject = new Date(valor);
     return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -188,4 +195,4 @@ esNumero = (valor) => {
     return typeof valor === 'number';
 }
 
-module.exports = { contenido, keys, guardar };
+module.exports = { contenido, keys, guardar, setNewPass };

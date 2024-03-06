@@ -7,7 +7,8 @@ const {
     renderPedidos,
     salesProducts,
     sugeridos,
-    saveAverias
+    saveAverias,
+    savePedido
     
     
 } = require('../controllers/domain.controller');
@@ -24,6 +25,7 @@ router.post('/domain/pedidos/suggested',isAuthenticated, sugeridos);
 router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
 router.put('/domain/averias/save', isAuthenticated, saveAverias);
+router.put('/domain/pedido/save', isAuthenticated, savePedido);
 
 
 
