@@ -152,7 +152,7 @@ async function keys(data) {
     const eschema = require(`../models/${data.modelo}`);
     const listk = eschema.schema.obj;
     const listaCampos = Object.keys(listk).filter(key => {
-        return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && key !== 'createdAt' && listk[key].type;
+        return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt'  && listk[key].type;
     }).map(key => {
         const alias = listk[key].alias || '';
         const tipo = listk[key].type.toLowerCase();

@@ -65,5 +65,17 @@ helpers.isAdmin = (req, res, next) => {
     //req.flash('error_msg','No es administrador');
     res.redirect('/signin');
 }
+
+helpers.isDispatcher = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        const user = req.user;
+        if(user.despachador){
+            return next();
+        }else {
+            return res.status(403).send({message:'Acceso  no autorizado :-('});
+        }
+    }
+    res.redirect('/signin');
+}
 module.exports = helpers;
 

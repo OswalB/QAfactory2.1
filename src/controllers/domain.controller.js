@@ -14,11 +14,37 @@ const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
 const User = require('../models/User');
 const Serial = require('../models/Serial');
+const Planilla = require('../models/Planilla');
 
 
 const DvService = require('../services/serv.db');
 
-  apiCtrl.intercambiador = async (req, res, next) => {
+apiCtrl.despachos = async (req, res, next) => {
+    try{
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Order';
+        if(data.fx === 'k'){
+            console.log('funcion de keys')
+            response = await keys(data);
+            res.json(response);
+        return;
+        }
+        if(data.fx === 'c'){
+            console.log(data)
+            //proyectar
+
+            response = await contenido(data);
+            
+            res.json(response);
+        return;
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.intercambiador = async (req, res, next) => {
     try {     
         res.render('interc');
     } catch (error) {
@@ -145,6 +171,21 @@ apiCtrl.pedidos = async (req, res, next) => {
         next(error);
     }
 }
+
+apiCtrl.renderDespachos = async (req, res, next) => {
+    const panel = {
+        "boton-xls":false,
+        "boton-pagination":true,
+        "boton-facturados":true,
+        "titulo":"Despachador"
+    };
+
+    try {     
+        res.render('ventas/despachos',{panel});
+    } catch (error) {
+        next(error);
+    }
+};
 
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {

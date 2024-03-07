@@ -1,0 +1,71 @@
+
+<!-- Modal history -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" id="headerVista">
+    <div class="modal-content">
+      <div id="headHistory" class="modal-header">
+      </div>
+      <div id="bodyHistory" class="modal-body">
+
+      </div>
+      <div class="modal-footer">
+        <button id="btnAsignar" type="button" class="btn btn-primary" data-bs-dismiss="modal">Asignar lote</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="seccAlert" class="alert alert-danger" role="alert" style="display: none;">
+  <h4 class="alert-heading">Atención!</h4>
+  Hay un problema con la conección, revise los últimos items digitados.<br><a id="itemAlert" href="#" class="alert-link">De click aquí</a> para reintentar. No reinicie la página pues se perderá la información pendiente.
+</div>
+
+<!-- modal lotes list-->
+<div  class="modal fade" id="lotesListModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">lotes disponibles:</h5>
+      </div>
+      <div id="bodyArchivar" class="modal-body">
+        <p>* Seleccione los lotes que se hayan agotado y luego preione "aplicar"</p>
+        <p>* Click en el lote que desea asignar</p>
+        
+        <ul id="lotesAvList" class="list-group">
+
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button id="btnFacturar" type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- modal embodegamiento-->
+<div  class="modal fade" id="embodegarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Embodegar:</h5>
+      </div>
+      <div id="bodyEmbodegar" class="modal-body">
+        
+        
+        <ul id="embodegarList" class="list-group">
+
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button id="btnSaveBodega" type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- cards container -->
+<div class="accordion" id="accordionPanel">
+  <div id="cardsContainer">
+
+  </div>
+</div>
+<script src="/js/despachos.js"></script>

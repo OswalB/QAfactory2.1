@@ -2,7 +2,11 @@ const {Schema, model}= require('mongoose');
 
 const OrderSchema = new Schema({
     
-    seller:{
+    createdAt:{
+        type: 'string',
+        requiered: true,
+        alias: 'Fecha creación'
+    },seller:{
         type: 'string',
         requiered: true,
         alias: 'Vendedor id'

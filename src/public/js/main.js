@@ -24,21 +24,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     workFilter.filterStatus = 'off';
     workFilter.currentPage = 1;
 
-    
     await init();
     await renderFilter();
     setFilter();
-    loadFilter();
     paintFilter();
-    
+    loadFilter();
     await renderTable();
     await footer();
-    
     afterLoad();
 
 })
-
-
 
 document.getElementById('pagination_container').addEventListener('click',async e =>{
     let i =e.target.getAttribute('_id');
@@ -53,13 +48,10 @@ document.getElementById('alertFilter').addEventListener('click', async (e) => {
     const frole = e.target.getAttribute('id');
 
     if (frole === 'alertCancelar') {
-        
         setFilter();
         refreshFilter('off')
-        
     } else if (frole === 'alertAplicar') {
         refreshFilter('active')
-        
     }
     
    
