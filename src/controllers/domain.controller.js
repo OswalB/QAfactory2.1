@@ -294,6 +294,20 @@ apiCtrl.salesProducts = async (req, res, next) => {
     }
 };
 
+apiCtrl.stateLotes = async (req, res, next) => {
+    try {
+        const data = req.body;
+        let response;
+        const obj={modelo:'Planilla'}
+        obj.documentos = data;
+        console.log(obj)
+        response = await guardar(obj);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.updateDespacho = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;

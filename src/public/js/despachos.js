@@ -9,54 +9,85 @@ document.getElementById('lotesFooter').addEventListener('click', async e => {
     if (accion) {
         flags.actionModal = accion;
         console.log(flags.actionModal);
-        $('#lotesListModal').modal('hide');
+        if (flags.actionModal != 'delete') {
+            $('#lotesListModal').modal('hide');
+        }
+
+        if (flags.actionModal === 'delete') {
+            const result = itemSelected.lotes.map(item => ({ _id: item.id, agotado: true }));
+            console.log('eliminar estos lotes:', result);
+            const res = await fetch('/domain/lotes/state', {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                method: "PUT",
+                body: JSON.stringify(result)
+            });
+            const dats = await res.json();
+            console.log(dats)
+            if (dats.fail) {
+                toastr.error(dats.message);
+                return;
+            }
+            toastr.info(dats.message);
+            const list = document.getElementById("lotesAvList");
+            itemSelected.lotes.forEach(item => {
+                const elementToRemove = list.querySelector(`li[_lote="${item.lote}"]`);
+                if (elementToRemove) {
+                    elementToRemove.remove();
+                } else {
+                    console.log("No se encontró ningún elemento con el atributo _lote igual a", item.lote);
+                }
+            })
+        }
+
+
     }
 })
 
 document.getElementById('lotesListModal').addEventListener('hide.bs.modal', async e => {
-    console.log('accion', flags.actionModal);
+    if(flags.actionModal === 'exit'){ 
+        document.getElementById(`in_${itemSelected.idItem}`).placeholder = itemSelected.oldValue;
+        return
+    
+    }    
     itemToSend = {};
-    if (flags.actionModal != 'delete') { //preparar paquete de datos para enviar
-        //if (flags.actionModal === 'select') {
-            const date = new Date();
-            itemToSend.fechaHistory = date.toISOString();
-            itemToSend.loteVenta = itemSelected.lotes?itemSelected.lotes[0].lote:'';
-            itemToSend.qtyHistory = itemSelected.value;
-            itemToSend.idDocument = itemSelected.idDocument;
-            itemToSend.idItem = itemSelected.idItem;
-            console.log('enviar estos datos:', itemToSend)
-            oneOrder = {};
-            let localResponse = {};
-            checkAnswerServer('/domain/despachos/update', 'PUT', itemToSend)
-                .then(respuesta => {
-                    console.log('Respuesta desde endpoint1:', respuesta);
-                    return respuesta.json();
-                })
-                .then(data => {
-                    localResponse = data;
-                    console.log('local', localResponse);
-
-                    if (data.success) {
-                        resMamager(true);
-                        oneOrder = localResponse.data
-                        sendItem();
-                    } else {
-                        resMamager(false, itemSelected.name);
-                    }
-                })
-                .catch(error => {
-                    resMamager(false, itemSelected.name);
-                    console.error('Error en endpoint1:', error); // Imprime el error en la consola
-                });
 
 
+    const date = new Date();
+    itemToSend.fechaHistory = date.toISOString();
+    itemToSend.loteVenta = itemSelected.lotes ? itemSelected.lotes[0].lote : '';
+    itemToSend.qtyHistory = itemSelected.value;
+    itemToSend.idDocument = itemSelected.idDocument;
+    itemToSend.idItem = itemSelected.idItem;
+    console.log('enviar estos datos:', itemToSend)
+    oneOrder = {};
+    let localResponse = {};
+    checkAnswerServer('/domain/despachos/update', 'PUT', itemToSend)
+        .then(respuesta => {
+            console.log('Respuesta desde endpoint1:', respuesta);
+            return respuesta.json();
+        })
+        .then(data => {
+            localResponse = data;
+            console.log('local', localResponse);
 
-        }
+            if (data.success) {
+                resMamager(true);
+                oneOrder = localResponse.data
+                sendItem();
+            } else {
+                resMamager(false, itemSelected.name);
+            }
+        })
+        .catch(error => {
+            resMamager(false, itemSelected.name);
+            console.error('Error en endpoint1:', error);
+        });
 
-        if (flags.actionModal === 'delete') {
-            //itemToSend.lotesDelete = itemSelected.lotes[ ].id
-            console.log('eliminar estos lotes:')
-        }
+
+
+
 
     //}
 });
@@ -82,7 +113,7 @@ document.getElementById('cardsContainer').addEventListener('change', async e => 
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.value = value0;
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
-
+        itemSelected.oldValue = document.getElementById(`in_${itemSelected.idItem}`).placeholder;
     }
 
 })
@@ -129,13 +160,13 @@ function toggleCheckbox(liElement) {
 
 
 //* * * * * * * * * *    FUNCIONES   * * * * * * * * * * * * * * * * * * * * * * * *
-async function sendItem(){
+async function sendItem() {
     console.log('resto del codigooo', oneOrder);
     const updatedOrder = oneOrder[1];
-    
+
     // Encuentra el índice del documento en localOrders usando el ID
     const indexToUpdate = localOrders.findIndex(order => order._id === updatedOrder._id);
-    console.log('ind',indexToUpdate)
+    console.log('ind', indexToUpdate)
     // Verifica si se encontró el documento
     if (indexToUpdate !== -1) {
         // Actualiza el documento en localOrders con los datos actualizados del servidor
@@ -147,14 +178,14 @@ async function sendItem(){
     //aqui actuallizar los datos del doscumento ej totaldisp****************
     const progressBar = document.getElementById(`pbar${updatedOrder._id}`);
     const avr = Math.trunc((100 * updatedOrder.TotalDisp) / updatedOrder.totalReq);
-    progressBar.style.width = `${avr}%`; 
-    progressBar.setAttribute('aria-valuenow', avr); 
+    progressBar.style.width = `${avr}%`;
+    progressBar.setAttribute('aria-valuenow', avr);
     progressBar.textContent = `${avr}%`;
 
     const bodyContainer = document.getElementById('body' + indexToUpdate);
     bodyContainer.innerHTML = '';
     for (let item of updatedOrder.orderItem) {
-        renderbodyTable(item,indexToUpdate, updatedOrder._id, bodyContainer);
+        renderbodyTable(item, indexToUpdate, updatedOrder._id, bodyContainer);
     }
 }
 function renderLotes() {
@@ -354,7 +385,7 @@ async function renderCards() {
         bodyContainer.innerHtml = '';
         //let j = 0;
         for (let item of order.orderItem) {
-            renderbodyTable(item,i, order._id, bodyContainer);
+            renderbodyTable(item, i, order._id, bodyContainer);
             //j += 1;
         }
 
@@ -363,8 +394,8 @@ async function renderCards() {
     fadeInputs();
 }
 
-function renderbodyTable(item,idtr, orderid, bodyContainer) {
-    const order = {_id:orderid}
+function renderbodyTable(item, idtr, orderid, bodyContainer) {
+    const order = { _id: orderid }
     const dif = item.qty - item.dispatch;
     let status;
     if (item.dispatch == 0) {
