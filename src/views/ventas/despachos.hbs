@@ -18,7 +18,7 @@
 
 <div id="seccAlert" class="alert alert-danger" role="alert" style="display: none;">
   <h4 class="alert-heading">Atención!</h4>
-  Hay un problema con la conección, revise los últimos items digitados.<br><a id="itemAlert" href="#" class="alert-link">De click aquí</a> para reintentar. No reinicie la página pues se perderá la información pendiente.
+  Hay un problema con la conección, revise el item: <span id="itemToCheck" class="item-highlight"></span><br><a id="itemAlert" href="#" class="alert-link">De click aquí</a> para Continuar...
 </div>
 
 <!-- modal lotes list-->
@@ -36,8 +36,10 @@
 
         </ul>
       </div>
-      <div class="modal-footer">
-        <button id="btnFacturar" type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Aplicar</button>
+      <div id="lotesFooter" class="modal-footer">
+        <button _acc="delete" id="btnDeleteLote" type="button" class="btn btn-danger" disabled=""><i class="fa fa-ban fa-lg" aria-hidden="true"></i> Eliminar</button>
+        <button _acc="exit" id="btnExitL" type="button" class="btn btn-secondary"  ><i class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cancelar</button>
+        <button _acc="select" id="btnSelectLote" type="button" class="btn btn-primary"  disabled=""><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Asignar</button>
       </div>
     </div>
   </div>

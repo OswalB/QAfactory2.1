@@ -12,7 +12,7 @@ async function contenido(data) {
         return ([{ 'countTotal': 0 }]);
 
     }
-
+    
     const dynamicModel = mongoose.models[data.modelo];
     const pipeline = [];
     const proyeccion = {};
@@ -67,6 +67,7 @@ async function contenido(data) {
 
     const pipecount = pipeline.slice();
     pipecount.push({ $count: 'countTotal' });
+    
     let counter = await dynamicModel.aggregate(pipecount);
     if (counter.length < 1) counter = [{ countTotal: 0 }];
     counter = counter[0];

@@ -55,9 +55,6 @@ const OrderSchema = new Schema({
         alias: 'Total despacahado'
     },
     orderItem:[{
-        loteVenta:{
-            type: 'string'
-        },
         code: {
             type: 'string',
             requiered: true
@@ -74,13 +71,8 @@ const OrderSchema = new Schema({
             type: 'number',
             requiered: true
         },
-        dispatchBy: {
-            type: 'string',
-            requiered: false
-        },
-        dispatchDate:{
-            type: 'date'
-        },
+        
+        
         historyDisp:[{
             fechaHistory:{
                 type: 'date',
@@ -92,7 +84,11 @@ const OrderSchema = new Schema({
             qtyHistory: {
                 type: 'number',
                 requiered: true
+            },
+            loteVenta:{
+                type: 'string'
             }
+            
         }]
     }]
 },{

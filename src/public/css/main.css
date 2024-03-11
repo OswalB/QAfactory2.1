@@ -5,13 +5,13 @@ body {
 
 
 .fade-input {
-    transition: background-color 0.9s, opacity 0.9s;
+    transition: background-color 6s, opacity 6s;
     opacity: 1;
   }
   
   .changed {
     
-    background-color: lightyellow;
+    background-color: rgb(255, 17, 0);
     
   }
 

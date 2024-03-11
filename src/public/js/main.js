@@ -422,7 +422,7 @@ fadeInputs.forEach(input => {
   input.addEventListener('blur', () => {
     input.fadeTimeout = setTimeout(() => {
       input.classList.remove('changed'); // Remueve el color de fondo cambiado después de un tiempo
-    }, 1000); 
+    }, 3000); 
   });
 });
 
@@ -518,4 +518,43 @@ function getInputClass(tipo) {
             return 'form-control'
     }
 }
+
+async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
+    const requestPromise = new Promise((resolve, reject) => {
+      fetch(url,{
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: _metod,
+        body: JSON.stringify(_body)
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al recibir la respuesta del servidor');
+          }
+          resolve(response); // Resuelve la promesa con true si la respuesta es exitosa
+        })
+        .catch(error => {
+          reject(error); // Rechaza la promesa con el error si hay un problema con la solicitud
+        });
+    });
+  
+    // Promesa para manejar el tiempo de espera (timeout)
+    const timeoutPromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('Tiempo de espera agotado')); // Rechaza la promesa si el tiempo de espera se agota
+      }, timeout);
+    });
+  
+    // Ejecutar ambas promesas simultáneamente usando Promise.race
+    return Promise.race([requestPromise, timeoutPromise])
+      .then(resultado => {
+        return resultado; // Retorna el resultado (true o false)
+      })
+      .catch(error => {
+        throw error; // Lanza el error si ocurre alguno
+      });
+}
+  
+  
 

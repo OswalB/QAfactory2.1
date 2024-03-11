@@ -10,7 +10,8 @@ const {
     salesProducts,
     sugeridos,
     saveAverias,
-    savePedido
+    savePedido,
+    updateDespacho,
     
     
 } = require('../controllers/domain.controller');
@@ -29,8 +30,8 @@ router.post('/domain/pedidos/suggested',isAuthenticated, sugeridos);
 router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
 router.put('/domain/averias/save', isAuthenticated, saveAverias);
+router.put('/domain/despachos/update', isDispatcher, updateDespacho);
 router.put('/domain/pedido/save', isAuthenticated, savePedido);
-
 
 
 
