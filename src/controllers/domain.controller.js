@@ -84,6 +84,41 @@ apiCtrl.despachos = async (req, res, next) => {
     }
 }
 
+apiCtrl.getHistory = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        const pipeline =[
+            {
+              '$match': {
+                '_id': new ObjectId(data.idDoc)
+              }
+            }, {
+              '$unwind': {
+                'path': '$orderItem'
+              }
+            }, {
+              '$match': {
+                'orderItem._id': new ObjectId(data.idItem)
+              }
+            }, {
+              '$project': {
+                'orderItem.qty': 1, 
+                'orderItem.dispatch': 1, 
+                'orderItem.historyDisp': 1
+              }
+            }
+          ]
+        response = await Order.aggregate(pipeline)  
+
+        console.log(pipeline);
+        
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.intercambiador = async (req, res, next) => {
     try {
         res.render('interc');
@@ -108,39 +143,6 @@ apiCtrl.misClientes = async (req, res, next) => {
             data.otrosMatch.push({ idClient: user.ccnit });
         };
         response = await contenido(data);
-        res.json(response);
-    } catch (error) {
-        next(error);
-    }
-};
-
-apiCtrl.sugeridos = async (req, res, next) => {
-    try {
-        const data = req.body, user = req.user;
-        let response;
-        const pipeline = [
-            {
-                $match: {
-                    nit: data.noc,
-                    createdAt: {
-                        $gte: new Date(new Date().setMonth(new Date().getMonth() - data.k))
-                    }
-                }
-            },
-            { $sort: { createdAt: -1 } },
-            { $limit: 4 },
-            { $unwind: "$orderItem" },
-            {
-                $group: {
-                    _id: "$orderItem.code",
-                    avgQty: { $avg: "$orderItem.qty" }
-                }
-            },
-            { $addFields: { avgQty: { $ceil: "$avgQty" } } },
-            { $project: { _id: 0, code: "$_id", product: 1, avgQty: 1 } }
-        ];
-        response = await Order.aggregate(pipeline);
-
         res.json(response);
     } catch (error) {
         next(error);
@@ -244,6 +246,21 @@ apiCtrl.renderPedidos = async (req, res, next) => {
     }
 };
 
+apiCtrl.salesProducts = async (req, res, next) => {
+    try {
+        const data = req.body;
+        let response;
+        data.modelo = 'Product';
+        data.sortObject = { categoria: 1, nombre: 1 };
+        data.otrosMatch = [];
+        data.proyectar = [{ nombre: 1 }, { _id: 0 }, { categoria: 1 }, { codigo: 1 }, { corto: 1 }];
+        response = await contenido(data);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.saveAverias = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -279,15 +296,33 @@ apiCtrl.savePedido = async (req, res, next) => {
     }
 }
 
-apiCtrl.salesProducts = async (req, res, next) => {
+apiCtrl.sugeridos = async (req, res, next) => {
     try {
-        const data = req.body;
+        const data = req.body, user = req.user;
         let response;
-        data.modelo = 'Product';
-        data.sortObject = { categoria: 1, nombre: 1 };
-        data.otrosMatch = [];
-        data.proyectar = [{ nombre: 1 }, { _id: 0 }, { categoria: 1 }, { codigo: 1 }, { corto: 1 }];
-        response = await contenido(data);
+        const pipeline = [
+            {
+                $match: {
+                    nit: data.noc,
+                    createdAt: {
+                        $gte: new Date(new Date().setMonth(new Date().getMonth() - data.k))
+                    }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 4 },
+            { $unwind: "$orderItem" },
+            {
+                $group: {
+                    _id: "$orderItem.code",
+                    avgQty: { $avg: "$orderItem.qty" }
+                }
+            },
+            { $addFields: { avgQty: { $ceil: "$avgQty" } } },
+            { $project: { _id: 0, code: "$_id", product: 1, avgQty: 1 } }
+        ];
+        response = await Order.aggregate(pipeline);
+
         res.json(response);
     } catch (error) {
         next(error);
