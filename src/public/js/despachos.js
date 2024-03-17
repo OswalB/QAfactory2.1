@@ -1,5 +1,25 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {};
 
+document.getElementById('btnAsignar').addEventListener('click', async e => {
+    const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
+    let orderItem;
+    if (!documentO) {
+        return;
+    }
+    orderItem = documentO.orderItem.find(item => item._id === itemSelected.idItem);
+    itemSelected.code = orderItem.code;
+    flags.btnSndEdit = e.target.getAttribute('_role');
+    if (flags.btnSndEdit === 'edit') {
+        lotesList = await getLotes(itemSelected.code);
+    }
+    if (flags.btnSndEdit === 'send') {
+        flags.editado=false;
+        await updateHistory();
+        $('#historyModal').modal('hide');
+    }
+    toggleBtnHistory();
+});
+
 document.getElementById('check_estado').addEventListener('click', async e => {
     updateCheckFacturados();
 });
@@ -61,6 +81,17 @@ document.getElementById('cardsContainer').addEventListener('input', async e => {
     document.getElementById(itemSelected.idBtn).disabled = true;
 });
 
+document.getElementById('historyModal').addEventListener('hide.bs.modal', async e => {
+    if(flags.editado){
+        const confirmacion = confirm('Ha efectuado algunos cambios, ¿desea Guardar o Cancelar?');
+        if (confirmacion) {
+            await updateHistory();
+        }
+    }
+    flags.btnSndEdit = 'send';
+    toggleBtnHistory()
+});
+
 document.getElementById('itemAlert').addEventListener('click', async e => {
     resMamager(true);
 });
@@ -103,6 +134,22 @@ document.getElementById('lotesFooter').addEventListener('click', async e => {
     }
 });
 
+document.getElementById('lotesHistoryModal').addEventListener('click', async e => {
+    itemSelected.loteEditHistory = e.target.getAttribute('_lote');
+
+    if (itemSelected.loteEditHistory) {
+        const td = document.getElementById(`tdh${itemSelected.index}`);
+        itemSelected.historyDisp[itemSelected.index].loteVenta = itemSelected.loteEditHistory;
+        cambiosEmbalaje(itemSelected.index)
+        td.innerHTML = itemSelected.loteEditHistory;
+    }
+    $('#lotesHistoryModal').modal('hide');
+});
+
+document.getElementById('lotesHistoryModal').addEventListener('hide.bs.modal', async e => {
+    document.getElementById('historyModal').style.display = 'block';
+});
+
 document.getElementById('lotesListModal').addEventListener('hide.bs.modal', async e => {
     if (flags.actionModal === 'exit') {
         document.getElementById(`in_${itemSelected.idItem}`).placeholder = itemSelected.oldValue;
@@ -125,7 +172,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
             localResponse = data;
             if (data.success) {
                 resMamager(true);
-                oneOrder = localResponse.data
+                oneOrder = localResponse.data;
                 sendItem();
             } else {
                 resMamager(false, itemSelected.name);
@@ -137,11 +184,24 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
         });
 });
 
+document.getElementById('bodyHistory').addEventListener('change', async e => {
+    const _role = e.target.getAttribute('_role');
+    const index = e.target.getAttribute('_index');
+    cambiosEmbalaje(index);
+})
+
+document.getElementById('bodyHistory').addEventListener('click', async e => {
+    const _role = e.target.getAttribute('_role');
+    itemSelected.index = e.target.getAttribute('_index');
+    if (flags.btnSndEdit === 'edit' && _role === 'lote') {
+        document.getElementById('historyModal').style.display = 'none';
+        renderLotesHist();
+    }  
+})
+
 //* * * * * * * * * *    FUNCIONES   * * * * * * * * * * * * * * * * * * * * * * * *
 
 async function afterLoad() {
-    //setPaso(0);
-    //fadeInputs();
 
 };
 
@@ -186,6 +246,13 @@ function businessHours(desdeFecha, hastaFecha) {
     return horasHabiles
 }
 
+function cambiosEmbalaje(index){
+    flags.editado=true;
+    document.getElementById('btnAsignar').disabled = false;
+    itemSelected.historyDisp[index].modificado = true;
+    itemSelected.historyDisp[index].adjust = parseInt(document.getElementById(`inadj${index}`).value) || 0;
+}
+
 function deshabilitar(estado) {
     coleccionIn = document.querySelectorAll('.form-control');
     coleccionIn.forEach(input => {
@@ -204,12 +271,15 @@ function fechaFormated(fecha) {
 }
 
 async function getHistory() {
+    flags.editado=false;
+    document.getElementById('btnAsignar').disabled=false;
     let response = await fetch("/domain/despachos/history", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
         body: JSON.stringify({ "idDoc": itemSelected.idDocument, "idItem": itemSelected.idItem })
     })
     const data = await response.json();
+    itemSelected.historyDisp = data[0].orderItem.historyDisp;
     const currentDoc = localOrders.find(doc => doc._id === itemSelected.idDocument);
     const cabecera = document.getElementById('headHistory');
     cabecera.innerHTML = `
@@ -226,9 +296,10 @@ async function getHistory() {
             <thead>
                     <tr>
                     <th scope="col">Fecha</th>
-                    <th scope="col">Dsp.</th>
+                    <th scope="col">Oper.</th>
                     <th scope="col">Lote</th>
-                    <th scope="col">Cantidad</th>
+                    <th scope="col">Cant.</th>
+                    <th scope="col">Ajuste</th>
                     </tr>
             </thead>
             <tbody id="vistaHistory">
@@ -242,25 +313,70 @@ async function getHistory() {
             </thead>
     `;
     vistaContainer.appendChild(div);
-
     const container2 = document.getElementById('vistaHistory');
     container2.innerHTML = '';
-    data[0].orderItem.historyDisp.forEach(fila => {
-    let fecha = new Date(fila.fechaHistory);
-        let fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+    data[0].orderItem.historyDisp.forEach((fila, index) => {
+        let fecha = new Date(fila.fechaHistory);
+        const opciones = {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        };
+        const fechaTxt = fecha.toLocaleString('es-ES', opciones);
         const tr = document.createElement('tr');
         tr.innerHTML = `
                     <td>${fechaTxt}</td>
                     <td>${fila.dspHistory}</td>
-                    <td>${fila.loteVenta}</td>
-                    <td>${fila.qtyHistory}</td>
+                    <td _role="lote" id=tdh${index} _index=${index}>${fila.loteVenta}</td>
+                    <td  _index=${index}>${fila.qtyHistory}</td>
+                    <td _role="adj" id=tda${index} _index=${index}>
+                        <input _role="adj" _index=${index} id=inadj${index} class="form-control form-control-sm in-adj" disabled=true type="number" value=0>
+                    </td>
                 `;
         container2.appendChild(tr);
-
-
     })
 
     $('#historyModal').modal('show');
+}
+
+async function getLotes(code) {
+    const filter = {};
+    filter.fx = 'l';
+    filter.code = code;
+    filter.otrosMatch = [];
+    try {
+        const res = await fetch("/domain/despachos", {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: JSON.stringify(filter)
+        })
+        const data = await res.json();
+        data.shift();
+        toastr.remove();
+        return data;
+    } catch (error) {
+        resMamager(false, itemSelected.name);
+        toastr.error('Error al obtener los lotes');
+        return [];
+    }
+}
+
+function hoursAgo(f) {
+    const entrega = new Date(f);
+    const ahora = new Date();
+    const diferenciaEnMilisegundos = ahora - entrega;
+    const diferenciaEnMinutos = Math.trunc(diferenciaEnMilisegundos / 60000);
+    const horas = Math.trunc(diferenciaEnMinutos / 60);
+    const minutos = diferenciaEnMinutos % 60;
+    const formatoHoras = ("0" + Math.abs(horas)).slice(-2);
+    const formatoMinutos = ("0" + Math.abs(minutos)).slice(-2);
+    const texto = `${formatoHoras}:${formatoMinutos}`;
+    return { "texto": texto, "horas": horas };
 }
 
 async function init() {
@@ -297,44 +413,7 @@ async function init() {
         return;
     }
     currentKeys = data;
-
-}
-
-async function getLotes(code) {
-    const filter = {};
-    filter.fx = 'l';
-    filter.code = code;
-    filter.otrosMatch = [];
-    try {
-        const res = await fetch("/domain/despachos", {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: "POST",
-            body: JSON.stringify(filter)
-        })
-        const data = await res.json();
-        data.shift();       
-        toastr.remove();
-        return data;
-    } catch (error) {
-        resMamager(false, itemSelected.name);
-        toastr.error('Error al obtener los lotes');
-        return []; 
-    }
-}
-
-function hoursAgo(f) {
-    const entrega = new Date(f);
-    const ahora = new Date();
-    const diferenciaEnMilisegundos = ahora - entrega;
-    const diferenciaEnMinutos = Math.trunc(diferenciaEnMilisegundos / 60000);
-    const horas = Math.trunc(diferenciaEnMinutos / 60);
-    const minutos = diferenciaEnMinutos % 60;
-    const formatoHoras = ("0" + Math.abs(horas)).slice(-2);
-    const formatoMinutos = ("0" + Math.abs(minutos)).slice(-2);
-    const texto = `${formatoHoras}:${formatoMinutos}`;
-    return { "texto": texto, "horas": horas };
+    flags.accSndEdit = 'edit'
 }
 
 function paintLotesButton() {
@@ -383,7 +462,6 @@ function renderbodyTable(item, idtr, orderid, bodyContainer) {
 
     if (item.dispatchBy) { dispatchBy = item.dispatchBy };
     let valueDisp = item.dispatch;
-    //const idtr = i;
     const tr = document.createElement('tr');
     tr.innerHTML = `
                     <th id="c1_${item._id}" class="text-white ${status} it-desc" >
@@ -498,6 +576,30 @@ function renderLotes() {
     }
 }
 
+function renderLotesHist() {
+    itemSelected.loteEditHistory = '';
+    if (lotesList.length === 0) return false;
+    if (lotesList.length === 1) {
+        itemSelected.lote = lote[0].loteOut;
+    } else {
+        $('#lotesHistoryModal').modal('show');
+        const container = document.getElementById('lotesAvHistory');
+        container.innerHTML = '';
+        lotesList.forEach(item => {
+            let fecha = new Date(item.fecha1);
+            const fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+            const li = document.createElement('li');
+            li.setAttribute("class", "list-group-item");
+            li.setAttribute("_lote", item.loteOut);
+
+            li.innerHTML = `
+            <strong _lote=${item.loteOut}>${item.loteOut}</strong>  (${fechaTxt})              
+        `;
+            container.appendChild(li);
+        })
+    }
+}
+
 async function renderTable() {
     workFilter.fx = 'c'
     const res = await fetch("/domain/despachos", {
@@ -509,7 +611,7 @@ async function renderTable() {
     })
     const data = await res.json();
     sizeCollection = data[0].countTotal;
-    data.shift();       
+    data.shift();
 
     if (data.fail) {
         toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
@@ -537,9 +639,9 @@ async function sendItem() {
     progressBar.style.width = `${avr}%`;
     progressBar.setAttribute('aria-valuenow', avr);
     progressBar.textContent = `${avr}%`;
-
     const bodyContainer = document.getElementById('body' + indexToUpdate);
     bodyContainer.innerHTML = '';
+    
     for (let item of updatedOrder.orderItem) {
         renderbodyTable(item, indexToUpdate, updatedOrder._id, bodyContainer);
     }
@@ -549,6 +651,26 @@ function toggleCheckbox(liElement) {
     const checkbox = liElement.querySelector('.checkArchivar');
     checkbox.checked = !checkbox.checked;
     itemSelected.lotes = paintLotesButton();
+}
+
+function toggleBtnHistory() {
+    const boton = document.getElementById('btnAsignar');
+    boton.disabled = !flags.editado;
+    if (flags.btnSndEdit === 'edit') {
+        boton.innerHTML = 'Guardar';
+        boton.setAttribute('_role', 'send');
+        boton.classList.remove('btn-primary');
+        boton.classList.add('btn-danger');
+        const setEnable = document.getElementsByClassName('in-adj');
+        Array.from(setEnable).forEach((item, index) => {
+            document.getElementById(`inadj${index}`).disabled=false;
+        })
+    } else {
+        boton.innerHTML = 'Editar';
+        boton.setAttribute('_role', 'edit');
+        boton.classList.remove('btn-danger');
+        boton.classList.add('btn-primary');
+    }
 }
 
 function updateCheckFacturados() {
@@ -566,4 +688,25 @@ function updateCheckFacturados() {
     paintFilter()
     const lblTexto = checkEstado ? 'No Facturados' : 'Todos';
     document.getElementById('lbl_estado').innerHTML = lblTexto;
+}
+
+async function updateHistory(){
+    const tosend ={};
+    tosend._id = itemSelected.idDocument;
+    tosend.idItem = itemSelected.idItem;
+    tosend.obj = itemSelected.historyDisp
+    .filter(objeto => objeto.modificado === true) // Filtra los objetos donde el campo 'modificado' es true
+    .map(({ fechaHistory, qtyHistory, dspHistory, modificado, ...resto }) => resto); // Mapea los objetos filtrados y devuelve el resto de las propiedades, excluyendo fechaHistory y qtyHistory
+    let response = await fetch("/domain/despachos-hist/update", {
+        headers: { 'content-type': 'application/json' },
+        method: 'PUT',
+        body: JSON.stringify(tosend)
+    })
+    const data = await response.json();
+    if(data.fail){
+        toastr.error(data.message);
+        return;
+    }
+    oneOrder = data;
+    sendItem();
 }

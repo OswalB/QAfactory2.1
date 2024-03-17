@@ -42,12 +42,6 @@ apiCtrl.despachos = async (req, res, next) => {
             if (data.sw) {
                 data.otrosMatch.push({ state: 0 })
             }
-            console.log(data)
-            /*data.proyectar = [
-                {sellerName:1}, {client:1},{delivery:1},{notes:1},
-                {'orderItem.dispatch':1},{'orderItem.historyDisp.loteVenta':1},
-                {state:1}
-            ]*/
             data.proyectar = [
                 {
                     'orderItem': {
@@ -71,8 +65,8 @@ apiCtrl.despachos = async (req, res, next) => {
                         }
                     }
                 },
-                {sellerName:1}, {client:1},{delivery:1},{notes:1},{state:1},
-                {createdAt:1},{totalReq:1},{TotalDisp:1}
+                { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
+                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }
             ]
             response = await contenido(data);
 
@@ -88,31 +82,29 @@ apiCtrl.getHistory = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
         let response;
-        const pipeline =[
+        const pipeline = [
             {
-              '$match': {
-                '_id': new ObjectId(data.idDoc)
-              }
+                '$match': {
+                    '_id': new ObjectId(data.idDoc)
+                }
             }, {
-              '$unwind': {
-                'path': '$orderItem'
-              }
+                '$unwind': {
+                    'path': '$orderItem'
+                }
             }, {
-              '$match': {
-                'orderItem._id': new ObjectId(data.idItem)
-              }
+                '$match': {
+                    'orderItem._id': new ObjectId(data.idItem)
+                }
             }, {
-              '$project': {
-                'orderItem.qty': 1, 
-                'orderItem.dispatch': 1, 
-                'orderItem.historyDisp': 1
-              }
+                '$project': {
+                    'orderItem.qty': 1,
+                    'orderItem.dispatch': 1,
+                    'orderItem.historyDisp': 1
+                }
             }
-          ]
-        response = await Order.aggregate(pipeline)  
+        ]
+        response = await Order.aggregate(pipeline)
 
-        console.log(pipeline);
-        
         res.json(response);
     } catch (error) {
         next(error);
@@ -333,9 +325,8 @@ apiCtrl.stateLotes = async (req, res, next) => {
     try {
         const data = req.body;
         let response;
-        const obj={modelo:'Planilla'}
+        const obj = { modelo: 'Planilla' }
         obj.documentos = data;
-        console.log(obj)
         response = await guardar(obj);
         res.json(response);
     } catch (error) {
@@ -346,23 +337,6 @@ apiCtrl.stateLotes = async (req, res, next) => {
 apiCtrl.updateDespacho = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
-
-        /*const nuevoObjeto = {};
-        nuevoObjeto.fechaHistory = data.fechaHistory;
-        nuevoObjeto.loteVenta = data.loteVenta;
-        nuevoObjeto.qtyHistory = data.qtyHistory;
-        nuevoObjeto.dspHistory = user.alias;
-        console.log(nuevoObjeto);
-        await Order.findOneAndUpdate(
-            { _id: data.idDocument, 'orderItem._id': data.idItem },
-            {
-                $push: { 'orderItem.$.historyDisp': nuevoObjeto }, // Añade el nuevo objeto al array historyDisp
-                $inc: { 'TotalDisp': nuevoObjeto.qtyHistory } // Incrementa el campo TotalDisp sumando la cantidad qtyHistory
-            },
-            { new: true } // Devuelve el documento actualizado
-        );*/
-
-        // Construir el objeto de actualización
         const updateObj = {
             $push: {
                 'orderItem.$.historyDisp': {
@@ -374,18 +348,14 @@ apiCtrl.updateDespacho = async (req, res, next) => {
             },
             $inc: { 'TotalDisp': data.qtyHistory, 'orderItem.$.dispatch': data.qtyHistory }
         };
-
-        // Actualizar el documento
         await Order.findOneAndUpdate(
             { _id: data.idDocument, 'orderItem._id': data.idItem },
             updateObj,
-
         );
 
         const query = {};
         query.modelo = 'Order';
         query.sortObject = {};
-        //query.proyectar = [{ state: 1 }, { TotalDisp: 1 }, { 'orderItem.dispatch': 1 }, { 'orderItem.historyDisp.loteVenta': 1 }];
         query.proyectar = [
             {
                 'orderItem': {
@@ -409,34 +379,116 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                     }
                 }
             },
-            {sellerName:1}, {client:1},{delivery:1},{notes:1},{state:1},
-            {createdAt:1},{totalReq:1},{TotalDisp:1}
+            { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
+            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }
         ]
-        
-        
-        
-        
-        
-        
-        
-        
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
-
-
         const resultado = await contenido(query);
-
-
-
-
-
         res.status(200).json({ success: true, message: 'Operación completada con éxito', data: resultado });
-
-        //res.status(404).json({ success: false, message: 'Documento no encontrado',data: {} });
-
     } catch (error) {
         next(error);
     }
 }
 
+apiCtrl.updateHistoryDisp = async (req, res, next) => {
+    try {
+        let response;
+        const data = req.body, user = req.user;
+        const obj = [...data.obj];
+        const consulta = await Order.find({ _id: new Object(data._id) }, 'state');
+        if (consulta.length === 0 || consulta[0].state === 1) {
+            res.json({ fail: true, message: 'No se puede editar un documento FACURADO.', data: {} });
+        }
+
+        for (let i = 0; i < obj.length; i++) {
+            const newDsp = await Order.aggregate([
+                {
+                    '$match': {
+                        '_id': new ObjectId(data._id)
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$orderItem'
+                    }
+                }, {
+                    '$match': {
+                        'orderItem._id': new ObjectId(data.idItem)
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$orderItem.historyDisp'
+                    }
+                }, {
+                    '$match': {
+                        'orderItem.historyDisp._id': new ObjectId(obj[i]._id)
+                    }
+                }, {
+                    '$project': {
+                        'dispatcher': '$orderItem.historyDisp.dspHistory',
+                        '_id': 0
+                    }
+                }
+            ]);
+            const actDsp = `${newDsp[0].dispatcher}-${user.alias}`;
+            const fechaActual = new Date();
+            await Order.findOneAndUpdate(
+                { _id: data._id },
+                {
+                    $inc: {
+                        'TotalDisp': obj[i].adjust,
+                        'orderItem.$[outer].dispatch': obj[i].adjust,
+                        'orderItem.$[outer].historyDisp.$[inner].qtyHistory': obj[i].adjust
+                    },
+                    $set: {
+                        'orderItem.$[outer].historyDisp.$[inner].dspHistory': actDsp,
+                        'orderItem.$[outer].historyDisp.$[inner].fechaHistory': fechaActual,
+                        'orderItem.$[outer].historyDisp.$[inner].loteVenta': obj[i].loteVenta
+                    }
+                },
+                {
+                    arrayFilters: [
+                        { 'outer._id': data.idItem },
+                        { 'inner._id': obj[i]._id }
+                    ]
+                }
+            );
+        }
+
+        const query = {};
+        query.modelo = 'Order';
+        query.sortObject = {};
+        query.proyectar = [
+            {
+                'orderItem': {
+                    $map: {
+                        input: '$orderItem',
+                        as: 'item',
+                        in: {
+                            $mergeObjects: [
+                                '$$item',
+                                {
+                                    'lotesOk': {
+                                        $reduce: {
+                                            input: '$$item.historyDisp',
+                                            initialValue: true,
+                                            in: { $and: ['$$value', { $ne: ['$$this.loteVenta', ''] }] } // Verifica si todos los elementos de historyDisp.loteVenta están presentes
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
+            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }
+        ]
+        query.otrosMatch = [{ _id: new ObjectId(data._id) }, { 'orderItem._id': new ObjectId(data.idItem) }];
+        response = await contenido(query);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
 
 module.exports = apiCtrl;
