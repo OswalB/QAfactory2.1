@@ -42,6 +42,11 @@ apiCtrl.despachos = async (req, res, next) => {
             if (data.sw) {
                 data.otrosMatch.push({ state: 0 })
             }
+            if (data.oneId) {
+                data.otrosMatch=[];
+                data.otrosMatch.push({ _id : new ObjectId(data.oneId) });
+                console.log('un solo id')
+            }
             data.proyectar = [
                 {
                     'orderItem': {
@@ -329,6 +334,22 @@ apiCtrl.stateLotes = async (req, res, next) => {
         obj.documentos = data;
         response = await guardar(obj);
         res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.setState = async (req, res, next) => {
+    try {
+        const data = req.body;
+        let response;
+        console.log(data);
+        await Order.findByIdAndUpdate(data._id, { state: data.newValue }, { new: true })
+
+        
+        
+        
+        res.json({msg:'facturado:ok'});
     } catch (error) {
         next(error);
     }

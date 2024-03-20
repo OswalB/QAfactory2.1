@@ -12,6 +12,7 @@ const {
     sugeridos,
     saveAverias,
     savePedido,
+    setState,
     stateLotes,
     updateDespacho,
     updateHistoryDisp
@@ -37,6 +38,7 @@ router.put('/domain/averias/save', isAuthenticated, saveAverias);
 router.put('/domain/despachos/update', isDispatcher, updateDespacho);
 router.put('/domain/despachos-hist/update', isDispatcher, updateHistoryDisp);
 router.put('/domain/lotes/state', isAuthenticated, stateLotes);
+router.put('/domain/order/state', isDispatcher, setState);
 router.put('/domain/pedido/save', isAuthenticated, savePedido);
 
 

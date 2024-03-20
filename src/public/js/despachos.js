@@ -1,5 +1,77 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {};
 
+document.getElementById('accordionPanel').addEventListener('click', async e => {
+
+    let i = e.target.getAttribute('idcard');
+
+    if (e.target.classList.contains('btn-hide')) {
+        document.getElementById('acc-item' + i).style.display = 'none';
+    }
+    if (e.target.classList.contains('clip')) {
+        itemSelected.idDocument = localOrders[i]._id;
+        console.log('click', i)
+        toastr.warning('ESPERE!');
+        try {
+            const res = await fetch("/domain/order/state", {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                method: "PUT",
+                body: JSON.stringify({ _id: itemSelected.idDocument, newValue: 1 })
+            });
+            if (!res.ok) {
+                throw new Error('Error al al facturar');
+            }
+            const data = await res.json();
+            if (data.fail) {
+                toastr.error('Reintente!', 'No se ha podido facturar.', 'Pedido');
+                return false;
+            }
+        } catch (error) {
+            error;
+            console.log(error);
+            toastr.error('Ocurrió un error al procesar la solicitud');
+            return false;
+        }
+
+        await actInputs();
+        const _id = localOrders[i]._id;
+        const toClip = localOrders[i].orderItem;
+        let pyme = '';
+        for (element of toClip) {
+            if (element.dispatch > 0) {
+                pyme += `${element.code}\t\t${element.dispatch}\n`;
+            }
+        }
+        document.getElementById('btnHide' + i).style.display = "";
+        toastr.remove();
+        toastr.success('Información copiada al portapapeles', 'Facturación');
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(pyme)
+                .then(() => toastr.success('Texto copiado con éxito'))
+                .catch((error) => toastr.error('No se pudo copiar el texto al portapapeles:', error));
+        } else {
+            var textArea = document.createElement("textarea");
+            textArea.value = pyme;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                var successful = document.execCommand('copy');
+                var msg = successful ? 'éxito' : 'fallo';
+                toastr.info(`Copia al portapapeles ${msg}`);
+            } catch (err) {
+                toastr.warning('No se pudo copiar el texto:', err);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+    }
+});
+
 document.getElementById('btnAsignar').addEventListener('click', async e => {
     const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
     let orderItem;
@@ -13,7 +85,7 @@ document.getElementById('btnAsignar').addEventListener('click', async e => {
         lotesList = await getLotes(itemSelected.code);
     }
     if (flags.btnSndEdit === 'send') {
-        flags.editado=false;
+        flags.editado = false;
         await updateHistory();
         $('#historyModal').modal('hide');
     }
@@ -43,8 +115,22 @@ document.getElementById('cardsContainer').addEventListener('change', async e => 
 
 document.getElementById('cardsContainer').addEventListener('click', async e => {
     let role = e.target.getAttribute('_role');
+    const esInput = e.target.getAttribute('idin');
+    if( esInput){
+        let idOrder = e.target.getAttribute('_idOrder');
+        const documentO = localOrders.find(doc => doc._id === idOrder);
+        if(documentO.state === 1){
+            toastr.error('El documento no se puede modificar');
+            return;
+        }
+    };
     if (role === 'hist') {
         itemSelected.idDocument = e.target.getAttribute('_idDoc');
+        const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
+        if(documentO.state === 1){
+            toastr.error('El documento no se puede modificar');
+            return;
+    };
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
         await getHistory();
@@ -82,7 +168,7 @@ document.getElementById('cardsContainer').addEventListener('input', async e => {
 });
 
 document.getElementById('historyModal').addEventListener('hide.bs.modal', async e => {
-    if(flags.editado){
+    if (flags.editado) {
         const confirmacion = confirm('Ha efectuado algunos cambios, ¿desea Guardar o Cancelar?');
         if (confirmacion) {
             await updateHistory();
@@ -196,10 +282,30 @@ document.getElementById('bodyHistory').addEventListener('click', async e => {
     if (flags.btnSndEdit === 'edit' && _role === 'lote') {
         document.getElementById('historyModal').style.display = 'none';
         renderLotesHist();
-    }  
+    }
 })
 
 //* * * * * * * * * *    FUNCIONES   * * * * * * * * * * * * * * * * * * * * * * * *
+
+async function actInputs() {
+    workFilter.fx = 'c';
+    workFilter.oneId = itemSelected.idDocument;
+    const res = await fetch("/domain/despachos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(workFilter)
+    })
+    const data = await res.json();
+    workFilter.oneId = false;
+    if (data.fail) {
+        toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
+        return false;
+    }
+    oneOrder = data;
+    sendItem();
+}
 
 async function afterLoad() {
 
@@ -246,8 +352,8 @@ function businessHours(desdeFecha, hastaFecha) {
     return horasHabiles
 }
 
-function cambiosEmbalaje(index){
-    flags.editado=true;
+function cambiosEmbalaje(index) {
+    flags.editado = true;
     document.getElementById('btnAsignar').disabled = false;
     itemSelected.historyDisp[index].modificado = true;
     itemSelected.historyDisp[index].adjust = parseInt(document.getElementById(`inadj${index}`).value) || 0;
@@ -271,8 +377,8 @@ function fechaFormated(fecha) {
 }
 
 async function getHistory() {
-    flags.editado=false;
-    document.getElementById('btnAsignar').disabled=false;
+    flags.editado = false;
+    document.getElementById('btnAsignar').disabled = false;
     let response = await fetch("/domain/despachos/history", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -641,7 +747,7 @@ async function sendItem() {
     progressBar.textContent = `${avr}%`;
     const bodyContainer = document.getElementById('body' + indexToUpdate);
     bodyContainer.innerHTML = '';
-    
+
     for (let item of updatedOrder.orderItem) {
         renderbodyTable(item, indexToUpdate, updatedOrder._id, bodyContainer);
     }
@@ -663,7 +769,7 @@ function toggleBtnHistory() {
         boton.classList.add('btn-danger');
         const setEnable = document.getElementsByClassName('in-adj');
         Array.from(setEnable).forEach((item, index) => {
-            document.getElementById(`inadj${index}`).disabled=false;
+            document.getElementById(`inadj${index}`).disabled = false;
         })
     } else {
         boton.innerHTML = 'Editar';
@@ -690,20 +796,20 @@ function updateCheckFacturados() {
     document.getElementById('lbl_estado').innerHTML = lblTexto;
 }
 
-async function updateHistory(){
-    const tosend ={};
+async function updateHistory() {
+    const tosend = {};
     tosend._id = itemSelected.idDocument;
     tosend.idItem = itemSelected.idItem;
     tosend.obj = itemSelected.historyDisp
-    .filter(objeto => objeto.modificado === true) // Filtra los objetos donde el campo 'modificado' es true
-    .map(({ fechaHistory, qtyHistory, dspHistory, modificado, ...resto }) => resto); // Mapea los objetos filtrados y devuelve el resto de las propiedades, excluyendo fechaHistory y qtyHistory
+        .filter(objeto => objeto.modificado === true) // Filtra los objetos donde el campo 'modificado' es true
+        .map(({ fechaHistory, qtyHistory, dspHistory, modificado, ...resto }) => resto); // Mapea los objetos filtrados y devuelve el resto de las propiedades, excluyendo fechaHistory y qtyHistory
     let response = await fetch("/domain/despachos-hist/update", {
         headers: { 'content-type': 'application/json' },
         method: 'PUT',
         body: JSON.stringify(tosend)
     })
     const data = await response.json();
-    if(data.fail){
+    if (data.fail) {
         toastr.error(data.message);
         return;
     }
