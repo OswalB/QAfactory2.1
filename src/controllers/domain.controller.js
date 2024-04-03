@@ -78,6 +78,61 @@ apiCtrl.despachos = async (req, res, next) => {
             res.json(response);
             return;
         }
+        if (data.fx === 'q') {
+            if (data.oneId) {
+                const pipeline =[
+                    {
+                      '$match': {
+                        '_id': new ObjectId(data.oneId)
+                      }
+                    }, {
+                      '$project': {
+                        'orderItem': {
+                          '$map': {
+                            'input': '$orderItem', 
+                            'as': 'item', 
+                            'in': {
+                              '$mergeObjects': [
+                                '$$item', {
+                                  'lotesOk': {
+                                    '$reduce': {
+                                      'input': '$$item.historyDisp', 
+                                      'initialValue': true, 
+                                      'in': {
+                                        '$and': [
+                                          '$$value', {
+                                            '$ne': [
+                                              '$$this.loteVenta', ''
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }, 
+                        'delivery': 1, 
+                        'state': 1, 
+                        'createdAt': 1, 
+                        'totalReq': 1, 
+                        'TotalDisp': 1
+                      }
+                    }, {
+                      '$project': {
+                        'orderItem.historyDisp': 0, 
+                        'orderItem.product': 0
+                      }
+                    }
+                  ]
+                response = await Order.aggregate(pipeline);
+                response.unshift({count:0})
+            res.json(response);
+            return;
+            }
+        }
     } catch (error) {
         next(error);
     }

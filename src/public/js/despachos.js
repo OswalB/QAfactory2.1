@@ -115,30 +115,25 @@ document.getElementById('cardsContainer').addEventListener('change', async e => 
 
 document.getElementById('cardsContainer').addEventListener('click', async e => {
     let role = e.target.getAttribute('_role');
-    const esInput = e.target.getAttribute('idin');
-    if( esInput){
-        let idOrder = e.target.getAttribute('_idOrder');
-        const documentO = localOrders.find(doc => doc._id === idOrder);
-        if(documentO.state === 1){
-            toastr.error('El documento no se puede modificar');
-            return;
-        }
-    };
     if (role === 'hist') {
         itemSelected.idDocument = e.target.getAttribute('_idDoc');
-        const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
-        if(documentO.state === 1){
-            toastr.error('El documento no se puede modificar');
-            return;
-    };
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
         await getHistory();
     }
 });
 
-document.getElementById('cardsContainer').addEventListener('focusout', async e => {
+document.getElementById('cardsContainer').addEventListener('focusin', async e => {
+    const idDoc = e.target.getAttribute('_idOrder');
+    const idItem = e.target.getAttribute('_idItem');
 
+    if (idDoc && idItem && !flags.siChangeH) {
+        workFilter.oneId = idDoc;
+        await qerryInputs();
+    }
+})
+
+document.getElementById('cardsContainer').addEventListener('focusout', async e => {
     if (flags.siChangeH) {
         let match = false, orderItem = {};
         const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
@@ -307,6 +302,25 @@ async function actInputs() {
     sendItem();
 }
 
+async function qerryInputs() {
+    workFilter.fx = 'q';
+    const res = await fetch("/domain/despachos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(workFilter)
+    })
+    const data = await res.json();
+    workFilter.oneId = false;
+    if (data.fail) {
+        toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
+        return false;
+    }
+    oneOrder = data;
+    sendItem();
+}
+
 async function afterLoad() {
 
 };
@@ -378,7 +392,9 @@ function fechaFormated(fecha) {
 
 async function getHistory() {
     flags.editado = false;
-    document.getElementById('btnAsignar').disabled = false;
+    const currentDoc = localOrders.find(doc => doc._id === itemSelected.idDocument);
+    const deshabilitar = currentDoc.state === 1;
+    document.getElementById('btnAsignar').disabled = deshabilitar;
     let response = await fetch("/domain/despachos/history", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -386,7 +402,6 @@ async function getHistory() {
     })
     const data = await response.json();
     itemSelected.historyDisp = data[0].orderItem.historyDisp;
-    const currentDoc = localOrders.find(doc => doc._id === itemSelected.idDocument);
     const cabecera = document.getElementById('headHistory');
     cabecera.innerHTML = `
         <h5 class="modal-title" id="vistaLabel">Detalle de embalaje Cliente: ${currentDoc.client}<br>${itemSelected.name} </strong></h5>
@@ -479,7 +494,7 @@ function hoursAgo(f) {
     const diferenciaEnMinutos = Math.trunc(diferenciaEnMilisegundos / 60000);
     const horas = Math.trunc(diferenciaEnMinutos / 60);
     const minutos = diferenciaEnMinutos % 60;
-    const formatoHoras = ("0" + Math.abs(horas)).slice(-2);
+    const formatoHoras = ("00" + Math.abs(horas)).slice(-3);
     const formatoMinutos = ("0" + Math.abs(minutos)).slice(-2);
     const texto = `${formatoHoras}:${formatoMinutos}`;
     return { "texto": texto, "horas": horas };
@@ -522,6 +537,50 @@ async function init() {
     flags.accSndEdit = 'edit'
 }
 
+function paintCard(itemCard, indice) {
+    const order = itemCard;
+    const progressBar = document.getElementById(`pbar${order._id}`);
+    const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
+    progressBar.style.width = `${avr}%`;
+    progressBar.setAttribute('aria-valuenow', avr);
+    progressBar.textContent = `${avr}%`;
+    const horasentrega = hoursAgo(order.delivery);
+    const colorh = horasentrega.horas > 5 ? 'danger' : 'success';
+    const today = new Date();
+    const haceHoras = businessHours(new Date(order.createdAt), today);
+    const reloj = document.getElementById(`reloj${indice}`);
+    reloj.setAttribute('class', `text-${colorh}`);
+    const pill = document.getElementById(`nuevo${indice}`);
+    const pillState = haceHoras < 5 ? '' : 'none';
+    pill.style.display = pillState
+    const Finalizado = document.getElementById(`end${indice}`);
+    Finalizado.style.display = order.state === 1 ? 'inline' : 'none';
+    const desHabilitar = order.state === 1;
+    order.orderItem.forEach(item => {
+        document.getElementById(`in_${item._id}`).disabled = desHabilitar;
+        const dif = item.qty - item.dispatch;
+        const clase = ''
+        let status;
+        if (item.dispatch == 0) {
+            status = ' bg-secondary';
+        } else {
+            if (item.lotesOk) {
+                if (dif < 0) status = ' bg-warning';
+                if (dif > 0) status = ' bg-primary';
+                if (dif == 0) status = ' bg-success';
+            } else {
+                status = ' bg-danger';
+            }
+        }
+        const c1 = document.getElementById(`c1_${item._id}`);
+        c1.setAttribute('class', `text-white it-desc ${status}`);
+        const c2 = document.getElementById(`c2_${item._id}`);
+        c2.setAttribute('class', `text-white it-desc ${status}`);
+        const inCnt = document.getElementById(`in_${item._id}`);
+        inCnt.placeholder = item.dispatch;
+    });
+}
+
 function paintLotesButton() {
     let listChk = document.getElementsByClassName('checkArchivar');
     let countChecked = 0, values = [];
@@ -552,35 +611,19 @@ function paintLotesButton() {
 
 function renderbodyTable(item, idtr, orderid, bodyContainer) {
     const order = { _id: orderid }
-    const dif = item.qty - item.dispatch;
-    let status;
-    if (item.dispatch == 0) {
-        status = ' bg-secondary';
-    } else {
-        if (item.lotesOk) {
-            if (dif < 0) status = ' bg-warning';
-            if (dif > 0) status = ' bg-primary';
-            if (dif == 0) status = ' bg-success';
-        } else {
-            status = ' bg-danger';
-        }
-    }
-
-    if (item.dispatchBy) { dispatchBy = item.dispatchBy };
-    let valueDisp = item.dispatch;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-                    <th id="c1_${item._id}" class="text-white ${status} it-desc" >
+                    <th id="c1_${item._id}" >
                         <label id="lbl${item._id}" for="in_${item._id}">${item.product}</label>
                     </th>
-                    <td id="c2_${item._id}" class=" text-white ${status} it-desc">
+                    <td id="c2_${item._id}" >
                         <label for="in_${item._id}">${item.qty}</label>
                     </td>
                     <td _idItem="${item._id}" _idDoc="${order._id}" _role="hist">
                         <label  id="c3_${item._id}" ><i _idItem="${item._id}" _idDoc="${order._id}" _role="hist" class="fa fa-search-plus" aria-hidden="true"></i></i>
                     </td>
                     <td>
-                        <input idin=true id="in_${item._id}" type="number"  class="form-control text-end it-input fade-input" placeholder="${valueDisp}" value="" _idOrder="${order._id}" _idItem="${item._id}" _qty="${item.qty}" _dispatch="${valueDisp}" _dispatchBy="${item.dispatchBy}" _idt="${idtr}">
+                        <input idin=true id="in_${item._id}" type="number"  class="form-control text-end it-input fade-input text-primary" value="" _idOrder="${order._id}" _idItem="${item._id}" _qty="${item.qty}"  _idt="${idtr}">
                     </td>
                 `;
     bodyContainer.appendChild(tr);
@@ -591,27 +634,22 @@ async function renderCards() {
     let i = 0;
     cardsContainer.innerHTML = '';
     for (let order of localOrders) {
-        const horasentrega = hoursAgo(order.delivery);
-        const colorh = horasentrega.horas > 0 ? 'danger' : 'success';
         const oc = order.id_compras ? `O.C.#  ${order.id_compras}` : '';
         const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
-        const estado = order.notes ? 'bg-warning' : '';
+        const txtavr = avr > 100 ? 'Alert! +100' : avr;
         const delivery = fechaFormated(new Date(order.delivery));
         const created = fechaFormated(new Date(order.createdAt));
-        const today = new Date();
-        const haceHoras = businessHours(new Date(order.createdAt), today);
-        const pill = haceHoras < 5 ? `<span class="position-absolute top-2 start-11 translate-middle badge rounded-pill bg-warning">Nuevo
-        <span class="visually-hidden">unread messages</span>
-        </span>`: '';
-        const estilo = order.state === 1 ? 'inline' : 'none';
+        const estado = order.notes ? 'bg-warning' : '';
+        const horasentrega = hoursAgo(order.delivery);
         const divCard = document.createElement('div');
         divCard.setAttribute('class', 'accordion-item ');
         divCard.setAttribute('id', 'acc-item' + i);
         divCard.innerHTML = `
             <h3 class="accordion-header" id="heading${i}">
                 <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}">
-                    <div class="flex-fill">${order.client}${pill}</div>
-                    <h5 id="reloj${i}" class="text-${colorh}">${avr}% ${horasentrega.texto}</h5>
+                    <div class="flex-fill">${order.client}<span id="nuevo${i}" class="position-absolute top-2 start-11 translate-middle badge rounded-pill bg-warning">Nuevo!</span>
+                    </div>
+                    <h5 id="reloj${i}" class="">${txtavr}% ${horasentrega.texto}</h5>
                 </button>
             </h3>
             <div id="collapse${i}" class="accordion-collapse collapse" data-bs-parent="#accordionPanel">
@@ -622,12 +660,13 @@ async function renderCards() {
                                 Entregar el: ${delivery} - ${order.notes} - ${oc}
                             </span>
                             <div class="progress">
-                                <div id="pbar${order._id}" class="progress-bar bg-info" role="progressbar" style="width: ${avr}%;" aria-valuenow="${avr}" aria-valuemin="0" aria-valuemax="100">${avr}%</div>
+                                <div id="pbar${order._id}" class="progress-bar bg-info" role="progressbar"   aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                         <div class="card-body">
                             <span>Enviado el : ${created}, por: ${order.sellerName}</span>
-                            <button id="fac${i}"class="btn btn-primary mx-2 clip position-relative" idcard=${i} href="#" >Facturar<span class="position-absolute top-0 start-200 translate-middle badge rounded-pill bg-danger" style = display:${estilo} >Finalizado!</span></button>
+                            <button id="fac${i}"class="btn btn-primary mx-2 clip position-relative" idcard=${i} href="#" >Facturar
+                            <span id="end${i}" class="position-absolute top-0 start-200 translate-middle badge rounded-pill bg-danger" style = "display:none" >Finalizado!</span></button>
                             <button id="btnHide${i}"class="btn btn-primary mx-2 btn-hide position-relative" idcard=${i} href="#"  style = display:none>Ocultar</button>
                             <table class="table table-hover table-bordered">
                                 <thead>
@@ -652,15 +691,43 @@ async function renderCards() {
         for (let item of order.orderItem) {
             renderbodyTable(item, i, order._id, bodyContainer);
         }
+        paintCard(order, i);
         i++;
     }
     fadeInputs();
 }
 
-function renderLotes() {
+async function renderLotes() {
     if (lotesList.length === 0) return false;
     if (lotesList.length === 1) {
-        itemSelected.lote = lote[0].loteOut;
+        itemSelected.lote = lotesList[0].loteOut;
+        itemToSend = {};
+        const date = new Date();
+        itemToSend.fechaHistory = date.toISOString();
+        itemToSend.loteVenta = lotesList[0].loteOut;
+        itemToSend.qtyHistory = itemSelected.value;
+        itemToSend.idDocument = itemSelected.idDocument;
+        itemToSend.idItem = itemSelected.idItem;
+        oneOrder = {};
+        let localResponse = {};
+        checkAnswerServer('/domain/despachos/update', 'PUT', itemToSend)
+            .then(respuesta => {
+                return respuesta.json();
+            })
+            .then(data => {
+                localResponse = data;
+                if (data.success) {
+                    resMamager(true);
+                    oneOrder = localResponse.data;
+                    sendItem();
+                } else {
+                    resMamager(false, itemSelected.name);
+                }
+            })
+            .catch(error => {
+                resMamager(false, itemSelected.name);
+                console.error('Error en endpoint1:', error);
+            });
     } else {
         $('#lotesListModal').modal('show');
         const container = document.getElementById('lotesAvList');
@@ -685,25 +752,21 @@ function renderLotes() {
 function renderLotesHist() {
     itemSelected.loteEditHistory = '';
     if (lotesList.length === 0) return false;
-    if (lotesList.length === 1) {
-        itemSelected.lote = lote[0].loteOut;
-    } else {
-        $('#lotesHistoryModal').modal('show');
-        const container = document.getElementById('lotesAvHistory');
-        container.innerHTML = '';
-        lotesList.forEach(item => {
-            let fecha = new Date(item.fecha1);
-            const fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
-            const li = document.createElement('li');
-            li.setAttribute("class", "list-group-item");
-            li.setAttribute("_lote", item.loteOut);
-
-            li.innerHTML = `
+    $('#lotesHistoryModal').modal('show');
+    const container = document.getElementById('lotesAvHistory');
+    container.innerHTML = '';
+    lotesList.forEach(item => {
+        let fecha = new Date(item.fecha1);
+        const fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+        const li = document.createElement('li');
+        li.setAttribute("class", "list-group-item");
+        li.setAttribute("_lote", item.loteOut);
+        li.innerHTML = `
             <strong _lote=${item.loteOut}>${item.loteOut}</strong>  (${fechaTxt})              
         `;
-            container.appendChild(li);
-        })
-    }
+        container.appendChild(li);
+    })
+
 }
 
 async function renderTable() {
@@ -740,17 +803,7 @@ async function sendItem() {
     if (indexToUpdate !== -1) {
         localOrders[indexToUpdate] = updatedOrder;
     }
-    const progressBar = document.getElementById(`pbar${updatedOrder._id}`);
-    const avr = Math.trunc((100 * updatedOrder.TotalDisp) / updatedOrder.totalReq);
-    progressBar.style.width = `${avr}%`;
-    progressBar.setAttribute('aria-valuenow', avr);
-    progressBar.textContent = `${avr}%`;
-    const bodyContainer = document.getElementById('body' + indexToUpdate);
-    bodyContainer.innerHTML = '';
-
-    for (let item of updatedOrder.orderItem) {
-        renderbodyTable(item, indexToUpdate, updatedOrder._id, bodyContainer);
-    }
+    paintCard(updatedOrder, indexToUpdate);
 }
 
 function toggleCheckbox(liElement) {
