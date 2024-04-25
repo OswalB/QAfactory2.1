@@ -3,6 +3,7 @@ const router = Router();
 const { 
     despachos,
     getHistory,
+    getEmbodegar,
     intercambiador,
     misClientes,
     pedidos,
@@ -24,6 +25,7 @@ const {isAuthenticated, isAdmin,  authorization, isDispatcher} = require('../hel
 const errorHandler = require('../middlewares/errorHandler');
 
 router.get('/domain/despachos',isDispatcher, renderDespachos);
+router.get('/domain/embodegar',isAuthenticated, getEmbodegar);
 router.get('/domain/intercambiador', intercambiador);
 router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 

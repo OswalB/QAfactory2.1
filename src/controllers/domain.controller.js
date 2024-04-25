@@ -138,6 +138,41 @@ apiCtrl.despachos = async (req, res, next) => {
     }
 }
 
+apiCtrl.getEmbodegar = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        const pipeline = [
+            {
+              '$match': {
+                'formulaOk': true, 
+                'embodegado': false, 
+                'categoria': 'Empaque'
+              }
+            }, {
+              '$project': {
+                'categoria':1,
+                'loteOut': 1, 
+                'fecha1': 1, 
+                'operario': 1, 
+                'producto': 1, 
+                'codigoProducto': 1, 
+                'cantProd': 1
+              }
+            },{
+                '$sort': {
+                    'categoria': 1
+                  }
+            }
+          ]
+        response = await Planilla.aggregate(pipeline)
+
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.getHistory = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -271,6 +306,7 @@ apiCtrl.renderDespachos = async (req, res, next) => {
         "boton-xls": false,
         "boton-pagination": true,
         "boton-facturados": true,
+        "boton-embodegar":true,
         "titulo": "Despachador"
     };
 
