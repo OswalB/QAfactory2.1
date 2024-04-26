@@ -80,20 +80,17 @@ document.getElementById('btnEmbodegar').addEventListener('click',async e =>{
         
     })
 
-    
     toEmbodegar = await res.json();
     toEmbodegar.selected =[];
     flags.funcionEmbodegar = 'paso1';
     flags.bodegaChange = false;
     document.getElementById('lblEmbodegar').innerHTML = ' Copiar código y cantidad';
     document.getElementById('btnSaveBodega').disabled = true;
-    console.log(toEmbodegar);
     const container = document.getElementById('embodegarList');
     container.innerHTML = '';
     prev = '';
     toEmbodegar.forEach(item =>{
         const change = prev != item.categoria;
-        
         let header = '';
         if(change)header = `<li class="list-group-item bg-info"><h5 class="modal-title" >${item.categoria}</h5></li>`
         prev = item.categoria;
@@ -142,9 +139,6 @@ document.getElementById('btnSaveBodega').addEventListener('click',async e =>{
         document.getElementById('lblEmbodegar').innerHTML = ' Copiar c.c y lote';
         flags.funcionEmbodegar = 'paso2';
     }
-    
-    
-    
     
 });
 
@@ -229,8 +223,6 @@ document.getElementById('embodegarModal').addEventListener('hide.bs.modal', asyn
             saveBodega();
         }
     }
-    
-    
 });
 
 document.getElementById('historyModal').addEventListener('hide.bs.modal', async e => {
@@ -896,7 +888,6 @@ async function saveBodega(){
     toEmbodegar.selected.forEach(item =>{
         enviar.documentos.push({_id:item._id, embodegado : true})
     });
-    console.log(enviar); 
     const res = await fetch('/core/save', {    
         headers: {
             'Content-Type': 'application/json'
@@ -905,12 +896,28 @@ async function saveBodega(){
           body: JSON.stringify(enviar)
     });
     const dats = await res.json();
-    console.log(dats)
     if(dats.fail){
         toastr.error(dats.message);
         return;
     }
     toastr.info(dats.message);
+    enviar.documentos = [];
+    toEmbodegar.selected.forEach(item =>{
+        enviar.documentos.push({
+            codigo : item.codigoProducto,
+            producto: item.producto,
+            cantidad : item.cantProd
+        });
+    });
+    const resB = await fetch('/core/embodegar', {    
+        headers: {
+            'Content-Type': 'application/json'
+          },
+          method: "POST",
+          body: JSON.stringify(enviar)
+    });
+    const responseB = resB.json();
+    toastr.info(responseB.message)
 
 }
 

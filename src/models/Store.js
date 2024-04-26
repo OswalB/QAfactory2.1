@@ -12,7 +12,7 @@ const StoreSchema = new Schema({
         type: 'string',
         alias: 'Producto'
     },
-    Cantidad:{
+    cantidad:{
         type: 'Number',
         alias:'Cantidad'
     }

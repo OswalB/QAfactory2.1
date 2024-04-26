@@ -5,6 +5,7 @@ const {
     changepass,
     deleteDocument,
     editContent,
+    embodegar,
     getKeys,
     getLotesVigentes,
     intercambiador,
@@ -35,6 +36,7 @@ router.get('/logout', logout);
 router.get('/signin', renderSignin);
 
 router.post('/changepass',changepass);
+router.post('/core/embodegar',isAuthenticated, embodegar);
 router.post('/core/editor-content',authorization, editContent);
 router.post('/core/keys',authorization, getKeys);
 router.post('/core/lotes/vigentes',isAuthenticated, getLotesVigentes);

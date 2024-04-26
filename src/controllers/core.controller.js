@@ -9,6 +9,7 @@ const Editable = require('../models/Editable');
 const Order = require('../models/Order');
 const Planilla = require('../models/Planilla');
 const Errorl = require('../models/Errorl');
+const Store = require('../models/Store');
 const User = require('../models/User');
 const passport = require('passport');
 //const  = require('../services/serv.db');
@@ -58,6 +59,27 @@ coreCtrl.editContent = async (req, res, next) => {
         next(error);
     }
 }
+
+coreCtrl.embodegar = async (req, res, next) => {
+    try {
+        const {documentos } = req.body;
+        const operario = req.user.alias;
+        for (const documento of documentos) {
+            documento.operario = operario;
+            try {
+                const newDocument = await Store.create(documento);
+            } catch (error) {
+               throw error; // Pasar al manejador de errores
+               
+            }
+        }
+
+        res.json({ success: true, message: 'Embodegamiento guardado.'});
+
+    } catch (error) {
+        next(error);
+    }
+};
 
 coreCtrl.deleteDocument  = async(req, res, next) => {
     try {
@@ -290,8 +312,6 @@ coreCtrl.resetPass = async (req, res, next) => {
         next(error);
     }
 };
-
-
 
 coreCtrl.saveDocument = async (req, res, next) => {
     try {
