@@ -9,6 +9,7 @@ const ObjectId = require('mongodb').ObjectId;
 const config = require('../config/settings');
 const mongoose = require('mongoose');
 const Editable = require('../models/Editable');
+const Averia = require('../models/Averia');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
@@ -43,8 +44,8 @@ apiCtrl.despachos = async (req, res, next) => {
                 data.otrosMatch.push({ state: 0 })
             }
             if (data.oneId) {
-                data.otrosMatch=[];
-                data.otrosMatch.push({ _id : new ObjectId(data.oneId) });
+                data.otrosMatch = [];
+                data.otrosMatch.push({ _id: new ObjectId(data.oneId) });
                 console.log('un solo id')
             }
             data.proyectar = [
@@ -78,59 +79,81 @@ apiCtrl.despachos = async (req, res, next) => {
             res.json(response);
             return;
         }
-        if (data.fx === 'q') {
-            if (data.oneId) {
-                const pipeline =[
-                    {
-                      '$match': {
-                        '_id': new ObjectId(data.oneId)
-                      }
-                    }, {
-                      '$project': {
-                        'orderItem': {
-                          '$map': {
-                            'input': '$orderItem', 
-                            'as': 'item', 
-                            'in': {
-                              '$mergeObjects': [
-                                '$$item', {
-                                  'lotesOk': {
-                                    '$reduce': {
-                                      'input': '$$item.historyDisp', 
-                                      'initialValue': true, 
-                                      'in': {
-                                        '$and': [
-                                          '$$value', {
-                                            '$ne': [
-                                              '$$this.loteVenta', ''
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        }, 
-                        'delivery': 1, 
-                        'state': 1, 
-                        'createdAt': 1, 
-                        'totalReq': 1, 
-                        'TotalDisp': 1
-                      }
-                    }, {
-                      '$project': {
-                        'orderItem.historyDisp': 0, 
-                        'orderItem.product': 0
-                      }
+        if (data.fx === 'a') {
+            const pipe = [
+                {
+                    '$match': {
+                        'firmado': false
                     }
-                  ]
-                response = await Order.aggregate(pipeline);
-                response.unshift({count:0})
+                }, {
+                    '$sort': {
+                        'createdAt': 1
+                    }
+                }
+            ]
+            response = await Averia.aggregate(pipe);
             res.json(response);
             return;
+
+        }
+        if (data.fx === 'q') {
+            if (data.oneId) {
+                const pipeline = [
+                    {
+                        '$match': {
+                            '_id': new ObjectId(data.oneId)
+                        }
+                    }, {
+                        '$project': {
+                            'orderItem': {
+                                '$map': {
+                                    'input': '$orderItem',
+                                    'as': 'item',
+                                    'in': {
+                                        '$mergeObjects': [
+                                            '$$item', {
+                                                'lotesOk': {
+                                                    '$reduce': {
+                                                        'input': '$$item.historyDisp',
+                                                        'initialValue': true,
+                                                        'in': {
+                                                            '$and': [
+                                                                '$$value', {
+                                                                    '$ne': [
+                                                                        '$$this.loteVenta', ''
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            'delivery': 1,
+                            'state': 1,
+                            'createdAt': 1,
+                            'totalReq': 1,
+                            'TotalDisp': 1
+                        }
+                    }, {
+                        '$project': {
+                            'orderItem.historyDisp': 0,
+                            'orderItem.product': 0
+                        }
+                    }
+                ]
+                if (data.siAverias) {
+                    response = await Averia.aggregate(pipeline);
+                } else {
+                    response = await Order.aggregate(pipeline);
+                }
+
+                response.unshift({ count: 0 })
+                res.json(response);
+                return;
             }
         }
     } catch (error) {
@@ -144,27 +167,27 @@ apiCtrl.getEmbodegar = async (req, res, next) => {
         let response;
         const pipeline = [
             {
-              '$match': {
-                'formulaOk': true, 
-                'embodegado': false, 
-                'categoria': 'Empaque'
-              }
+                '$match': {
+                    'formulaOk': true,
+                    'embodegado': false,
+                    'categoria': 'Empaque'
+                }
             }, {
-              '$project': {
-                'categoria':1,
-                'loteOut': 1, 
-                'fecha1': 1, 
-                'operario': 1, 
-                'producto': 1, 
-                'codigoProducto': 1, 
-                'cantProd': 1
-              }
-            },{
+                '$project': {
+                    'categoria': 1,
+                    'loteOut': 1,
+                    'fecha1': 1,
+                    'operario': 1,
+                    'producto': 1,
+                    'codigoProducto': 1,
+                    'cantProd': 1
+                }
+            }, {
                 '$sort': {
                     'categoria': 1
-                  }
+                }
             }
-          ]
+        ]
         response = await Planilla.aggregate(pipeline)
 
         res.json(response);
@@ -199,6 +222,45 @@ apiCtrl.getHistory = async (req, res, next) => {
             }
         ]
         response = await Order.aggregate(pipeline)
+
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.getHistoryAveria = async (req, res, next) => {
+    try {
+        console.log('historia averias');
+        const data = req.body, user = req.user;
+        let response;
+        const pipeline = [
+            {
+                '$match': {
+                    '_id': new ObjectId(data.idDoc)
+                }
+            }, {
+                '$unwind': {
+                    'path': '$orderItem'
+                }
+            }, {
+                '$match': {
+                    'orderItem._id': new ObjectId(data.idItem)
+                }
+            }, {
+                '$project': {
+                    'orderItem.qty': 1,
+                    'orderItem.dispatch': 1,
+                    'orderItem.historyDisp': [{
+                        'loteVenta': '$orderItem.loteRepuesto',
+                        'dspHistory': '$orderItem.dispatchBy',
+                        'fechaHistory': '$orderItem.dispatchDate',
+                        'qtyHistory': '$orderItem.dispatch',
+                    }]
+                }
+            }
+        ]
+        response = await Averia.aggregate(pipeline)
 
         res.json(response);
     } catch (error) {
@@ -306,7 +368,7 @@ apiCtrl.renderDespachos = async (req, res, next) => {
         "boton-xls": false,
         "boton-pagination": true,
         "boton-facturados": true,
-        "boton-embodegar":true,
+        "boton-embodegar": true,
         "titulo": "Despachador"
     };
 
@@ -437,14 +499,41 @@ apiCtrl.setState = async (req, res, next) => {
         console.log(data);
         await Order.findByIdAndUpdate(data._id, { state: data.newValue }, { new: true })
 
-        
-        
-        
-        res.json({msg:'facturado:ok'});
+
+
+
+        res.json({ msg: 'facturado:ok' });
     } catch (error) {
         next(error);
     }
 };
+
+apiCtrl.updateAveria = async (req, res, next) => {
+
+    try {
+        const data = req.body, user = req.user;
+        await Averia.findOneAndUpdate(
+            { _id: data.idDocument, 'orderItem._id': data.idItem },
+            {
+                $inc: { 'orderItem.$.dispatch': data.qtyHistory },
+                $set: { 
+                    'orderItem.$.loteRepuesto': data.loteVenta,
+                    'orderItem.$.dispatchBy': user.alias
+                }
+            }
+        );
+
+        const query = {};
+        query.modelo = 'Averia';
+        query.sortObject = {};
+        query.proyectar = [];
+        query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
+        const resultado = await contenido(query);
+        res.status(200).json({ success: true, message: 'Operación completada con éxito', data: resultado });
+    } catch (error) {
+        next(error);
+    }
+}
 
 apiCtrl.updateDespacho = async (req, res, next) => {
     try {

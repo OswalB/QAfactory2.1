@@ -71,17 +71,17 @@ document.getElementById('btnAsignar').addEventListener('click', async e => {
     toggleBtnHistory();
 });
 
-document.getElementById('btnEmbodegar').addEventListener('click',async e =>{
-    const res = await fetch('/domain/embodegar',{
+document.getElementById('btnEmbodegar').addEventListener('click', async e => {
+    const res = await fetch('/domain/embodegar', {
         headers: {
             'Content-Type': 'application/json'
         },
         method: 'GET'
-        
+
     })
 
     toEmbodegar = await res.json();
-    toEmbodegar.selected =[];
+    toEmbodegar.selected = [];
     flags.funcionEmbodegar = 'paso1';
     flags.bodegaChange = false;
     document.getElementById('lblEmbodegar').innerHTML = ' Copiar código y cantidad';
@@ -89,57 +89,57 @@ document.getElementById('btnEmbodegar').addEventListener('click',async e =>{
     const container = document.getElementById('embodegarList');
     container.innerHTML = '';
     prev = '';
-    toEmbodegar.forEach(item =>{
+    toEmbodegar.forEach(item => {
         const change = prev != item.categoria;
         let header = '';
-        if(change)header = `<li class="list-group-item bg-info"><h5 class="modal-title" >${item.categoria}</h5></li>`
+        if (change) header = `<li class="list-group-item bg-info"><h5 class="modal-title" >${item.categoria}</h5></li>`
         prev = item.categoria;
         let fecha = new Date(item.fecha1);
-        let fechaTxt =  `${fecha.toLocaleDateString('es-us',{weekday: 'short',day:'2-digit',month:'short',hour:'2-digit', minute:'2-digit'})}`;
+        let fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
         const li = document.createElement('li');
-        li.setAttribute("class","list-group-item");
+        li.setAttribute("class", "list-group-item");
         li.setAttribute("onclick", "toggleCheckboxBodega(this)")
-        li.innerHTML= `
+        li.innerHTML = `
             ${header} 
             <input class="form-check-input me-1 checkBodega" type="checkbox" value="" idPlanilla=${item._id} onclick="event.stopPropagation()"><strong _idPlanilla=${item._id}>Prod.: ${item.codigoProducto}</strong> ${item.producto} - Cnt: ${item.cantProd} - L:${item.loteOut} ${fechaTxt} Op: ${item.operario})              
         `;
         container.appendChild(li);
-    }) 
-    
+    })
+
     $('#embodegarModal').modal('show');
 })
 
-document.getElementById('btnSaveBodega').addEventListener('click',async e =>{
-    if(flags.funcionEmbodegar === 'paso4'){
+document.getElementById('btnSaveBodega').addEventListener('click', async e => {
+    if (flags.funcionEmbodegar === 'paso4') {
         flags.funcionEmbodegar = 'paso1';
     }
-    if(flags.funcionEmbodegar === 'paso3'){
-        if(flags.bodegaChange){
+    if (flags.funcionEmbodegar === 'paso3') {
+        if (flags.bodegaChange) {
             await saveBodega();
         }
         flags.bodegaChange = false;
         flags.funcionEmbodegar = 'paso4';
         document.getElementById('lblEmbodegar').innerHTML = ' Copiar código y cantidad';
     }
-    if(flags.funcionEmbodegar === 'paso2'){
-        pyme = ''; 
-        toEmbodegar.selected.forEach(item =>{
+    if (flags.funcionEmbodegar === 'paso2') {
+        pyme = '';
+        toEmbodegar.selected.forEach(item => {
             pyme += `110${item.codigoProducto}\t${item.loteOut}\n`;
         });
         toClipBoard(pyme);
         document.getElementById('lblEmbodegar').innerHTML = ' Guardar';
         flags.funcionEmbodegar = 'paso3';
     }
-    if(flags.funcionEmbodegar === 'paso1'){
-        pyme = ''; 
-        toEmbodegar.selected.forEach(item =>{
+    if (flags.funcionEmbodegar === 'paso1') {
+        pyme = '';
+        toEmbodegar.selected.forEach(item => {
             pyme += `${item.codigoProducto}\t\t\t${item.cantProd}\n`;
         });
         toClipBoard(pyme);
         document.getElementById('lblEmbodegar').innerHTML = ' Copiar c.c y lote';
         flags.funcionEmbodegar = 'paso2';
     }
-    
+
 });
 
 document.getElementById('check_estado').addEventListener('click', async e => {
@@ -166,17 +166,20 @@ document.getElementById('cardsContainer').addEventListener('change', async e => 
 document.getElementById('cardsContainer').addEventListener('click', async e => {
     let role = e.target.getAttribute('_role');
     if (role === 'hist') {
+        
         itemSelected.idDocument = e.target.getAttribute('_idDoc');
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
+        const encontrado = localAverias.find(doc => doc._id === itemSelected.idDocument);
+        workFilter.siAverias = encontrado ? true : false;
         await getHistory();
     }
 });
 
 document.getElementById('cardsContainer').addEventListener('focusin', async e => {
+
     const idDoc = e.target.getAttribute('_idOrder');
     const idItem = e.target.getAttribute('_idItem');
-
     if (idDoc && idItem && !flags.siChangeH) {
         workFilter.oneId = idDoc;
         await qerryInputs();
@@ -217,7 +220,7 @@ document.getElementById('embodegarList').addEventListener('change', async e => {
 });
 
 document.getElementById('embodegarModal').addEventListener('hide.bs.modal', async e => {
-    if(flags.bodegaChange){
+    if (flags.bodegaChange) {
         const confirmacion = confirm('Ha seleccionado varios items, si ya los embodegó y no guarda los cambios podria duplicarse la informacion!, ¿desea Guardar o Cancelar?');
         if (confirmacion) {
             saveBodega();
@@ -308,7 +311,8 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
     itemToSend.idItem = itemSelected.idItem;
     oneOrder = {};
     let localResponse = {};
-    checkAnswerServer('/domain/despachos/update', 'PUT', itemToSend)
+    const url = workFilter.siAverias ? '/domain/averias/update' : '/domain/despachos/update';
+    checkAnswerServer(url, 'PUT', itemToSend)
         .then(respuesta => {
             return respuesta.json();
         })
@@ -317,6 +321,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
             if (data.success) {
                 resMamager(true);
                 oneOrder = localResponse.data;
+                console.log('hide and save', oneOrder)
                 sendItem();
             } else {
                 resMamager(false, itemSelected.name);
@@ -367,6 +372,8 @@ async function actInputs() {
 
 async function qerryInputs() {
     workFilter.fx = 'q';
+    const encontrado = localAverias.find(doc => doc._id === workFilter.oneId);
+    workFilter.siAverias = encontrado ? true : false;
     const res = await fetch("/domain/despachos", {
         headers: {
             'Content-Type': 'application/json'
@@ -443,9 +450,9 @@ function deshabilitar(estado) {
     })
 }
 
-function embodegarCambios(){
+function embodegarCambios() {
     let listChk = document.getElementsByClassName('checkBodega');
-    let countChecked = 0 ;
+    let countChecked = 0;
     flags.bodegaChange = true;
     toEmbodegar.selected = [];
     Array.from(listChk).forEach(item => {
@@ -474,17 +481,46 @@ function fechaFormated(fecha) {
     return `${d}-${m}-${a} ${h}:${mins}`;
 }
 
+function formatOrder(data) {
+    console.log(data)
+    data.forEach(document => {
+        document.orderItem.forEach(item => {
+            item.lotesOk = true;
+            if (item.loteRepuesto === '' && item.dispatch > 0) {
+                item.lotesOk = false;
+            }
+            item.dispatch = item.dispatch ? item.dispatch : 0;
+        })
+        const arraySinLote = document.orderItem.filter(item => (item.loteRepuesto === '' && item.dispatch > 0));
+        document.lotesOk = arraySinLote.length > 0;
+        document.client = `* Averias - ${document.client}`;
+        document.delivery = document.createdAt;
+        document.totalReq = document.orderItem.reduce((acumulador, doc) => {
+            const cantidad = doc.qty ? doc.qty : 0;
+            return acumulador + cantidad;
+        }, 0);
+
+        document.TotalDisp = document.orderItem.reduce((acumulador, doc) => {
+            const cantidad = doc.dispatch ? doc.dispatch : 0;
+            return acumulador + cantidad;
+        }, 0);
+    });
+    return data;
+}
+
 async function getHistory() {
     flags.editado = false;
     const currentDoc = localOrders.find(doc => doc._id === itemSelected.idDocument);
     const deshabilitar = currentDoc.state === 1;
     document.getElementById('btnAsignar').disabled = deshabilitar;
-    let response = await fetch("/domain/despachos/history", {
+    const url = workFilter.siAverias ? '/domain/averias/history' : '/domain/despachos/history';
+    let response = await fetch( url , {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
         body: JSON.stringify({ "idDoc": itemSelected.idDocument, "idItem": itemSelected.idItem })
     })
     const data = await response.json();
+    console.log(data)
     itemSelected.historyDisp = data[0].orderItem.historyDisp;
     const cabecera = document.getElementById('headHistory');
     cabecera.innerHTML = `
@@ -872,6 +908,19 @@ async function renderTable() {
     }
     toastr.remove();
     localOrders = data;
+
+    const res2 = await fetch("/domain/despachos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({ fx: 'a' })
+    })
+    let data2 = await res2.json();
+    data2 = formatOrder(data2);
+    localAverias = data2;
+    console.log(data2);
+    localOrders = localOrders.concat(localAverias);
     renderCards();
 }
 
@@ -881,40 +930,40 @@ function resMamager(estado, item) {
     alertSend(estado, item);
 }
 
-async function saveBodega(){
-    const enviar ={};
+async function saveBodega() {
+    const enviar = {};
     enviar.modelo = 'Planilla';
     enviar.documentos = [];
-    toEmbodegar.selected.forEach(item =>{
-        enviar.documentos.push({_id:item._id, embodegado : true})
+    toEmbodegar.selected.forEach(item => {
+        enviar.documentos.push({ _id: item._id, embodegado: true })
     });
-    const res = await fetch('/core/save', {    
+    const res = await fetch('/core/save', {
         headers: {
             'Content-Type': 'application/json'
-          },
-          method: "PUT",
-          body: JSON.stringify(enviar)
+        },
+        method: "PUT",
+        body: JSON.stringify(enviar)
     });
     const dats = await res.json();
-    if(dats.fail){
+    if (dats.fail) {
         toastr.error(dats.message);
         return;
     }
     toastr.info(dats.message);
     enviar.documentos = [];
-    toEmbodegar.selected.forEach(item =>{
+    toEmbodegar.selected.forEach(item => {
         enviar.documentos.push({
-            codigo : item.codigoProducto,
+            codigo: item.codigoProducto,
             producto: item.producto,
-            cantidad : item.cantProd
+            cantidad: item.cantProd
         });
     });
-    const resB = await fetch('/core/embodegar', {    
+    const resB = await fetch('/core/embodegar', {
         headers: {
             'Content-Type': 'application/json'
-          },
-          method: "POST",
-          body: JSON.stringify(enviar)
+        },
+        method: "POST",
+        body: JSON.stringify(enviar)
     });
     const responseB = resB.json();
     toastr.info(responseB.message)
@@ -922,6 +971,12 @@ async function saveBodega(){
 }
 
 async function sendItem() {
+    if (workFilter.siAverias) {
+        let array = [];
+        array.push(oneOrder[1]);
+        arrray = formatOrder(array);
+        oneOrder[1] = array[0]
+    }
     const updatedOrder = oneOrder[1];
     const indexToUpdate = localOrders.findIndex(order => order._id === updatedOrder._id);
     if (indexToUpdate !== -1) {
@@ -930,7 +985,7 @@ async function sendItem() {
     paintCard(updatedOrder, indexToUpdate);
 }
 
-function toClipBoard(pyme){
+function toClipBoard(pyme) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(pyme)
             .then(() => toastr.success('Texto copiado con éxito.'))
