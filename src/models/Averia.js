@@ -16,6 +16,11 @@ const AveriaSchema = new Schema({
         requiered: false,
         alias: 'Vendedor'
     },
+    state:{
+        type: 'number',
+        default:0,
+        alias: 'Estado'
+    },
     client:{
         type: 'string',
         requiered: true,

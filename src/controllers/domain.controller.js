@@ -19,6 +19,7 @@ const Planilla = require('../models/Planilla');
 
 
 const DvService = require('../services/serv.db');
+const { response } = require('express');
 
 apiCtrl.despachos = async (req, res, next) => {
     try {
@@ -586,6 +587,22 @@ apiCtrl.updateDespacho = async (req, res, next) => {
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
         const resultado = await contenido(query);
         res.status(200).json({ success: true, message: 'Operación completada con éxito', data: resultado });
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.updateHistoryAverias = async (req, res, next) => {
+    try {
+        let response='ok';
+        const data = req.body, user = req.user;
+        
+        const consulta = await Averia.find({ _id: new Object(data._id) }, 'state');
+        if (consulta.length === 0 || consulta[0].state === 1) {
+            res.json({ fail: true, message: 'No se puede editar un documento FACURADO.', data: {} });
+        }
+        console.log('codiguito de actualizar historia av',response);
+        res.json(response);
     } catch (error) {
         next(error);
     }

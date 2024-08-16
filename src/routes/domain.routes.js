@@ -18,6 +18,7 @@ const {
     stateLotes,
     updateAveria,
     updateDespacho,
+    updateHistoryAverias,
     updateHistoryDisp
     
     
@@ -42,6 +43,7 @@ router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 router.put('/domain/averias/save', isAuthenticated, saveAverias);
 router.put('/domain/averias/update', isDispatcher, updateAveria);
 router.put('/domain/despachos/update', isDispatcher, updateDespacho);
+router.put('/domain/averias-hist/update', isDispatcher, updateHistoryAverias);
 router.put('/domain/despachos-hist/update', isDispatcher, updateHistoryDisp);
 router.put('/domain/lotes/state', isAuthenticated, stateLotes);
 router.put('/domain/order/state', isDispatcher, setState);

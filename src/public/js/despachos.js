@@ -1060,13 +1060,14 @@ function updateCheckFacturados() {
 }
 
 async function updateHistory() {
+    const url = workFilter.siAverias?"/domain/averias-hist/update":"/domain/despachos-hist/update";
     const tosend = {};
     tosend._id = itemSelected.idDocument;
     tosend.idItem = itemSelected.idItem;
     tosend.obj = itemSelected.historyDisp
         .filter(objeto => objeto.modificado === true) // Filtra los objetos donde el campo 'modificado' es true
         .map(({ fechaHistory, qtyHistory, dspHistory, modificado, ...resto }) => resto); // Mapea los objetos filtrados y devuelve el resto de las propiedades, excluyendo fechaHistory y qtyHistory
-    let response = await fetch("/domain/despachos-hist/update", {
+    let response = await fetch(url, {
         headers: { 'content-type': 'application/json' },
         method: 'PUT',
         body: JSON.stringify(tosend)
@@ -1076,6 +1077,7 @@ async function updateHistory() {
         toastr.error(data.message);
         return;
     }
+    
     oneOrder = data;
     sendItem();
 }
