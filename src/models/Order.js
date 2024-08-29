@@ -1,7 +1,17 @@
 const {Schema, model}= require('mongoose');
 
 const OrderSchema = new Schema({
-    
+    consecutivo:{
+        type: 'number',
+        requiered: true,
+        alias: 'Consecutivo'
+    },
+    siOrder:{
+        type: 'boolean',
+        requiered: true,
+        alias: 'Es orden compra',
+        default: 'true'
+    },
     createdAt:{
         type: 'string',
         requiered: true,
@@ -55,6 +65,12 @@ const OrderSchema = new Schema({
         alias: 'Total despacahado'
     },
     orderItem:[{
+        loteAveria:{
+            type: 'string'
+        },
+        causalAveria:{
+            type: 'string'
+        },
         code: {
             type: 'string',
             requiered: true
@@ -71,8 +87,6 @@ const OrderSchema = new Schema({
             type: 'number',
             requiered: true
         },
-        
-        
         historyDisp:[{
             fechaHistory:{
                 type: 'date',
@@ -88,7 +102,6 @@ const OrderSchema = new Schema({
             loteVenta:{
                 type: 'string'
             }
-            
         }]
     }]
 },{

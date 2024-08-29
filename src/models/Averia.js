@@ -16,11 +16,6 @@ const AveriaSchema = new Schema({
         requiered: false,
         alias: 'Vendedor'
     },
-    state:{
-        type: 'number',
-        default:0,
-        alias: 'Estado'
-    },
     client:{
         type: 'string',
         requiered: true,
@@ -34,6 +29,11 @@ const AveriaSchema = new Schema({
     notes:{
         type: 'string',
         alias: 'notas'
+    },
+    state:{
+        type: 'number',
+        default:0,
+        alias: 'Estado'
     },
     firmado:{
         type: 'boolean',
@@ -54,21 +54,22 @@ const AveriaSchema = new Schema({
         product: {
             type: 'string',
             requiered: true
+        }, qty: {
+            type: 'number',
+            requiered: true
+        },dispatch: {
+            type: 'number',
+            requiered: true
         },
+
         causal:{
             type: 'string'
         },
         typeResponse:{
             type: 'string'
         },
-        qty: {
-            type: 'number',
-            requiered: true
-        },
-        dispatch: {
-            type: 'number',
-            requiered: true
-        },
+       
+        
         dispatchBy: {
             type: 'string',
             requiered: false

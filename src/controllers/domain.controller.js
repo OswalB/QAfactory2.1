@@ -304,28 +304,7 @@ apiCtrl.pedidos = async (req, res, next) => {
         const data = req.body, user = req.user;
         let response;
         data.modelo = 'Order';
-        if (data.fx === 'a') {
-            data.modelo = 'Averia';
-            if (user.administrador || user.despachador) {
-                data.otrosMatch.push({
-                    firmado: false,
-                });
-            } else {
-                data.otrosMatch.push({
-                    firmado: false,
-                    seller: user.ccnit,
-                });
-            }
-            data.saltar = 0;
-            data.limitar = 0;
-            data.sortObject = { consecutivo: 1 };
-
-            data.proyectar.push({ consecutivo: 1 }, { createdAt: 1 }, { client: 1 }, { _id: 0 }, { orderItem: 1 })
-
-            response = await contenido(data);
-            res.json(response);
-            return;
-        }
+        
         if (data.fx === 'k') {
             response = await keys(data);
             res.json(response);
@@ -345,12 +324,11 @@ apiCtrl.pedidos = async (req, res, next) => {
                 data.saltar = 0;
                 data.otrosMatch.push({ _id: new ObjectId(data._id) });
                 data.proyectar.push({ client: 1 }, { id_compras: 1 }, { totalReq: 1 }, { TotalDisp: 1 },
-                    { delivery: 1 }, { createdAt: 1 }, { state: 1 }, { notes: 1 }, { sellerName: 1 }, { vendedor: 1 },
+                    { delivery: 1 }, { createdAt: 1 }, { state: 1 }, { notes: 1 }, { sellerName: 1 }, { vendedor: 1 }, {consecutivo:1}, {siOrder:1},
                     { 'orderItem.product': 1 }, { 'orderItem.qty': 1 }, { 'orderItem.dispatch': 1 }, { 'orderItem.code': 1 }
                 );
             } else {
-                data.proyectar.push({ TotalDisp: 1 }, { client: 1 }, { delivery: 1 }, { state: 1 }, { totalReq: 1 });
-
+                data.proyectar.push({ TotalDisp: 1 }, { client: 1 }, { delivery: 1 }, { state: 1 }, { totalReq: 1 }, {consecutivo:1}, {siOrder:1});
             }
 
             response = await contenido(data);
@@ -387,6 +365,7 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         "boton-nuevo": true,
         "boton-vista": true,
         "boton-averias": true,
+        "boton-cancelar": true,
         "titulo": ""
     };
 
@@ -418,7 +397,7 @@ apiCtrl.saveAverias = async (req, res, next) => {
         let response;
         lastId = await Serial.findOne();
         if (!lastId) {
-            let newSerial = await new Serial({ 'consecutivo': 0, serialAverias: 0 });
+            let newSerial =  new Serial({ serialOrders: 0, serialAverias: 0, serialPlanillas: 0 });
             await newSerial.save();
             lastId = await Serial.findOne();
         }
@@ -437,9 +416,23 @@ apiCtrl.saveAverias = async (req, res, next) => {
 apiCtrl.savePedido = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
+        const siEsPedido = data.documentos[0].siOrder;
         let response;
+        lastId = await Serial.findOne();
+        if (!lastId) {
+            let newSerial =  new Serial({ serialOrders: 0, serialAverias: 0, serialPlanillas: 0 });
+            await newSerial.save();
+            lastId = await Serial.findOne();
+        }
+        
+        let counter = siEsPedido?lastId.serialOrders: lastId.serialAverias;
+        counter += 1;
+        const fieldToUpdate = siEsPedido ? 'serialOrders' : 'serialAverias';
+        await Serial.updateOne({ "_id": lastId._id }, { $set: { [fieldToUpdate]: counter } });
+        data.modelo = 'Order';
         data.documentos[0].seller = user.salesGroup;
         data.documentos[0].sellerName = user.name;
+        data.documentos[0].consecutivo = counter;
         response = await guardar(data);
         res.json(response);
     } catch (error) {

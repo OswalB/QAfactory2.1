@@ -1,39 +1,55 @@
-let misClientes = null, listProducts = null, currentCollection={}, docPedido = {}, docAverias={}, order, sugeridos;
-let esPedido = true, misAverias=[];
-
-
-
+let misClientes = null, listProducts = null, currentCollection = {}, docPedido = {}, docAverias = [], order, sugeridos;
+let esPedido = true, misAverias = [];
+const minHoras = 4;
 
 //=========================== sin revisar: =============================================
-document.getElementById('accordionItems').addEventListener('click', async e=>{
-    
-    let codeSelected = e.target.getAttribute('_idproduct');
-    if(!codeSelected || esPedido) return;
-    currentCollection.code = codeSelected;
+document.getElementById('accordionItems').addEventListener('click', async e => {
 
-    const product = listProducts.find(list => list.codigo === codeSelected );
+    let codeSelected = e.target.getAttribute('_idproduct');
+    if (!codeSelected || esPedido) return;
+    currentCollection.code = codeSelected;
+    const product = listProducts.find(list => list.codigo === codeSelected);
     currentCollection.product = product.nombre;
     const res = await fetch("/core/lotes/vigentes", {
         headers: {
             'Content-Type': 'application/json'
         },
         method: "POST",
-        body: JSON.stringify({code:codeSelected})
+        body: JSON.stringify({ code: codeSelected })
     });
     const data = await res.json();
     data.forEach(item => {
         item.vence = formatDate(new Date(item.vence));
     })
-    renderModalAverias(codeSelected,data);
-    
+    renderModalAverias(codeSelected, data);
+
 });
 
-document.getElementById('btnFaltantes').addEventListener('click', async e=>{
+document.getElementById('btnAverias').addEventListener('click', async e => {
+    esPedido = false;
+    newOrder();
+});
+
+document.getElementById('btnCancelar').addEventListener('click', async e => {
+    toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
+    const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
+    if (!resp) return;
+    pilotoFuncion({ btnP: true, btnA: true, btnC: false, btnV: false });
+    clearInputs();
+    setPaso(0);
+})
+
+document.getElementById('btnCopiar').addEventListener('click', async e => {
+    await backOrder(false);    //true: faltantes ; false: copia
+});
+
+document.getElementById('btnFaltantes').addEventListener('click', async e => {
     await backOrder(true);    //true: faltantes ; false: copia
 });
 
-document.getElementById('btnCopiar').addEventListener('click', async e=>{
-    await backOrder(false);    //true: faltantes ; false: copia
+document.getElementById('btnNuevo').addEventListener('click', async e => {
+    esPedido = true;
+    newOrder();
 });
 
 document.getElementById('btnVista').addEventListener('click', async e => {
@@ -43,54 +59,18 @@ document.getElementById('btnVista').addEventListener('click', async e => {
     docPedido.id_compras = document.getElementById('compra').value;
     docPedido.notes = document.getElementById('notes').value;
     docPedido.orderItem = jsonPedido;
-    docAverias.notes = document.getElementById('notes').value;
 });
 
-document.getElementById('btnNuevo').addEventListener('click', async e => {
-    esPedido = true;
-    if (document.getElementById('nombre').value) {
-        toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
-        const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
-        if (!resp) return;
+document.getElementById('inHoras').addEventListener('input', async e => {
+    let plazo = 0;
+    if (document.getElementById('inHoras').value) {
+        plazo = parseInt(document.getElementById('inHoras').value);
     }
-    clearInputs();
-    docPedido = {};
-    if (!misClientes) {
-        await getMisClientes();
-        await getProducts();
-        await renderAccordion();
-
+    if (plazo < 1) {
+        plazo = 0;
+        document.getElementById('inHoras').value = plazo;
     }
-
-    await renderClientes('');
-    document.getElementById('inHoras').value = 2;
-    const fecha = entrega(2);
-    docPedido.delivery = fecha.fechaEntrega;
-    document.getElementById('dateOrder').value = fecha.fechaDisplay;
-    $('#clientesModal').modal('show');
-});
-
-document.getElementById('btnAverias').addEventListener('click', async e => {
-    esPedido=false;
-    document.getElementById('step03').style.display = 'none';
-    document.getElementById('step04').style.display = 'none';
-    if (document.getElementById('nombre').value) {
-        toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
-        const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
-        if (!resp) return;
-    }
-    clearInputs();
-    docAverias = {};
-    docAverias.orderItem = [];
-    if (!misClientes) {
-        await getMisClientes();
-        await getProducts();
-        await renderAccordion();
-
-    }
-    borrarSugeridos();
-    await renderClientes('');
-    $('#clientesModal').modal('show');
+    actualizarFechaEntrega(plazo);
 });
 
 document.getElementById('inSearch').addEventListener('input', async e => {
@@ -99,41 +79,55 @@ document.getElementById('inSearch').addEventListener('input', async e => {
     renderClientes(text);
 });
 
-document.getElementById('misAveriasBody').addEventListener('click', async e => {
-    const idPedido = parseInt(e.target.getAttribute('_idpedido'));
-    
-    currentAveria = misAverias.find(averia => averia.consecutivo === idPedido);
-    document.getElementById('pedidoLabel').innerHTML =`Averias de:${currentAveria.client}` ;
-    document.getElementById('cardBody').innerHTML = `
-        <table class="table table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col" >Cant.</th>
-                    <th scope="col" >Producto / causal</th>
-                </tr>
-            </thead>
-            <tbody id="body1"></tbody>
-        </table>  
-    `;
-    const bodyContainer = document.getElementById('body1');
-    currentAveria.orderItem.forEach(item => {
-        const product = `${item.product} lote: ${item.loteVenta} - ${item.causal}`;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-                    <th class=" scope="row">${item.qty}</th>
-                    <td class=" text-right ">${product}</td>
-                    
-                `;
-        bodyContainer.appendChild(tr);
+document.getElementById('listClientes').addEventListener('click', async e => {
+    pilotoFuncion({ btnP: false, btnA: false, btnC: true, btnV: true });
+    let nit = e.target.getAttribute('_nit');
+    let nombre = e.target.innerText;
+    setPaso(1);
+    docPedido.client = nombre;
+    docPedido.nit = nit;
+    document.getElementById('nombre').value = nombre;
+    $('#clientesModal').modal('hide');
+
+    const res = await fetch("/domain/pedidos/suggested", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({ noc: nit, k: 12 })
     });
-    document.getElementById('card-footer').innerHTML = formatDateAgo(currentAveria.createdAt);
-    $('#pedidodrop').modal('show');
-})
+
+    sugeridos = await res.json();
+    borrarSugeridos();
+    if (esPedido) {
+        sugeridos.forEach(item => {
+            const entrada = document.getElementById(item.code);
+            if (entrada) {
+                entrada.placeholder = `Rec.:${item.avgQty}`;
+            };
+
+        });
+        bloquearInputs(false);
+    } else {
+        bloquearInputs(true);
+    }
+});
+
+document.getElementById('btnMas').addEventListener('click', async e => {
+    const valor = parseInt(document.getElementById('inHoras').value) + 1;
+    document.getElementById('inHoras').value = valor;
+    actualizarFechaEntrega(valor);
+});
+
+document.getElementById('btnMenos').addEventListener('click', async e => {
+    const valor = Math.max(parseInt(document.getElementById('inHoras').value) - 1, 0);
+    document.getElementById('inHoras').value = valor;
+    actualizarFechaEntrega(valor);
+});
 
 document.getElementById('misPedidosBody').addEventListener('click', async e => {
     toastr.warning('Cargando...', 'Espere');
     const idPedido = e.target.getAttribute('_idpedido');
-    //const pedidoSeleccionado = misPedidos.find(pedido => pedido._id === idPedido);
     workFilter.funcion = 'c';
     workFilter._id = idPedido;
     workFilter.fx = 'c'
@@ -148,7 +142,6 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
     workFilter._id = '';
     const data = await res.json();
     order = data[1];
-
     const oc = order.id_compras ? `O.C.# ${order.id_compras}` : '';
     const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
     const delivery = new Date(order.delivery);
@@ -162,7 +155,6 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
             <div class="progress-bar bg-info" role="progressbar" style="width: ${avr}%;" aria-valuenow="${avr}" aria-valuemin="0" aria-valuemax="100">${avr}%</div>
             </div>
         </h5>
-    
     `;
     document.getElementById('cardBody').innerHTML = `
         <h5 class="card-title">Usuario: ${order.sellerName}, enviado: ${created.toLocaleDateString()}-${created.toLocaleTimeString()} ${pill}</h5>
@@ -194,7 +186,7 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
         bodyContainer.appendChild(tr);
     });
 
-    document.getElementById('card-footer').innerHTML = '';//formatDateAgo(currentAveria.createdAt)
+    document.getElementById('card-footer').innerHTML = '';//formatDateAgo
     $('#pedidodrop').modal('show');
     if (!misClientes) {
         await getMisClientes();
@@ -202,96 +194,35 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
         await renderAccordion();
 
     }
-});
-
-document.getElementById('listClientes').addEventListener('click', async e => {
-    
-    let nit = e.target.getAttribute('_nit');
-    let nombre = e.target.innerText;
-    setPaso(1);
-    docPedido.client = nombre;
-    docPedido.nit = nit;
-    document.getElementById('nombre').value = nombre;
-    $('#clientesModal').modal('hide');
-
-    const res = await fetch("/domain/pedidos/suggested", {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify({noc:nit, k:12})
-    });
-    
-    sugeridos = await res.json();
-    borrarSugeridos();
-    if(esPedido){
-        sugeridos.forEach(item => {
-            const entrada = document.getElementById(item.code);
-            if(entrada){
-                entrada.placeholder = `Rec.:${item.avgQty}`;
-            };
-            
-        });
-        bloquearInputs(false);
-    }else{
-        
-        docAverias.client = nombre;
-        docAverias.nit = nit;
-        
-        bloquearInputs(true);
-    }
-    
-
-});
-
-document.getElementById('btnMas').addEventListener('click', async e => {
-    const valor = parseInt(document.getElementById('inHoras').value) + 1;
-    document.getElementById('inHoras').value = valor;
-    actualizarFechaEntrega(valor);
-});
-
-document.getElementById('btnMenos').addEventListener('click', async e => {
-    const valor = Math.max(parseInt(document.getElementById('inHoras').value) - 1, 0);
-    document.getElementById('inHoras').value = valor;
-    actualizarFechaEntrega(valor);
-});
-
-document.getElementById('inHoras').addEventListener('input', async e => {
-    let plazo = 0;
-    if (document.getElementById('inHoras').value) {
-        plazo = parseInt(document.getElementById('inHoras').value);
-    }
-    if (plazo < 1) {
-        plazo = 0;
-        document.getElementById('inHoras').value = plazo;
-    }
-    actualizarFechaEntrega(plazo);
+    document.getElementById('btnFaltantes').style.display=order.siOrder?'':'none';
+    document.getElementById('btnCopiar').style.display=order.siOrder?'':'none';
 });
 
 document.getElementById('btnSend').addEventListener('click', async e => {
-        toastr.info('Enviando...', 'Pedido');
-        const pedido = {};
-        pedido.modelo = esPedido?'Order':'Averia';
-        pedido.documentos = esPedido?[docPedido]:[docAverias];
-        const ruta = esPedido?'/domain/pedido/save':'/domain/averias/save';
-
+    toastr.info('Enviando...', 'Pedido');
+    const pedido = {};
+    docPedido.siOrder = esPedido
+    if (!esPedido) {
+        docPedido.orderItem = docAverias;
+    }
+    pedido.documentos = [docPedido];
+    const ruta = '/domain/pedido/save';
     const res = await fetch(ruta, {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: "PUT",
-            body: JSON.stringify(pedido)
-        });
-        const data = await res.json();
-        if (data.fail) {
-            toastr.error('Reintente!', 'No se ha podido enviar.', 'Pedido');
-            return false;
-        }
-        toastr.remove();
-        toastr.success(data.msg, 'Pedido');
-    
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "PUT",
+        body: JSON.stringify(pedido)
+    });
+    const data = await res.json();
+    if (data.fail) {
+        toastr.error('Reintente!', 'No se ha podido enviar.', 'Pedido');
+        return false;
+    }
+    toastr.remove();
+    toastr.success(data.msg, 'Pedido');
+    pilotoFuncion({ btnP: true, btnA: true, btnC: false, btnV: false })
     clearInputs();
-
     setPaso(0);
     $('#vistadrop').modal('hide');
     await renderTable();
@@ -299,15 +230,14 @@ document.getElementById('btnSend').addEventListener('click', async e => {
 
 document.getElementById('btn_guardar').addEventListener('click', () => {
     const item = {};
-    item.loteVenta = document.getElementById('loteVenta').value;
+    item.loteAveria = document.getElementById('loteVenta').value;
     item.qty = parseInt(document.getElementById('qty').value);
     item.code = currentCollection.code;
     item.product = currentCollection.product;
-    item.causal = document.getElementById('causal').value;
-    docAverias.orderItem.push(item);
-
+    item.causalAveria = document.getElementById('causal').value;
+    docAverias.push(item);
     $('#modalEditor').modal('hide');
-    const resultado = docAverias.orderItem.reduce((acumulador, pedido) => {
+    const resultado = docAverias.reduce((acumulador, pedido) => {
         const { code, qty } = pedido;
         if (!acumulador[code]) {
             acumulador[code] = { code, suma: 0 };
@@ -315,27 +245,67 @@ document.getElementById('btn_guardar').addEventListener('click', () => {
         acumulador[code].suma += qty;
         return acumulador;
     }, {});
-    
     const arrayResultado = Object.values(resultado);
     arrayResultado.forEach(item => {
-        document.getElementById(item.code).value= item.suma
+        document.getElementById(item.code).value = item.suma
     })
 
 })
 
 document.getElementById('modalEditor').addEventListener('change', () => {
-    if(applyValidation()){
+    if (applyValidation()) {
         document.getElementById('btn_guardar').style.display = '';
-    }else{
+    } else {
         document.getElementById('btn_guardar').style.display = 'none';
-        }
+    }
 })
 
 
 //=========================== FUNCTIONS =============================================
+function pilotoFuncion(config) {
+    const btnA = document.getElementById('btnAverias');
+    const btnP = document.getElementById('btnNuevo');
+    const btnC = document.getElementById('btnCancelar');
+    const btnV = document.getElementById('btnVista');
+    btnP.style.display = config.btnP ? '' : 'none';
+    btnA.style.display = config.btnA ? '' : 'none';
+    btnC.style.display = config.btnC ? '' : 'none';
+    btnV.style.display = config.btnV ? '' : 'none';
+    btnC.textContent = `Cancelar ${esPedido ? 'Pedido' : 'Averia'}`
+}
+
+async function newOrder() {
+    pilotoFuncion({ btnP: false, btnA: false, btnC: true, btnV: false })
+    const titletxt = `Seleccione el  cliente para solicitar: ${esPedido ? 'Pedidos' : 'Averias'}`;
+    document.getElementById('modalTitleClient').textContent = titletxt;
+    if (document.getElementById('nombre').value) {
+        toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
+        const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
+        if (!resp) return;
+    }
+    clearInputs();
+    docPedido = {};
+    docAverias = [];
+    if (!misClientes) {
+        await getMisClientes();
+        await getProducts();
+        await renderAccordion();
+    }
+    if (!esPedido) {
+        borrarSugeridos();
+    }
+    await renderClientes('');
+    document.getElementById('inHoras').value = minHoras;
+    const fecha = entrega(minHoras);
+    docPedido.delivery = fecha.fechaEntrega;
+    document.getElementById('dateOrder').value = fecha.fechaDisplay;
+    $('#clientesModal').modal('show');
+
+}
+
 async function init() {
     document.getElementById('title-main').innerHTML = 'Pedidos';
-
+    pilotoFuncion({ btnP: true, btnA: true, btnC: false, btnV: false });
     workFilter.modelo = 'Order';
     backFilter.filterBy = '0';
     backFilter.filterTxt = '';
@@ -369,30 +339,6 @@ async function init() {
 };
 
 async function renderTable() {
-    workFilter.fx = 'a'
-    const resAv = await fetch("/domain/pedidos", {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify(workFilter)
-    })
-    const dataAv = await resAv.json();
-    dataAv.shift(); 
-    misAverias = dataAv;
-    const containerAv = document.getElementById('misAveriasBody');
-    containerAv.innerHTML = '';
-    misAverias.forEach(item =>{
-        const tr = document.createElement('tr');
-        const fecha = new Date(item.createdAt)
-        tr.innerHTML = `
-                   <td  _idpedido="${item.consecutivo}">${item.consecutivo}</td>
-                   <td  _idpedido="${item.consecutivo}">${formatDate(fecha)}</td>
-                   <td  _idpedido="${item.consecutivo}">${item.client}</td>
-        `;
-        containerAv.appendChild(tr);
-    })
-
     workFilter.fx = 'c'
     const res = await fetch("/domain/pedidos", {
         headers: {
@@ -404,7 +350,7 @@ async function renderTable() {
     const data = await res.json();
     sizeCollection = data[0].countTotal;
     data.shift();       //elimina el dato contador
-    
+
     if (data.fail) {
         toastr.error('Reintente!', 'No se ha podido recibir.', 'Pedido');
         return false;
@@ -413,24 +359,34 @@ async function renderTable() {
     misPedidos = data;
     const container = document.getElementById('misPedidosBody');
     container.innerHTML = '';
-    
-    
     misPedidos.forEach(pedido => {
-        const estado = pedido.state === 0 ? 'table-info' : ''
+        //const estado = pedido.state === 0 ? 'table-info' : ''
+        let estado;
+
+        if (pedido.siOrder === false) {
+            estado = 'table-danger';
+        } else if (pedido.state === 0 && pedido.siOrder === true) {
+            estado = 'table-info';
+        } else {
+            estado = '';
+        }
+        
+        const clientAv = (pedido.siOrder === false) ?`AVERIAS - ${pedido.client}`: pedido.client ;
+
         const avr = Math.trunc((100 * pedido.TotalDisp) / pedido.totalReq);
         let entrega = new Date(pedido.delivery);
         entrega = `${entrega.getDate()}/${(entrega.getMonth() + 1)} ${entrega.getHours()}:${+entrega.getMinutes()}`;
         const tr = document.createElement('tr');
         tr.setAttribute("class", estado);
         tr.innerHTML = `
-                   <td  _idpedido="${pedido._id}">${(entrega)}</td>
-                   <td  _idpedido="${pedido._id}">${pedido.client}</td>
-                   <td  _idpedido="${pedido._id}">${avr}%</td>
+                    <td  _idpedido="${pedido._id}">${pedido.consecutivo || ''}</td>
+                    <td  _idpedido="${pedido._id}">${(entrega)}</td>
+                    <td  _idpedido="${pedido._id}">${clientAv}</td>
+                    <td  _idpedido="${pedido._id}">${avr}%</td>
         `;
         container.appendChild(tr);
     });
     setPaso(0);
-
 }
 
 async function afterLoad() {
@@ -439,32 +395,33 @@ async function afterLoad() {
 
 };
 
-async function renderModalAverias(codeSelected, data){
+async function renderModalAverias(codeSelected, data) {
     currentCollection.modelo = 'Averia';
-    const avKeys  = [
-        {alias:'Cantidad',campo:'qty', tipo:'number', min:1, require:true},
-        {alias:'Lote', campo:'loteVenta', tipo:'select', require:true, failMsg:'Seleccione un lote'},
-        {alias:'Causal',campo:'causal', tipo:'select', require:true, failMsg:'Seleccione una causal'}
+    const avKeys = [
+        { alias: 'Cantidad', campo: 'qty', tipo: 'number', min: 1, require: true },
+        { alias: 'Lote', campo: 'loteVenta', tipo: 'select', require: true, failMsg: 'Seleccione un lote' },
+        { alias: 'Causal', campo: 'causal', tipo: 'select', require: true, failMsg: 'Seleccione una causal' }
     ];
     renderModalEditor(avKeys);
     document.getElementById('btn_guardar').style.display = 'none';
+
     const dataOptions = data.map(objeto => {
         return {
             ...objeto,
             campo: objeto.loteOut,
-            alias: `${objeto.loteOut} ${objeto.vencido?'Vencido':''}`
+            alias: `${objeto.loteOut} ${objeto.vencido ? 'Vencido' : ''}`
         };
     });
 
     addOptions('loteVenta', dataOptions)
-    document.getElementById('modal-title').innerHTML=`Averias de ${data.nombre}`;
-    const response = await fetch("/core/editor-content",{
-        headers: {'content-type': 'application/json'},
+    document.getElementById('modal-title').innerHTML = `Averias de ${data.nombre}`;
+    const response = await fetch("/core/editor-content", {
+        headers: { 'content-type': 'application/json' },
         method: 'POST',
         body: JSON.stringify({
-            modelo:'Reason', 
-            sortObject:{titulo:1},
-            proyectar:[{titulo:1},{_id:0}]
+            modelo: 'Reason',
+            sortObject: { titulo: 1 },
+            proyectar: [{ titulo: 1 }, { _id: 0 }]
         })
     })
     const dataList = await response.json();
@@ -478,27 +435,23 @@ async function renderModalAverias(codeSelected, data){
     });
     addOptions('causal', dataOptions2);
 
-return;
-    
-    
-    
-
+    return;
     $('#modalEditor').modal('show');
 }
 
-function borrarSugeridos(){
+function borrarSugeridos() {
     listProducts.forEach(item => {
         element = document.getElementById(item.codigo);
-        if(element){
+        if (element) {
             element.placeholder = '';
         }
     });
 }
 
-function bloquearInputs(bloquear){
+function bloquearInputs(bloquear) {
     listProducts.forEach(item => {
         element = document.getElementById(item.codigo);
-        if(element){
+        if (element) {
             element.readOnly = bloquear;
         }
     });
@@ -555,14 +508,14 @@ function renderModalVista() {
 
 }
 
-async function backOrder(faltantes){
-    
-    if(document.getElementById('nombre').value) {
-        toastr.warning('El pedido actual no ha sido enviado','Atencion!')
+async function backOrder(faltantes) {
+
+    if (document.getElementById('nombre').value) {
+        toastr.warning('El pedido actual no ha sido enviado', 'Atencion!')
         const resp = confirm('El pedido actual no ha sido enviado.\n¿Desea borrar el contenido e iniciar un pedido nuevo?');
-        if(!resp) return;
+        if (!resp) return;
     }
-    
+    pilotoFuncion({ btnP: false, btnA: false, btnC: true, btnV: true });
     clearInputs();
     setPaso(1);
     $('#pedidodrop').modal('hide');
@@ -576,16 +529,14 @@ async function backOrder(faltantes){
     docPedido.client = order.client;
     docPedido.nit = order.nit;
     order.orderItem.forEach(item => {
-        if(faltantes){
+        if (faltantes) {
             let pendiente = item.qty - item.dispatch;
-            if(pendiente > 0) {
+            if (pendiente > 0) {
                 document.getElementById(item.code).value = pendiente;
             }
-        }else{
+        } else {
             document.getElementById(item.code).value = item.qty;
-        }    
-        
-        
+        }
     })
 }
 
@@ -641,26 +592,17 @@ async function renderAccordion() {
 }
 
 function setPaso(paso) {
-    const elementsToShow = ['step01', 'step02','step03', 'step04', 'step05', 'accordionItems', 'btnVista'];
+    const elementsToShow = ['step01', 'step02', 'step03', 'step04', 'step05', 'accordionItems'];
     const elementsToHide = ['step02', 'step03', 'step04'];
-
     let state = paso < 1 ? 'none' : '';
-    
+
     elementsToShow.forEach(elementId => {
         const element = document.getElementById(elementId);
         if (element) {
             element.style.display = state;
         }
     });
-    
-    if (!esPedido){
-        elementsToHide.forEach(elementId => {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.style.display = 'none';
-        }
-    });
-    }
+
 }
 
 function clearInputs() {
@@ -748,11 +690,11 @@ function entrega(plazo) {
 
     return { fechaEntrega, fechaDisplay };
 
-    
+
 }
 
 function actualizarFechaEntrega(valor) {
-    document.getElementById('alertPlazo').style.display = valor < 2 ? '' : 'none';
+    document.getElementById('alertPlazo').style.display = valor < minHoras ? '' : 'none';
     const fechaEntrega = entrega(valor);
     document.getElementById('dateOrder').value = fechaEntrega.fechaDisplay;
     docPedido.delivery = fechaEntrega.fechaEntrega;

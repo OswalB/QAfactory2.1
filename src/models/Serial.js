@@ -1,14 +1,19 @@
 const {Schema, model}= require('mongoose');
 const SerialSchema = new Schema({
-    consecutivo:{
+    serialOrders:{
         type: 'Number',
         required: true,
-        alias:'Consecutivo'
+        alias:'Consecutivo ordenes'
+    },
+    serialPlanillas:{
+        type: 'Number',
+        required: true,
+        alias:'Consecutivo planillas'
     },
     serialAverias:{
         type: 'Number',
         required: true,
-        alias:'Consecutivo Averias'
+        alias:'Consecutivo averias'
     }
 
 },{
