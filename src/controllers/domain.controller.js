@@ -73,7 +73,8 @@ apiCtrl.despachos = async (req, res, next) => {
                     }
                 },
                 { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder: 1}
+                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder: 1},
+                { id_compras:1}
             ]
             response = await contenido(data);
 

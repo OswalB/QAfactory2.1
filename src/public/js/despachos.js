@@ -721,12 +721,14 @@ async function renderCards() {
     let i = 0;
     cardsContainer.innerHTML = '';
     for (let order of localOrders) {
-        const oc = order.id_compras ? `O.C.#  ${order.id_compras}` : '';
+        const delivery = fechaFormated(new Date(order.delivery));
+        let nota = ` Entrega: ${delivery}`;
+        nota +=  order.notes?` - ${order.notes}`:'';
+        nota +=  order.id_compras ? ` O.C.#  ${order.id_compras}` : '';
         const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
         const txtavr = avr > 100 ? 'Alert! +100' : avr;
-        const delivery = fechaFormated(new Date(order.delivery));
         const created = fechaFormated(new Date(order.createdAt));
-        order.notes = order.siOrder?order.notes:`AVERIAS -${order.notes}`;
+        const numeracion = order.siOrder?'Pedido # ':`AVERIAS #`;
         const estado = order.notes ? 'bg-warning' : '';
         const horasentrega = hoursAgo(order.delivery);
         const stateAveria = order.siOrder? '':'bg-dark text-light'
@@ -745,8 +747,9 @@ async function renderCards() {
                 <div class="accordion-body">
                     <div class="card">
                         <div class="card-header ${estado}">
+                            <strong>${numeracion} ${order.consecutivo}</strong><br>
                             <span class="fs-5">
-                                Entregar el: ${delivery} - ${order.notes} - ${oc}
+                                ${nota}
                             </span>
                             <div class="progress">
                                 <div id="pbar${order._id}" class="progress-bar bg-info" role="progressbar"   aria-valuemin="0" aria-valuemax="100"></div>
