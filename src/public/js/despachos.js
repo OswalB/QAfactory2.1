@@ -19,7 +19,7 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
                 body: JSON.stringify({ _id: itemSelected.idDocument, newValue: 1 })
             });
             if (!res.ok) {
-                throw new Error('Error al al facturar');
+                throw new Error('Error al facturar');
             }
             const data = await res.json();
             if (data.fail) {
