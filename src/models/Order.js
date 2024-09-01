@@ -85,6 +85,7 @@ const OrderSchema = new Schema({
         },
         dispatch: {
             type: 'number',
+            default: 0,
             requiered: true
         },
         historyDisp:[{

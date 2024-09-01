@@ -9,7 +9,7 @@ const ObjectId = require('mongodb').ObjectId;
 const config = require('../config/settings');
 const mongoose = require('mongoose');
 const Editable = require('../models/Editable');
-const Averia = require('../models/Averia');
+
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
@@ -73,30 +73,14 @@ apiCtrl.despachos = async (req, res, next) => {
                     }
                 },
                 { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }
+                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder: 1}
             ]
             response = await contenido(data);
 
             res.json(response);
             return;
         }
-        if (data.fx === 'a') {
-            const pipe = [
-                {
-                    '$match': {
-                        'firmado': false
-                    }
-                }, {
-                    '$sort': {
-                        'createdAt': 1
-                    }
-                }
-            ]
-            response = await Averia.aggregate(pipe);
-            res.json(response);
-            return;
-
-        }
+      
         if (data.fx === 'q') {
             if (data.oneId) {
                 const pipeline = [
@@ -146,12 +130,8 @@ apiCtrl.despachos = async (req, res, next) => {
                         }
                     }
                 ]
-                if (data.siAverias) {
-                    response = await Averia.aggregate(pipeline);
-                } else {
-                    response = await Order.aggregate(pipeline);
-                }
-
+                
+                response = await Order.aggregate(pipeline);
                 response.unshift({ count: 0 })
                 res.json(response);
                 return;
@@ -223,45 +203,6 @@ apiCtrl.getHistory = async (req, res, next) => {
             }
         ]
         response = await Order.aggregate(pipeline)
-
-        res.json(response);
-    } catch (error) {
-        next(error);
-    }
-}
-
-apiCtrl.getHistoryAveria = async (req, res, next) => {
-    try {
-        console.log('historia averias');
-        const data = req.body, user = req.user;
-        let response;
-        const pipeline = [
-            {
-                '$match': {
-                    '_id': new ObjectId(data.idDoc)
-                }
-            }, {
-                '$unwind': {
-                    'path': '$orderItem'
-                }
-            }, {
-                '$match': {
-                    'orderItem._id': new ObjectId(data.idItem)
-                }
-            }, {
-                '$project': {
-                    'orderItem.qty': 1,
-                    'orderItem.dispatch': 1,
-                    'orderItem.historyDisp': [{
-                        'loteVenta': '$orderItem.loteRepuesto',
-                        'dspHistory': '$orderItem.dispatchBy',
-                        'fechaHistory': '$orderItem.dispatchDate',
-                        'qtyHistory': '$orderItem.dispatch',
-                    }]
-                }
-            }
-        ]
-        response = await Averia.aggregate(pipeline)
 
         res.json(response);
     } catch (error) {
@@ -391,28 +332,6 @@ apiCtrl.salesProducts = async (req, res, next) => {
     }
 };
 
-apiCtrl.saveAverias = async (req, res, next) => {
-    try {
-        const data = req.body, user = req.user;
-        let response;
-        lastId = await Serial.findOne();
-        if (!lastId) {
-            let newSerial =  new Serial({ serialOrders: 0, serialAverias: 0, serialPlanillas: 0 });
-            await newSerial.save();
-            lastId = await Serial.findOne();
-        }
-        let counter = lastId.serialAverias += 1;
-        await Serial.updateOne({ "_id": lastId._id }, { $set: { 'serialAverias': counter } });
-        data.documentos[0].consecutivo = counter;
-        data.documentos[0].seller = user.ccnit;
-        data.documentos[0].sellerName = user.name;
-        response = await guardar(data);
-        res.json(response);
-    } catch (error) {
-        next(error);
-    }
-}
-
 apiCtrl.savePedido = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -502,33 +421,6 @@ apiCtrl.setState = async (req, res, next) => {
     }
 };
 
-apiCtrl.updateAveria = async (req, res, next) => {
-
-    try {
-        const data = req.body, user = req.user;
-        await Averia.findOneAndUpdate(
-            { _id: data.idDocument, 'orderItem._id': data.idItem },
-            {
-                $inc: { 'orderItem.$.dispatch': data.qtyHistory },
-                $set: { 
-                    'orderItem.$.loteRepuesto': data.loteVenta,
-                    'orderItem.$.dispatchBy': user.alias
-                }
-            }
-        );
-
-        const query = {};
-        query.modelo = 'Averia';
-        query.sortObject = {};
-        query.proyectar = [];
-        query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
-        const resultado = await contenido(query);
-        res.status(200).json({ success: true, message: 'Operación completada con éxito', data: resultado });
-    } catch (error) {
-        next(error);
-    }
-}
-
 apiCtrl.updateDespacho = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -580,22 +472,6 @@ apiCtrl.updateDespacho = async (req, res, next) => {
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
         const resultado = await contenido(query);
         res.status(200).json({ success: true, message: 'Operación completada con éxito', data: resultado });
-    } catch (error) {
-        next(error);
-    }
-}
-
-apiCtrl.updateHistoryAverias = async (req, res, next) => {
-    try {
-        let response='ok';
-        const data = req.body, user = req.user;
-        
-        const consulta = await Averia.find({ _id: new Object(data._id) }, 'state');
-        if (consulta.length === 0 || consulta[0].state === 1) {
-            res.json({ fail: true, message: 'No se puede editar un documento FACURADO.', data: {} });
-        }
-        console.log('codiguito de actualizar historia av',response);
-        res.json(response);
     } catch (error) {
         next(error);
     }

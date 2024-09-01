@@ -3,7 +3,6 @@ const router = Router();
 const { 
     despachos,
     getHistory,
-    getHistoryAveria,
     getEmbodegar,
     intercambiador,
     misClientes,
@@ -12,13 +11,11 @@ const {
     renderPedidos,
     salesProducts,
     sugeridos,
-    saveAverias,
     savePedido,
     setState,
     stateLotes,
     updateAveria,
     updateDespacho,
-    updateHistoryAverias,
     updateHistoryDisp
     
     
@@ -34,16 +31,12 @@ router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 
 router.post('/domain/despachos',isDispatcher, despachos);
 router.post('/domain/despachos/history',isDispatcher, getHistory);
-router.post('/domain/averias/history',isDispatcher, getHistoryAveria);
 router.post('/domain/mis-clientes',isAuthenticated, misClientes);
 router.post('/domain/pedidos',isAuthenticated, pedidos);
 router.post('/domain/pedidos/suggested',isAuthenticated, sugeridos);
 router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
-router.put('/domain/averias/save', isAuthenticated, saveAverias);
-router.put('/domain/averias/update', isDispatcher, updateAveria);
 router.put('/domain/despachos/update', isDispatcher, updateDespacho);
-router.put('/domain/averias-hist/update', isDispatcher, updateHistoryAverias);
 router.put('/domain/despachos-hist/update', isDispatcher, updateHistoryDisp);
 router.put('/domain/lotes/state', isAuthenticated, stateLotes);
 router.put('/domain/order/state', isDispatcher, setState);

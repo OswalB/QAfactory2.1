@@ -9,7 +9,6 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
     }
     if (e.target.classList.contains('clip')) {
         itemSelected.idDocument = localOrders[i]._id;
-        console.log('click', i)
         toastr.warning('ESPERE!');
         try {
             const res = await fetch("/domain/order/state", {
@@ -170,8 +169,6 @@ document.getElementById('cardsContainer').addEventListener('click', async e => {
         itemSelected.idDocument = e.target.getAttribute('_idDoc');
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
-        const encontrado = localAverias.find(doc => doc._id === itemSelected.idDocument);
-        workFilter.siAverias = encontrado ? true : false;
         await getHistory();
     }
 });
@@ -311,7 +308,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
     itemToSend.idItem = itemSelected.idItem;
     oneOrder = {};
     let localResponse = {};
-    const url = workFilter.siAverias ? '/domain/averias/update' : '/domain/despachos/update';
+    const url = '/domain/despachos/update';
     checkAnswerServer(url, 'PUT', itemToSend)
         .then(respuesta => {
             return respuesta.json();
@@ -321,7 +318,6 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
             if (data.success) {
                 resMamager(true);
                 oneOrder = localResponse.data;
-                console.log('hide and save', oneOrder)
                 sendItem();
             } else {
                 resMamager(false, itemSelected.name);
@@ -372,8 +368,6 @@ async function actInputs() {
 
 async function qerryInputs() {
     workFilter.fx = 'q';
-    const encontrado = localAverias.find(doc => doc._id === workFilter.oneId);
-    workFilter.siAverias = encontrado ? true : false;
     const res = await fetch("/domain/despachos", {
         headers: {
             'Content-Type': 'application/json'
@@ -481,39 +475,12 @@ function fechaFormated(fecha) {
     return `${d}-${m}-${a} ${h}:${mins}`;
 }
 
-function formatOrder(data) {
-    console.log(data)
-    data.forEach(document => {
-        document.orderItem.forEach(item => {
-            item.lotesOk = true;
-            if (item.loteRepuesto === '' && item.dispatch > 0) {
-                item.lotesOk = false;
-            }
-            item.dispatch = item.dispatch ? item.dispatch : 0;
-        })
-        const arraySinLote = document.orderItem.filter(item => (item.loteRepuesto === '' && item.dispatch > 0));
-        document.lotesOk = arraySinLote.length > 0;
-        document.client = `* Averias - ${document.client}`;
-        document.delivery = document.createdAt;
-        document.totalReq = document.orderItem.reduce((acumulador, doc) => {
-            const cantidad = doc.qty ? doc.qty : 0;
-            return acumulador + cantidad;
-        }, 0);
-
-        document.TotalDisp = document.orderItem.reduce((acumulador, doc) => {
-            const cantidad = doc.dispatch ? doc.dispatch : 0;
-            return acumulador + cantidad;
-        }, 0);
-    });
-    return data;
-}
-
 async function getHistory() {
     flags.editado = false;
     const currentDoc = localOrders.find(doc => doc._id === itemSelected.idDocument);
     const deshabilitar = currentDoc.state === 1;
     document.getElementById('btnAsignar').disabled = deshabilitar;
-    const url = workFilter.siAverias ? '/domain/averias/history' : '/domain/despachos/history';
+    const url = '/domain/despachos/history';
     let response = await fetch( url , {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -759,14 +726,16 @@ async function renderCards() {
         const txtavr = avr > 100 ? 'Alert! +100' : avr;
         const delivery = fechaFormated(new Date(order.delivery));
         const created = fechaFormated(new Date(order.createdAt));
+        order.notes = order.siOrder?order.notes:`AVERIAS -${order.notes}`;
         const estado = order.notes ? 'bg-warning' : '';
         const horasentrega = hoursAgo(order.delivery);
+        const stateAveria = order.siOrder? '':'bg-dark text-light'
         const divCard = document.createElement('div');
         divCard.setAttribute('class', 'accordion-item ');
         divCard.setAttribute('id', 'acc-item' + i);
         divCard.innerHTML = `
             <h3 class="accordion-header" id="heading${i}">
-                <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}">
+                <button class="${stateAveria} accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}">
                     <div class="flex-fill">${order.client}<span id="nuevo${i}" class="position-absolute top-2 start-11 translate-middle badge rounded-pill bg-warning">Nuevo!</span>
                     </div>
                     <h5 id="reloj${i}" class="">${txtavr}% ${horasentrega.texto}</h5>
@@ -908,19 +877,6 @@ async function renderTable() {
     }
     toastr.remove();
     localOrders = data;
-
-    const res2 = await fetch("/domain/despachos", {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify({ fx: 'a' })
-    })
-    let data2 = await res2.json();
-    data2 = formatOrder(data2);
-    localAverias = data2;
-    console.log(data2);
-    localOrders = localOrders.concat(localAverias);
     renderCards();
 }
 
@@ -971,12 +927,6 @@ async function saveBodega() {
 }
 
 async function sendItem() {
-    if (workFilter.siAverias) {
-        let array = [];
-        array.push(oneOrder[1]);
-        arrray = formatOrder(array);
-        oneOrder[1] = array[0]
-    }
     const updatedOrder = oneOrder[1];
     const indexToUpdate = localOrders.findIndex(order => order._id === updatedOrder._id);
     if (indexToUpdate !== -1) {
@@ -1060,7 +1010,7 @@ function updateCheckFacturados() {
 }
 
 async function updateHistory() {
-    const url = workFilter.siAverias?"/domain/averias-hist/update":"/domain/despachos-hist/update";
+    const url = "/domain/despachos-hist/update";
     const tosend = {};
     tosend._id = itemSelected.idDocument;
     tosend.idItem = itemSelected.idItem;

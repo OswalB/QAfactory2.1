@@ -60,7 +60,7 @@ app.use(session({
     secret: 'cathyca82',
     resave: true,
     saveUninitialized: true,
-    cookie: { maxAge: oneWeek * 2},
+    cookie: { maxAge: oneWeek * 4},
     store: MongoStore.create({
         mongoUrl: MONGODB_URI,
         autoReconnect: true,
