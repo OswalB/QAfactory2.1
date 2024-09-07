@@ -9,7 +9,7 @@ const ObjectId = require('mongodb').ObjectId;
 const config = require('../config/settings');
 const mongoose = require('mongoose');
 const Editable = require('../models/Editable');
-
+const Template = require('../models/Template');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
@@ -360,6 +360,19 @@ apiCtrl.savePedido = async (req, res, next) => {
     }
 }
 
+apiCtrl.saveTemplate = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response = {fail: true, message: 'error al grabar'};
+        console.log(data);
+        response = await Template.updateOne({ "idTemplate": data.idTemplate }, { $set:  data  });
+        console.log(response)
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.sugeridos = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -417,6 +430,36 @@ apiCtrl.setState = async (req, res, next) => {
 
 
         res.json({ msg: 'facturado:ok' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.templatesList = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response = {message: 'Funcion no encontrada', fail: true};
+        const pipelineList = [
+            {
+                $match: {
+                    model: data.modelo
+                }
+            },
+            { $sort: { idTemplate: 1 } },
+            { $project: { idTemplate: 1, descripcion: 1} }
+        ];
+        const pipelineContent = [
+            {
+                $match: {
+                    idTemplate: data.idTemplate
+                }
+            },
+            { $project: { updatedAt: 0, createdAt: 0} }
+        ];
+        if(data.fx === 'list') response = await Template.aggregate(pipelineList);
+        if(data.fx === 'content') response = await Template.aggregate(pipelineContent);
+
+        res.json(response);
     } catch (error) {
         next(error);
     }

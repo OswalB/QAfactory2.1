@@ -1,18 +1,211 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
 
+<!-- botones editor de PDF -->
+<div style="display: flex; align-items: center;">
+  <select id="in-template" class="form-select" style="margin-right: 10px; display:none"></select>
+  <button id="btnVerpdf" type="button" class="btn btn-success"
+    style="margin-right: 10px;  display:none">Generar</button>
+  <button id="btnEditarTemplate" type="button" class="btn btn-danger" style=" display:none">Editar</button>
+  <button id="btnGuardarTemplate" type="button" class="btn btn-danger" style=" display:none">Guardar</button>
+</div>
+
+<!-- formulario editor de plantillas PDF -->
+<div class="container mt-4" id="formDesign">
+  <div class="row">
+    <!-- Columna 1: Acordeón design PDF-->
+    <div class="col-md-8">
+      <div class="scrollable">
+
+        <div class="accordion" id="accordionDesign">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading1">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                Configuración de página
+              </button>
+            </h2>
+            <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1"
+              data-bs-parent="#accordionDesign">
+              <div class="accordion-body">
+                <label for="pageSize">Tamaño:</label>
+                <select id="pageSize" name="size" class="form-select" data-section="pagina">
+                  <option value="letter" selected>Letter (216 x 279 mm)</option>
+                  <option value="folio">Folio (216 x 330 mm)</option>
+                  <option value="half-letter">Half Letter (140 x 216 mm)</option>
+                  <option value="legal">Legal (216 x 356 mm)</option>
+                  <option value="ledger">Ledger (279 x 432 mm)</option>
+                  <option value="tabloid">Tabloid (279 x 432 mm)</option>
+                  <option value="executive">Executive (184 x 267 mm)</option>
+                  <option value="a0">A0 (841 x 1189 mm)</option>
+                  <option value="a1">A1 (594 x 841 mm)</option>
+                  <option value="a2">A2 (420 x 594 mm)</option>
+                  <option value="a3">A3 (297 x 420 mm)</option>
+                  <option value="a4">A4 (210 x 297 mm)</option>
+                  <option value="a5">A5 (148 x 210 mm)</option>
+                  <option value="a6">A6 (105 x 148 mm)</option>
+                  <option value="a7">A7 (74 x 105 mm)</option>
+                  <option value="a8">A8 (52 x 74 mm)</option>
+                  <option value="a9">A9 (37 x 52 mm)</option>
+                  <option value="a10">A10 (26 x 37 mm)</option>
+                  <option value="b0">B0 (1000 x 1414 mm)</option>
+                  <option value="b1">B1 (707 x 1000 mm)</option>
+                  <option value="b2">B2 (500 x 707 mm)</option>
+                  <option value="b3">B3 (353 x 500 mm)</option>
+                  <option value="b4">B4 (250 x 353 mm)</option>
+                  <option value="b5">B5 (176 x 250 mm)</option>
+                  <option value="b6">B6 (125 x 176 mm)</option>
+                  <option value="b7">B7 (88 x 125 mm)</option>
+                  <option value="b8">B8 (62 x 88 mm)</option>
+                  <option value="b9">B9 (44 x 62 mm)</option>
+                  <option value="b10">B10 (31 x 44 mm)</option>
+                  <option value="c0">C0 (917 x 1297 mm)</option>
+                  <option value="c1">C1 (648 x 917 mm)</option>
+                  <option value="c2">C2 (458 x 648 mm)</option>
+                  <option value="c3">C3 (324 x 458 mm)</option>
+                  <option value="c4">C4 (229 x 324 mm)</option>
+                  <option value="c5">C5 (162 x 229 mm)</option>
+                  <option value="c6">C6 (114 x 162 mm)</option>
+                  <option value="c7">C7 (81 x 114 mm)</option>
+                  <option value="c8">C8 (57 x 81 mm)</option>
+                  <option value="c9">C9 (40 x 57 mm)</option>
+                  <option value="c10">C10 (28 x 40 mm)</option>
+                  <option value="dl">DL (110 x 220 mm)</option>
+                </select>
+                <label for="pageOrientation">Orientación:</label>
+                <select id="pageOrientation" name="orientation" class="form-select" data-section="pagina">
+                  <option value="p" selected>Vertical</option>
+                  <option value="l">Horizontal</option>
+                </select>
+                <label for="" class="mt-4">Márgenes:</label>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon2">Izq.</span>
+                  <input type="number" class="form-control" name="ml" id="in-ml" value="18" data-section="pagina">
+                  <span class="input-group-text" id="basic-addon2">Der.</span>
+                  <input type="number" class="form-control" name="mr" id="in-mr" value="18" data-section="pagina">
+                </div>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon2">Sup.</span>
+                  <input type="number" class="form-control" name="mt" id="in-mt" value="19" data-section="pagina">
+                  <span class="input-group-text" id="basic-addon2">Der.</span>
+                  <input type="number" class="form-control" name="mb" id="in-mb" value="19" data-section="pagina">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading2">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                Encabezado de informe
+              </button>
+            </h2>
+            <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2"
+              data-bs-parent="#accordionDesign">
+              <div class="accordion-body">
+                <div id="acc-headerReport">
+
+                </div>
+                <div class="row mt-2" style="width: 100%;">
+                  <div class="col-8">
+                    <a data-section="headerReport" role="addHeaderReport" class="btn btn-success w-100" href="#">
+                      <i data-section="headerReport" role="addHeaderReport" class="fa fa-plus-square"></i> Add
+                    </a>
+                  </div>
+                  <div class="col-4">
+                    <a data-section="headerReport" role="delHeaderReport" class="btn btn-danger w-100" href="#">
+                      <i data-section="headerReport" role="delHeaderReport" class="fa fa-trash"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading0">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse0" aria-expanded="false" aria-controls="collapse0">
+                Accordion Item #0
+              </button>
+            </h2>
+            <div id="collapse0" class="accordion-collapse collapse" aria-labelledby="heading0"
+              data-bs-parent="#accordionDesign">
+              <div class="accordion-body">
+                Contenido del acordeón 0.
+              </div>
+            </div>
+          </div>
 
 
+
+        </div>
+
+      </div>
+    </div>
+    <!-- Columna 2: properties -->
+    <div class="col-md-4 bg-dark bg-opacity-10">
+      <div class="scrollable">
+        <h5 id="title-properties">titulo</h5>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2"  >Col(1-12)</span>
+          <input type="number" class="form-control text-end" name="col" id="in-col"  role="property">
+        </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Alto</span>
+          <input type="number" class="form-control text-end" name="height" id="in-heiht"  role="property">
+        </div>
+        <label class="form-check-label" for="in-siBorde">Borde </label>
+        <input type="checkbox" class="form-check-input" name="siBorde" id="in-siBorde" value="" checked role="property">
+        <div class="input-group mb-1 mt-1">
+          <span class="input-group-text" for="in-align">Alineación:</span>
+          <select id="in-align" name="align" class="form-select" role="property">
+            <option value="0" selected>Izquierda</option>
+            <option value="1">Centro</option>
+            <option value="2">Derecha</option>
+          </select>
+        </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Tam. fuente</span>
+          <input type="number" class="form-control text-end" name="sizeFont" id="in-sizeFont" 
+            role="property">
+        </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Color</span>
+          <input type="color" class="form-control" name="colorFont" id="in-colorFont"        role="property">
+        </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Padding X</span>
+          <input type="number" class="form-control text-end" name="paddingX" id="in-paddingX" 
+            role="property">
+        </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Padding Y</span>
+          <input type="number" class="form-control text-end" name="paddingY" id="in-paddingY" 
+            role="property">
+        </div>
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <table class="table table-success table-striped table-hover">
   <thead>
     <tr id="encabezado">
-      
+
     </tr>
   </thead>
-  <tbody id="bodyContainer" >
-    
+  <tbody id="bodyContainer">
+
   </tbody>
 </table>
 
 <script src="/js/editor.js"></script>
+<script type="text/javascript" src="  https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>

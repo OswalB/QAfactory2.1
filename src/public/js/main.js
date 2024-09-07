@@ -1,4 +1,4 @@
-var currentKeys =[], backFilter ={}, workFilter={}, tgg = true, role, sizeCollection;
+var currentKeys = [], backFilter = {}, workFilter = {}, tgg = true, role, sizeCollection, localDesign = { pagina: {} };
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
 let k_group, k_datepp;
@@ -6,21 +6,21 @@ let k_group, k_datepp;
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-   
-    k_filterBy= document.getElementById('in-filterBy');
-    k_filterTxt= document.getElementById('in-filterTxt');
-    k_limitar= document.getElementById('in-limitar');
-    k_max= document.getElementById('in-max');
-    k_min= document.getElementById('in-min');
-    k_datemin= document.getElementById('in-datemin');
-    k_datemax= document.getElementById('in-datemax');
-    k_sortBy= document.getElementById('in-sortBy');
-    k_checkAsc= document.getElementById('checkAsc');
-    k_checkDsc= document.getElementById('checkDsc');
-    k_valorBoolean= document.getElementById('in-valorBoolean');
-    k_group= document.getElementById('in-group');
-    k_datepp= document.getElementById('in-datepp');
-   
+
+    k_filterBy = document.getElementById('in-filterBy');
+    k_filterTxt = document.getElementById('in-filterTxt');
+    k_limitar = document.getElementById('in-limitar');
+    k_max = document.getElementById('in-max');
+    k_min = document.getElementById('in-min');
+    k_datemin = document.getElementById('in-datemin');
+    k_datemax = document.getElementById('in-datemax');
+    k_sortBy = document.getElementById('in-sortBy');
+    k_checkAsc = document.getElementById('checkAsc');
+    k_checkDsc = document.getElementById('checkDsc');
+    k_valorBoolean = document.getElementById('in-valorBoolean');
+    k_group = document.getElementById('in-group');
+    k_datepp = document.getElementById('in-datepp');
+
     workFilter.filterStatus = 'off';
     workFilter.currentPage = 1;
 
@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 })
 
-document.getElementById('pagination_container').addEventListener('click',async e =>{
-    let i =e.target.getAttribute('_id');
-    workFilter.currentPage = i?i:1; 
+document.getElementById('pagination_container').addEventListener('click', async e => {
+    let i = e.target.getAttribute('_id');
+    workFilter.currentPage = i ? i : 1;
     workFilter.saltar = (workFilter.currentPage - 1) * workFilter.limitar;
-    await renderTable(); 
-    await footer(i); 
-    
+    await renderTable();
+    await footer(i);
+
 })
 
 document.getElementById('alertFilter').addEventListener('click', async (e) => {
@@ -53,38 +53,38 @@ document.getElementById('alertFilter').addEventListener('click', async (e) => {
     } else if (frole === 'alertAplicar') {
         refreshFilter('active')
     }
-    
-   
+
+
 });
 
 async function refreshFilter(strFilterStatus) {
     workFilter.currentPage = 1
     workFilter.filterStatus = strFilterStatus;
     loadFilter();
-    
+
     await renderTable();
     await footer();
     paintFilter();
     showAlertFilter();
 }
 
-document.getElementById('form-filtro').addEventListener('change',async e =>{
+document.getElementById('form-filtro').addEventListener('change', async e => {
     workFilter.filterStatus = 'change';
     showAlertFilter();
     paintFilter();
-     
+
 });
 
 function paintFilter() {
     const filtroPor = currentKeys.find(actuales => actuales.campo === k_filterBy.value);
-    
-    const tipoSelected = filtroPor?filtroPor.tipo:'0';
+
+    const tipoSelected = filtroPor ? filtroPor.tipo : '0';
     const tipoEstiloMap = {
-        '0':        ['none', 'none', 'none', 'none', 'none', 'none'],
-        'string':   ['block', 'none', 'none', 'none', 'none', 'none'],
-        'number':   ['none', 'block', 'block', 'none', 'none', 'none'],
-        'boolean':  ['none', 'none', 'none', 'block', 'none', 'none'],
-        'date':     ['none', 'none', 'none', 'none', 'block', 'block']
+        '0': ['none', 'none', 'none', 'none', 'none', 'none'],
+        'string': ['block', 'none', 'none', 'none', 'none', 'none'],
+        'number': ['none', 'block', 'block', 'none', 'none', 'none'],
+        'boolean': ['none', 'none', 'none', 'block', 'none', 'none'],
+        'date': ['none', 'none', 'none', 'none', 'block', 'block']
     };
 
     const [filterTxtStyle, minStyle, maxStyle, valorBooleanStyle, dateminStyle, datemaxStyle] = tipoEstiloMap[tipoSelected];
@@ -96,23 +96,38 @@ function paintFilter() {
     k_datemin.style.display = dateminStyle;
     k_datemax.style.display = datemaxStyle;
 
-    if(k_group.value === 'itemspp'){
+    if (k_group.value === 'itemspp') {
         k_limitar.style.display = 'block';
         k_datepp.style.display = 'none'
-    }else{
+    } else {
         k_limitar.style.display = 'none';
         k_datepp.style.display = 'block'
-    }  
+    }
 }
 
-async function renderFilter(){
+async function renderFilter() {
 
-    addOptionsToSelect('in-sortBy', currentKeys);
-    addOptionsToSelect('in-filterBy', currentKeys);
-
+    addOptionsSelect('in-sortBy', currentKeys, 'campo', 'alias');
+    addOptionsSelect('in-filterBy', currentKeys, 'campo', 'alias');
 
 }
 
+function addOptionsSelect(selectId, keys, valueKey, labelKey) {
+    const container = document.getElementById(selectId);
+    container.innerHTML = '';
+    const defaultOption = document.createElement('option');
+    defaultOption.setAttribute("value", 0);
+    defaultOption.textContent = 'Ninguno';
+    container.appendChild(defaultOption);
+    keys.forEach(item => {
+        const option = document.createElement('option');
+        option.setAttribute("value", item[valueKey]);
+        option.textContent = item[labelKey];
+        container.appendChild(option);
+    });
+}
+
+/*
 function addOptionsToSelect(selectId, keys) {
     const container = document.getElementById(selectId);
     container.innerHTML = '';
@@ -143,17 +158,17 @@ function addOptions(selectId, keys) {
         container.appendChild(op);
     });
 }
+*/
 
+function setFilter() {
 
-function setFilter() {  
-
-    k_filterBy.value = backFilter.filterBy ;
+    k_filterBy.value = backFilter.filterBy;
     k_filterTxt.value = backFilter.filterTxt;
-    k_limitar.value = backFilter.limitar ;
-    k_max.value = backFilter.max ;
-    k_min.value = backFilter.min ;
-    k_datemax.value = backFilter.datemax ;
-    k_datemin.value = backFilter.datemin ;
+    k_limitar.value = backFilter.limitar;
+    k_max.value = backFilter.max;
+    k_min.value = backFilter.min;
+    k_datemax.value = backFilter.datemax;
+    k_datemin.value = backFilter.datemin;
     workFilter.saltar = backFilter.saltar;
     workFilter.indSort = backFilter.indSort || 0;
     k_sortBy.value = backFilter.sortBy;
@@ -162,77 +177,77 @@ function setFilter() {
     k_valorBoolean.value = backFilter.valorBoolean;
     k_group.value = backFilter.group;
     k_datepp.value = backFilter.datepp;
-    
-    
-}  
 
-function loadFilter(){
 
-    workFilter.filterBy = k_filterBy.value === '0'?'':k_filterBy.value;
-    workFilter.filterTxt = k_filterTxt.offsetParent?k_filterTxt.value:'';
+}
+
+function loadFilter() {
+
+    workFilter.filterBy = k_filterBy.value === '0' ? '' : k_filterBy.value;
+    workFilter.filterTxt = k_filterTxt.offsetParent ? k_filterTxt.value : '';
     workFilter.limitar = parseInt(k_limitar.value);
     workFilter.datepp = k_datepp.value;
     workFilter.group = k_group.value;
-    workFilter.max = k_max.offsetParent?parseInt(k_max.value):'';
-    workFilter.min = k_min.offsetParent?parseInt(k_min.value):'';
-    workFilter.datemax = k_datemax.offsetParent?k_datemax.value:'';
-    workFilter.datemin = k_datemin.offsetParent?k_datemin.value:'';
-    workFilter.sortObject = {[k_sortBy.value]:k_checkAsc.checked?1:-1}
-    if(k_sortBy.value === '0') workFilter.sortObject = {};
-    workFilter.valorBoolean = k_valorBoolean.offsetParent?k_valorBoolean.value:'';
+    workFilter.max = k_max.offsetParent ? parseInt(k_max.value) : '';
+    workFilter.min = k_min.offsetParent ? parseInt(k_min.value) : '';
+    workFilter.datemax = k_datemax.offsetParent ? k_datemax.value : '';
+    workFilter.datemin = k_datemin.offsetParent ? k_datemin.value : '';
+    workFilter.sortObject = { [k_sortBy.value]: k_checkAsc.checked ? 1 : -1 }
+    if (k_sortBy.value === '0') workFilter.sortObject = {};
+    workFilter.valorBoolean = k_valorBoolean.offsetParent ? k_valorBoolean.value : '';
     workFilter.otrosMatch = backFilter.otrosMatch;
     workFilter.proyectar = backFilter.proyectar;
 
-    if(k_group.value === 'itemspp'){
+    if (k_group.value === 'itemspp') {
         workFilter.keyGroup = '';
         workFilter.limitar = parseInt(k_limitar.value);
     }
 
-    if(k_group.value === 'diapp'){
+    if (k_group.value === 'diapp') {
         workFilter.datemax = k_datepp.value;
         workFilter.datemin = k_datepp.value;
         workFilter.keyGroup = backFilter.keyGroup;
         workFilter.limitar = 0;
     }
 
-    if(k_group.value === 'semanapp'){
-        const range = getRange('ww',k_datepp.value);
+    if (k_group.value === 'semanapp') {
+        const range = getRange('ww', k_datepp.value);
         workFilter.datemax = range.end;
         workFilter.datemin = range.start;
         workFilter.keyGroup = backFilter.keyGroup;
         workFilter.limitar = 0;
     }
 
-    if(k_group.value === 'mespp'){
-        const range = getRange('mm',k_datepp.value);
+    if (k_group.value === 'mespp') {
+        const range = getRange('mm', k_datepp.value);
         workFilter.datemax = range.end;
         workFilter.datemin = range.start;
         workFilter.keyGroup = backFilter.keyGroup;
         workFilter.limitar = 0;
     }
-        
+
 }
 
-function applyValidation(){
+function applyValidation() {
     let validate = true
     const form = document.querySelector('.needs-validation');
-              if (form.checkValidity()) {
-                // El formulario es válido, puedes realizar acciones aquí
-                
-              } else {
-                validate = false;
-                // El formulario no es válido, aplicar estilos de validación
-                form.classList.add('was-validated');
-              }
+    if (form.checkValidity()) {
+        // El formulario es válido, puedes realizar acciones aquí
+
+    } else {
+        validate = false;
+        // El formulario no es válido, aplicar estilos de validación
+        form.classList.add('was-validated');
+    }
     return validate;
-           
+
 }
 
 
 
 document.getElementById("btn_borrar").addEventListener('click', async e => {
     const result = window.confirm('Seguro que desea BORRAR el documento?');
-    
+
     if (!result) {
         return;
     }
@@ -252,7 +267,7 @@ document.getElementById("btn_borrar").addEventListener('click', async e => {
         });
 
         const data = await res.json();
-        
+
         if (data.fail) {
             return;
         }
@@ -286,10 +301,10 @@ function showAlertFilter() {
 }
 
 
-document.getElementById('btn-refrescar').addEventListener('click',async e =>{
-   
-    refreshFilter('active');   
-        
+document.getElementById('btn-refrescar').addEventListener('click', async e => {
+
+    refreshFilter('active');
+
 })
 
 
@@ -309,9 +324,9 @@ $(".btnmenu").on('click', function () {
         $('.sidebar').addClass('active');
         $('#nav-menu').addClass('active');
         $('.content-w').addClass('active');
-        
+
     } else {
-       
+
         $('.sidebar').removeClass('active');
         $('#nav-menu').removeClass('active');
         $('.content-w').removeClass('active');
@@ -322,7 +337,7 @@ $(".btnmenu").on('click', function () {
 $(".content-w").on('click', function () {
 
     if (!tgg) {
-        
+
         $('.sidebar').removeClass('active');
         $('#nav-menu').removeClass('active');
         $('.content-w').removeClass('active');
@@ -336,7 +351,7 @@ function formatDate(date) {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    
+
     return `${year}-${month}-${day}`;
 }
 
@@ -369,69 +384,69 @@ function formatDateAgo(dateString) {
     const today = new Date();
     const diffTime = Math.abs(today - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return `Hace ${diffDays} dia${diffDays === 1 ? '':'s'}`;
+
+    return `Hace ${diffDays} dia${diffDays === 1 ? '' : 's'}`;
 }
 
 //-------------------------- PAGINATION AND FILTER  --------------------------------------
 
-async function footer(npage){
-     let winL, winR, winMax;
-    let pags = Math.ceil(sizeCollection / (workFilter.limitar === 0 ? sizeCollection : workFilter.limitar))-1;
-    if(sizeCollection%workFilter.limitar != 0){pags += 1;}
-    document.getElementById('lbl_results').innerHTML=`Resultados: ${sizeCollection}`;
+async function footer(npage) {
+    let winL, winR, winMax;
+    let pags = Math.ceil(sizeCollection / (workFilter.limitar === 0 ? sizeCollection : workFilter.limitar)) - 1;
+    if (sizeCollection % workFilter.limitar != 0) { pags += 1; }
+    document.getElementById('lbl_results').innerHTML = `Resultados: ${sizeCollection}`;
     const pagContainer = document.getElementById('pagination_container');
-    pagContainer.innerHTML='';
-    if(workFilter.currentPage<(pags-2)){winL = workFilter.currentPage-2;}
-    else{winL = pags-5;}
-    if(winL < 2 || pags < 8 ){winL = 2;}
-    winR= winL+4;
-    if(winR>(pags-1)){winR=pags-1}
-    if(pags > 0){this.addPag(pagContainer,1,workFilter.currentPage);}
-    if(winL > 2){this.addPag(pagContainer,0,workFilter.currentPage);}
-    for(let i = winL; i<= winR; i++){
-        this.addPag(pagContainer,i,workFilter.currentPage);
+    pagContainer.innerHTML = '';
+    if (workFilter.currentPage < (pags - 2)) { winL = workFilter.currentPage - 2; }
+    else { winL = pags - 5; }
+    if (winL < 2 || pags < 8) { winL = 2; }
+    winR = winL + 4;
+    if (winR > (pags - 1)) { winR = pags - 1 }
+    if (pags > 0) { this.addPag(pagContainer, 1, workFilter.currentPage); }
+    if (winL > 2) { this.addPag(pagContainer, 0, workFilter.currentPage); }
+    for (let i = winL; i <= winR; i++) {
+        this.addPag(pagContainer, i, workFilter.currentPage);
     }
-    if(pags - winR  > 1){this.addPag(pagContainer,0,workFilter.currentPage);}
-    if(pags > 1){this.addPag(pagContainer,pags,workFilter.currentPage);}
+    if (pags - winR > 1) { this.addPag(pagContainer, 0, workFilter.currentPage); }
+    if (pags > 1) { this.addPag(pagContainer, pags, workFilter.currentPage); }
 }
 
-function addPag(pagContainer,i){
-    
+function addPag(pagContainer, i) {
+
     const lipag = document.createElement('li');
     let clase = 'page-item';
-    if(i==workFilter.currentPage){clase += ' active';}
+    if (i == workFilter.currentPage) { clase += ' active'; }
     lipag.setAttribute('class', clase);
-    if(i==0){
+    if (i == 0) {
         lipag.innerHTML = `<label class="px-2"> ... </label>`;
-    }else{
+    } else {
         lipag.innerHTML = `<a class="page-link " _id=${i} href="#" id="page${i}">${i}</a>`;
     }
     pagContainer.appendChild(lipag);
 }
 
-function fadeInputs(){
+function fadeInputs() {
     const fadeInputs = document.querySelectorAll('.fade-input');
 
-fadeInputs.forEach(input => {
-  input.addEventListener('input', () => {
-    input.classList.add('changed'); // Aplica el color de fondo cambiado
-    clearTimeout(input.fadeTimeout); // Cancela el timeout anterior (si existe)
-  });
+    fadeInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            input.classList.add('changed'); // Aplica el color de fondo cambiado
+            clearTimeout(input.fadeTimeout); // Cancela el timeout anterior (si existe)
+        });
 
-  input.addEventListener('blur', () => {
-    input.fadeTimeout = setTimeout(() => {
-      input.classList.remove('changed'); // Remueve el color de fondo cambiado después de un tiempo
-    }, 3000); 
-  });
-});
+        input.addEventListener('blur', () => {
+            input.fadeTimeout = setTimeout(() => {
+                input.classList.remove('changed'); // Remueve el color de fondo cambiado después de un tiempo
+            }, 3000);
+        });
+    });
 
 }
 
 async function renderModalEditor(currentk) {
     const cambio = document.getElementById('btn_reset');
     cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
-    
+
     const ind = role === 'edit' ? currentContent.findIndex(content => content._id === currentDocumentId) : 0;
     document.getElementById('btn_borrar').style.display = role === 'edit' ? '' : 'none';
 
@@ -443,14 +458,14 @@ async function renderModalEditor(currentk) {
 
         const inputType = getInputType(item.tipo);
         const inputClass = getInputClass(item.tipo);
-        
+
         const tr = document.createElement('tr');
         const tdLabel = document.createElement('td');
         tdLabel.innerHTML = `<span class="input-group-text" id="addon-wrapping">${item.alias}:</span>`;
         tr.appendChild(tdLabel);
 
         const tdInput = document.createElement('td');
-        const input = document.createElement(inputType==='select' ? 'select' :'input');
+        const input = document.createElement(inputType === 'select' ? 'select' : 'input');
         input.id = item.campo;
         input.type = inputType;
         input.classList.add(inputClass, 'form-snd');
@@ -459,15 +474,15 @@ async function renderModalEditor(currentk) {
         if (item.minlength !== undefined) {
             input.minLength = item.minlength;
         }
-        
+
         if (item.maxlength !== undefined) {
             input.maxLength = item.maxlength;
         }
-        
+
         if (item.min !== undefined) {
             input.min = item.min;
         }
-        
+
         if (item.max !== undefined) {
             input.max = item.max;
         }
@@ -478,7 +493,7 @@ async function renderModalEditor(currentk) {
         invalidFeedback.textContent = item.failMsg || 'Campo Requerido';
         tdInput.appendChild(invalidFeedback);
 
-       
+
 
         tr.appendChild(tdInput);
         bodyTable.appendChild(tr);
@@ -487,7 +502,7 @@ async function renderModalEditor(currentk) {
             input.checked = true;
         }
 
-        
+
     });
 
     $('#modalEditor').modal('show');
@@ -509,7 +524,7 @@ function getInputType(tipo) {
 }
 
 function getInputClass(tipo) {
-    switch(tipo) {
+    switch (tipo) {
         case 'boolean':
             return 'form-check-input';
         case 'select':
@@ -521,40 +536,216 @@ function getInputClass(tipo) {
 
 async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
     const requestPromise = new Promise((resolve, reject) => {
-      fetch(url,{
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: _metod,
-        body: JSON.stringify(_body)
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Error al recibir la respuesta del servidor');
-          }
-          resolve(response); // Resuelve la promesa con true si la respuesta es exitosa
+        fetch(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: _metod,
+            body: JSON.stringify(_body)
         })
-        .catch(error => {
-          reject(error); // Rechaza la promesa con el error si hay un problema con la solicitud
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al recibir la respuesta del servidor');
+                }
+                resolve(response); // Resuelve la promesa con true si la respuesta es exitosa
+            })
+            .catch(error => {
+                reject(error); // Rechaza la promesa con el error si hay un problema con la solicitud
+            });
     });
-  
+
     // Promesa para manejar el tiempo de espera (timeout)
     const timeoutPromise = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        reject(new Error('Tiempo de espera agotado')); // Rechaza la promesa si el tiempo de espera se agota
-      }, timeout);
+        setTimeout(() => {
+            reject(new Error('Tiempo de espera agotado')); // Rechaza la promesa si el tiempo de espera se agota
+        }, timeout);
     });
-  
+
     // Ejecutar ambas promesas simultáneamente usando Promise.race
     return Promise.race([requestPromise, timeoutPromise])
-      .then(resultado => {
-        return resultado; // Retorna el resultado (true o false)
-      })
-      .catch(error => {
-        throw error; // Lanza el error si ocurre alguno
-      });
+        .then(resultado => {
+            return resultado; // Retorna el resultado (true o false)
+        })
+        .catch(error => {
+            throw error; // Lanza el error si ocurre alguno
+        });
 }
-  
-  
+
+async function generarPDF(design, data) {
+    const doc = new jsPDF({
+        orientation: design.pagina.orientation,
+        unit: 'pt',
+        format: design.pagina.size
+    });
+    const pageSize = doc.internal.pageSize;
+    const page = {
+        ml: mmToPt(design.pagina.ml),
+        mr: mmToPt(design.pagina.mr),
+        mt: mmToPt(design.pagina.mt),
+        mb: mmToPt(design.pagina.mb),
+        pw: pageSize.getWidth(),
+        ph: pageSize.getHeight(),
+    }
+    page.sw = page.pw - page.ml - page.mr;   //ancho del espacio imprimible
+    page.sh = page.ph - page.mt - page.mb;
+    page.centerX = (page.sw / 2) + page.ml;
+    page.ymax = page.ph - page.mb;
+    page.colpt = Math.round(page.sw / 12);
+    let curry = page.mt, currx = page.ml;
+    let px = page.ml, py = page.mt;
+
+    doc.text(5, 15, 'v1.007');
+
+    doc.rect(page.ml, page.mt, page.sw, page.sh);
+
+    const listSections = ['headerReport'];
+
+    listSections.forEach(section => {
+        design[section].forEach(item => {
+            const width = parseInt(item.col) * page.colpt;
+            const height = parseInt(item.height);
+            const align = parseInt(item.align);
+            const fontSize = parseInt(item.sizeFont);
+            const paddingX = parseInt(item.paddingX);
+            const paddingY = parseInt(item.paddingY);
+            let lineY = py + fontSize + paddingY;
+
+
+            doc.setFontSize(fontSize);
+            const lines = doc.splitTextToSize(item.texto, width - (paddingX * 2));
+            if (item.siBorde) {
+                doc.rect(px, py, width, height);
+            }
+            lines.forEach(fila => {
+                const textWidth = doc.getTextWidth(fila);
+                let lineX = alinear(px, paddingX, width, align, textWidth);
+                doc.text(lineX, lineY, fila);
+                lineY += fontSize;
+            })
+
+            px += width;
+        })
+    })
+    const out = doc.output();
+    const url = 'data:application/pdf;base64,' + btoa(out);
+    const iframe = "<iframe width='100%' height='100%' src='" + url + "'></iframe>";
+    const x = window.open();
+    x.document.open();
+    x.document.write(iframe);
+    x.document.close();
+}
+
+function alinear(x, padding, space, fx, textWidth) {
+    if (fx === 0) return x + padding;
+    if (fx === 1) return x + (space - textWidth) / 2;
+    if (fx === 2) return x + space - textWidth - padding;
+    return x;
+}
+
+function mmToPt(mm) {
+    const ptPerMm = 2.83465;
+    return Math.round(mm * ptPerMm);
+}
+
+async function demo1() {
+    //var il=0, sz
+
+    design = {
+        'vista': [
+            {
+                'title': 'general del informe se simula una muktilinea para probar el split function e interlineado',
+                'size': 24,
+                'color': '#000000',
+                'align': '2',
+                'interline': 5,
+                'xmargin': 0,
+                'ymargin': 0
+            }, {
+                'title': 'pagina ej: 1 de 1..',
+                'size': 14,
+                'color': '#00ff00',
+                'align': '0',
+                'interline': 5,
+                'xmargin': 10,
+                'ymargin': 11
+            }, {
+                'title': 'Grupo: ',
+                'size': 12,
+                'color': '#000000',
+                'align': '0',
+                'interline': 5,
+                'xmargin': 20,
+                'ymargin': 21
+            }
+        ],
+        'config': [{
+            'marginT': 25,
+            'marginL': 15,
+            'marginB': 10,
+            'marginR': 20,
+            'grupo': 'Agrupar por'
+        }],
+        'fields': [
+            { 'title': '#', 'keyField': '__n', 'xmargin': 2, 'ymargin': 0, 'wfield': 6, 'size': 10, 'interline': 6 },
+            { 'title': 'cmpo_01', 'keyField': 'insumo_n', 'xmargin': 0, 'ymargin': 0, 'wfield': 20, 'size': 7, 'interline': 6 },
+            { 'title': 'campo_02', 'keyField': 'cantidad', 'xmargin': 1, 'ymargin': 0, 'wfield': 21, 'size': 8, 'interline': 6 },
+            { 'title': 'campo_03', 'keyField': '_id', 'xmargin': 2, 'ymargin': 0, 'wfield': 22, 'size': 9, 'interline': 6 },
+
+        ],
+        'formules': [
+            { 'keyForm': 'doble', 'code': `2*[]cantidad` },
+            { 'keyForm': 'medio', 'code': `0.5*[]cantidad` },
+            { 'keyForm': 'mas', 'code': `[]medio +2` }
+
+        ]
+    }
+
+
+
+
+
+    const mil = 2.83465;
+    const pt = 0.35278;
+    const stt = {
+        'ml': Math.round(design.config[0].marginL * mil),
+        'mt': Math.round(design.config[0].marginT * mil),
+        'mb': Math.round(design.config[0].marginB * mil),
+        'mr': Math.round(design.config[0].marginR * mil),
+        'w_pdf': doc.internal.pageSize.getWidth(),
+        'h_pdf': doc.internal.pageSize.getHeight()
+    };
+
+    stt.w_space = stt.w_pdf - stt.ml - stt.mr;
+    stt.h_space = stt.h_pdf - stt.mt - stt.mb;
+    stt.centerX = (stt.w_space / 2) + stt.ml;
+    stt.ymax = stt.h_pdf - stt.mb;
+    let currY = stt.mt, currX = stt.ml;
+
+    if (typeof print !== 'undefined') {
+        console.log(print);
+    } else {
+        console.warn('print is not defined');
+    }
+
+    doc.text(5, 15, 'v1.007');
+    doc.rect(stt.ml, stt.mt, stt.w_space, stt.h_space);
+
+    let idd = 0, indexG = 0;
+    print.headReport = true;
+    print.headPage = true;
+    print.headDetail = true;
+
+    const out = doc.output();
+    const url = 'data:application/pdf;base64,' + btoa(out);
+
+    const iframe = "<iframe width='100%' height='100%' src='" + url + "'></iframe>";
+    const x = window.open();
+    x.document.open();
+    x.document.write(iframe);
+    x.document.close();
+
+
+}
+
+
 
