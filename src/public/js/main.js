@@ -571,8 +571,10 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
         });
 }
 
+let doc;
+
 async function generarPDF(design, data) {
-    const doc = new jsPDF({
+    doc = new jsPDF({
         orientation: design.pagina.orientation,
         unit: 'pt',
         format: design.pagina.size
@@ -583,39 +585,50 @@ async function generarPDF(design, data) {
         mr: mmToPt(design.pagina.mr),
         mt: mmToPt(design.pagina.mt),
         mb: mmToPt(design.pagina.mb),
-        pw: pageSize.getWidth(),
-        ph: pageSize.getHeight(),
+        pw: Math.round(pageSize.getWidth()),
+        ph: Math.round(pageSize.getHeight())
     }
-    page.sw = page.pw - page.ml - page.mr;   //ancho del espacio imprimible
-    page.sh = page.ph - page.mt - page.mb;
+    page.sw = Math.round(page.pw - page.ml - page.mr);   //ancho del espacio imprimible
+    page.sh = Math.round(page.ph - page.mt - page.mb);
     page.centerX = (page.sw / 2) + page.ml;
     page.ymax = page.ph - page.mb;
-    page.colpt = Math.round(page.sw / 12);
+    page.colpt = Math.round(page.sw / 12)-0.5;
+    page.maxR =page.pw - page.mr;
+    page.maxY =page.ph - page.mt;
     let curry = page.mt, currx = page.ml;
     let px = page.ml, py = page.mt;
 
     doc.text(5, 15, 'v1.007');
-
     doc.rect(page.ml, page.mt, page.sw, page.sh);
 
-    const listSections = ['headerReport'];
+    const listSections = ['headerReport', 'headerPage', 'headerGroup'];
 
     listSections.forEach(section => {
+        if (!Array.isArray(design[section])) {
+            console.log(`Sección ${section} no es un array válido. Continuando...`);
+            return;
+        }
+        let maxHeight = 0;
         design[section].forEach(item => {
-            const width = parseInt(item.col) * page.colpt;
+
+            let col = Math.max(1, Math.min(12, parseInt(item.col)));
+            const width = col * page.colpt;
             const height = parseInt(item.height);
             const align = parseInt(item.align);
             const fontSize = parseInt(item.sizeFont);
             const paddingX = parseInt(item.paddingX);
             const paddingY = parseInt(item.paddingY);
+            ({ px, py, maxHeight } = testWidth(px, py, width, page.maxR, page.ml, maxHeight));
+            maxHeight = height > maxHeight ? height : maxHeight;
             let lineY = py + fontSize + paddingY;
 
-
+            doc.setTextColor(item.colorFont);
             doc.setFontSize(fontSize);
             const lines = doc.splitTextToSize(item.texto, width - (paddingX * 2));
             if (item.siBorde) {
                 doc.rect(px, py, width, height);
             }
+
             lines.forEach(fila => {
                 const textWidth = doc.getTextWidth(fila);
                 let lineX = alinear(px, paddingX, width, align, textWidth);
@@ -625,6 +638,9 @@ async function generarPDF(design, data) {
 
             px += width;
         })
+        px = page.ml
+        py += maxHeight;
+        maxHeight = 0
     })
     const out = doc.output();
     const url = 'data:application/pdf;base64,' + btoa(out);
@@ -633,6 +649,14 @@ async function generarPDF(design, data) {
     x.document.open();
     x.document.write(iframe);
     x.document.close();
+}
+
+function testWidth(px, py, width, maxR, ml, maxHeight) {
+    if ((px + width) > maxR) {
+        return { px: ml, py: py + maxHeight, maxHeight: 0 }
+    } else {
+        return { px, py, maxHeight }
+    }
 }
 
 function alinear(x, padding, space, fx, textWidth) {
@@ -646,106 +670,94 @@ function mmToPt(mm) {
     const ptPerMm = 2.83465;
     return Math.round(mm * ptPerMm);
 }
+// +***********  FUNCIONES DE PRUEBA
 
-async function demo1() {
-    //var il=0, sz
+function unwind(data, parentKey = '', result = [], fields = new Map()) {
+    if (Array.isArray(data)) {
+        data.forEach((item, index) => {
+            const newKey = parentKey ? `${parentKey}.${index}` : `${index}`;
+            unwind(item, newKey, result, fields);
+        });
+    } else if (typeof data === 'object' && data !== null) {
+        Object.keys(data).forEach(key => {
+            const newKey = parentKey ? `${parentKey}.${key}` : key;
 
-    design = {
-        'vista': [
-            {
-                'title': 'general del informe se simula una muktilinea para probar el split function e interlineado',
-                'size': 24,
-                'color': '#000000',
-                'align': '2',
-                'interline': 5,
-                'xmargin': 0,
-                'ymargin': 0
-            }, {
-                'title': 'pagina ej: 1 de 1..',
-                'size': 14,
-                'color': '#00ff00',
-                'align': '0',
-                'interline': 5,
-                'xmargin': 10,
-                'ymargin': 11
-            }, {
-                'title': 'Grupo: ',
-                'size': 12,
-                'color': '#000000',
-                'align': '0',
-                'interline': 5,
-                'xmargin': 20,
-                'ymargin': 21
+            // Agregar campo y su tipo de datos
+            if (!fields.has(key)) {
+                fields.set(key, typeof data[key]);
             }
-        ],
-        'config': [{
-            'marginT': 25,
-            'marginL': 15,
-            'marginB': 10,
-            'marginR': 20,
-            'grupo': 'Agrupar por'
-        }],
-        'fields': [
-            { 'title': '#', 'keyField': '__n', 'xmargin': 2, 'ymargin': 0, 'wfield': 6, 'size': 10, 'interline': 6 },
-            { 'title': 'cmpo_01', 'keyField': 'insumo_n', 'xmargin': 0, 'ymargin': 0, 'wfield': 20, 'size': 7, 'interline': 6 },
-            { 'title': 'campo_02', 'keyField': 'cantidad', 'xmargin': 1, 'ymargin': 0, 'wfield': 21, 'size': 8, 'interline': 6 },
-            { 'title': 'campo_03', 'keyField': '_id', 'xmargin': 2, 'ymargin': 0, 'wfield': 22, 'size': 9, 'interline': 6 },
 
-        ],
-        'formules': [
-            { 'keyForm': 'doble', 'code': `2*[]cantidad` },
-            { 'keyForm': 'medio', 'code': `0.5*[]cantidad` },
-            { 'keyForm': 'mas', 'code': `[]medio +2` }
-
-        ]
-    }
-
-
-
-
-
-    const mil = 2.83465;
-    const pt = 0.35278;
-    const stt = {
-        'ml': Math.round(design.config[0].marginL * mil),
-        'mt': Math.round(design.config[0].marginT * mil),
-        'mb': Math.round(design.config[0].marginB * mil),
-        'mr': Math.round(design.config[0].marginR * mil),
-        'w_pdf': doc.internal.pageSize.getWidth(),
-        'h_pdf': doc.internal.pageSize.getHeight()
-    };
-
-    stt.w_space = stt.w_pdf - stt.ml - stt.mr;
-    stt.h_space = stt.h_pdf - stt.mt - stt.mb;
-    stt.centerX = (stt.w_space / 2) + stt.ml;
-    stt.ymax = stt.h_pdf - stt.mb;
-    let currY = stt.mt, currX = stt.ml;
-
-    if (typeof print !== 'undefined') {
-        console.log(print);
+            unwind(data[key], newKey, result, fields);
+        });
     } else {
-        console.warn('print is not defined');
+        result.push({ key: parentKey, value: data });
     }
 
-    doc.text(5, 15, 'v1.007');
-    doc.rect(stt.ml, stt.mt, stt.w_space, stt.h_space);
-
-    let idd = 0, indexG = 0;
-    print.headReport = true;
-    print.headPage = true;
-    print.headDetail = true;
-
-    const out = doc.output();
-    const url = 'data:application/pdf;base64,' + btoa(out);
-
-    const iframe = "<iframe width='100%' height='100%' src='" + url + "'></iframe>";
-    const x = window.open();
-    x.document.open();
-    x.document.write(iframe);
-    x.document.close();
-
-
+    // Convertir el Map a un array de objetos con nombre y tipo
+    const fieldsArray = Array.from(fields, ([name, type]) => ({ name, type }));
+    return { result, fields: fieldsArray };
 }
+
+
+
+
+
+
+
+
+
+
+
+/*function unwind2(data, parentKey = '', result = []) {
+    if (Array.isArray(data)) {
+        data.forEach((item, index) => {
+            const newKey = parentKey ? `${parentKey}.${index}` : `${index}`;
+            unwind(item, newKey, result);
+        });
+    } else if (typeof data === 'object' && data !== null) {
+        Object.keys(data).forEach(key => {
+            const newKey = parentKey ? `${parentKey}.${key}` : key;
+            unwind(data[key], newKey, result);
+        });
+    } else {
+        result.push({ key: parentKey, value: data });
+    }
+    return result;
+}*/
+
+function generate(data, groupBy, fields) {
+    const tables = {};
+
+    data.forEach(item => {
+        const groupKey = item[groupBy]; // Agrupar por el criterio recibido
+
+        // Si no existe la tabla para este grupo, se crea
+        if (!tables[groupKey]) {
+            tables[groupKey] = [];
+        }
+
+        // Desenrr el array de elementos que contiene el grupo (puede ser productos, pedidos, etc.)
+        const arrayToUnwind = item[fields.nestedArray]; // Nombre del campo anidado que contiene los detalles (ej: 'productos')
+
+        if (Array.isArray(arrayToUnwind)) {
+            arrayToUnwind.forEach(element => {
+                const row = { [groupBy]: groupKey };
+
+                // Mapear los campos clave del elemento actual a la tabla
+                fields.columns.forEach(field => {
+                    row[field.label] = element[field.key];
+                });
+
+                tables[groupKey].push(row);
+            });
+        }
+    });
+
+    return tables;
+}
+
+
+
 
 
 

@@ -69,7 +69,67 @@ const TemplateSchema = new Schema({
         paddingY:{
             type: 'number'
         }
-    }]    
+    }],
+    headerPage:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
+            type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        }
+    }],
+    headerGroup:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
+            type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        }
+    }]     
 
 },{
     timestamps: true,

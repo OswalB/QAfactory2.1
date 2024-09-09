@@ -6,14 +6,20 @@ const defaults = {
     align: 0,
     sizeFont: 11,
     paddingX: 2,
-    paddingY: 0
+    paddingY: 0,
+    colorFont: "#000000"
 }
+
+const listSections = ['headerReport', 'headerPage', 'headerGroup'];
+
 document.getElementById("accordionDesign").addEventListener('click', async e => {
     const role = e.target.getAttribute('role');
-    //const index = parseInt(e.target.getAttribute('data-index'));
     const section = e.target.getAttribute('data-section');
 
-    if (role === 'addHeaderReport') {
+    processRole(role, section); // Agrega un input a la sección 'headerReport'
+    
+    
+    /*if (role === 'addHeaderReport') {
         const inputs = document.getElementById('acc-headerReport').querySelectorAll('input');
         const index = inputs.length;
         console.log('click en boton ', role, index);
@@ -26,13 +32,58 @@ document.getElementById("accordionDesign").addEventListener('click', async e => 
         if (inputs.length > 0) {
             const lastInput = inputs[inputs.length - 1];
             section.removeChild(lastInput);
+            localDesign.headerReport.pop();
         } else {
             console.log('No hay inputs para eliminar.');
         }
 
-    }
+    }*/
 
 })
+
+
+
+function processRole(role, section) {
+    // Definir el ID del contenedor basado en la sección
+    const containerId = `acc-${section}`;
+    const sectionElement = document.getElementById(containerId);
+
+    if (!sectionElement) {
+        console.log(`No se encontró el contenedor para la sección: ${section}`);
+        return;
+    }
+
+    if (role === 'addSection') {
+        const inputs = sectionElement.querySelectorAll('input');
+        const index = inputs.length;
+        console.log(`Agregando input en sección: ${section}, índice: ${index}`);
+        renderInputs(containerId, index, section);
+        if (!localDesign[section]) {
+            localDesign[section] = [];
+        }
+        if (!localDesign[section][index]) {
+            localDesign[section][index] = { ...defaults };
+        }
+        
+    } else if (role === 'delSection') {
+        const inputs = sectionElement.querySelectorAll('input');
+        if (inputs.length > 0) {
+            const lastInput = inputs[inputs.length - 1];
+            sectionElement.removeChild(lastInput);
+            if (localDesign[section]) {
+                localDesign[section].pop(); // Eliminar el último elemento del array correspondiente
+            }
+        } else {
+            console.log(`No hay inputs para eliminar en la sección: ${section}`);
+        }
+    } else {
+        console.log(`Acción no válida: ${role}`);
+    }
+}
+
+
+
+
 
 function renderInputs(container, index, section, value = '') {
     const containerElement = document.getElementById(container);
@@ -77,6 +128,62 @@ formSection.addEventListener('focus', function (event) {
     document.getElementById('title-properties').innerHTML = titulo
 }, true); // 'true' para que el evento se capture en la fase de captura
 
+
+
+
+let currentInput2 = null; // Variable para almacenar el input donde ocurrió el dblclick
+
+// Escucha el evento dblclick en la sección
+formSection.addEventListener('dblclick', function (event) {
+    if (event.target.tagName === 'INPUT') {
+        currentInput2 = event.target; // Almacena el input donde se hizo el dblclick
+        mostrarListaOpciones(event.target);
+    }
+});
+
+// Función para mostrar la lista de opciones basadas en currentKeys
+function mostrarListaOpciones(input) {
+    const listaContainer = document.createElement('div');
+    listaContainer.style.position = 'absolute';
+    listaContainer.style.top = `${input.offsetTop + input.offsetHeight}px`;
+    listaContainer.style.left = `${input.offsetLeft}px`;
+    listaContainer.style.border = '1px solid #ccc';
+    listaContainer.style.background = '#fff';
+    listaContainer.style.zIndex = 1000;
+
+    currentKeys.forEach(key => {
+        const opcion = document.createElement('div');
+        opcion.textContent = key.alias;
+        opcion.style.padding = '5px';
+        opcion.style.cursor = 'pointer';
+
+        opcion.addEventListener('click', function () {
+            input.value = key.alias; // Asigna el alias al input
+            document.body.removeChild(listaContainer); // Elimina la lista de la vista
+        });
+
+        listaContainer.appendChild(opcion);
+    });
+
+    document.body.appendChild(listaContainer);
+
+    // Elimina la lista si haces clic fuera de ella
+    document.addEventListener('click', function removerLista(event) {
+        if (!listaContainer.contains(event.target) && event.target !== currentInput2) {
+            document.body.removeChild(listaContainer);
+            document.removeEventListener('click', removerLista); // Remueve el listener después de la ejecución
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
 function updateTitle() {
     const translations = {
         'headerReport': 'Encabezado de informe'
@@ -88,6 +195,36 @@ function updateTitle() {
     }
 }
 
+
+function toggleInputs({ bloquear }) {
+    const formSection = document.getElementById('formDesign');
+    const inputsAndSelects = formSection.querySelectorAll('input, select');
+    inputsAndSelects.forEach(element => {
+        if (element.role === 'property') {
+            element.disabled = bloquear;
+
+            if (bloquear) {
+                if (element.type !== 'color') {
+                    element.value = ''; // Limpiar valor si está bloqueado
+                }
+            } else {
+                const sectionArray = localDesign[currentInput.section];  
+                if (Array.isArray(sectionArray) && sectionArray[currentInput.index] && sectionArray[currentInput.index].hasOwnProperty(element.name)) {
+                    const valor = sectionArray[currentInput.index][element.name];
+                    if (element.type === 'checkbox') {
+                        element.checked = valor;
+                    } else {
+                        element.value = (valor != null && valor !== '') ? valor : defaults[element.name];
+                    }
+                } else {
+                    console.log(`No se encontró el valor para la sección: ${currentInput.section}, índice: ${currentInput.index}, nombre: ${element.name}`);
+                }
+            }
+        }
+    });
+}
+
+/*
 function toggleInputs({ bloquear }) {
     const formSection = document.getElementById('formDesign');
     const inputsAndSelects = formSection.querySelectorAll('input, select');
@@ -106,19 +243,20 @@ function toggleInputs({ bloquear }) {
                     if (element.type === 'checkbox') {
                         element.checked = valor;
                     } else {
-                        element.value = valor?valor:defaults[element.name];
-                    }         
+                        element.value = valor ? valor : defaults[element.name];
+                    }
                 } else {
                     console.log(`No se encontró el valor para la sección: ${currentInput.section}, índice: ${currentInput.index}, nombre: ${element.name}`);
                 }
 
             }
-            
+
         }
 
 
     });
 }
+*/
 
 function defaultValues() {
     const formSection = document.getElementById('formDesign');
@@ -132,10 +270,10 @@ function defaultValues() {
 }
 
 document.getElementById("in-template").addEventListener('change', async e => {
-        currentInput.section = '';
-        toggleInputs({ bloquear: true });
-const titulo = updateTitle();
-document.getElementById('title-properties').innerHTML = titulo
+    currentInput.section = '';
+    toggleInputs({ bloquear: true });
+    const titulo = updateTitle();
+    document.getElementById('title-properties').innerHTML = titulo
     selectedTemplate = parseInt(document.getElementById('in-template').value);
     const vis = selectedTemplate === 0 ? false : true;
     activeButtons({ btnSel: true, btnV: vis, btnE: vis, btnG: false });
@@ -386,7 +524,7 @@ function fillDesign() {
             }
         }
     });
-    const listSections = ['headerReport', 'headerPage', 'headerGroup']
+    //const listSections = ['headerReport', 'headerPage', 'headerGroup']
     listSections.forEach((section, index) => {
         if (localDesign.hasOwnProperty(section) && Array.isArray(localDesign[section])) {
             const container = 'acc-' + section;
