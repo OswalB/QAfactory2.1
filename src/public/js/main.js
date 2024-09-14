@@ -592,9 +592,9 @@ async function generarPDF(design, data) {
     page.sh = Math.round(page.ph - page.mt - page.mb);
     page.centerX = (page.sw / 2) + page.ml;
     page.ymax = page.ph - page.mb;
-    page.colpt = Math.round(page.sw / 12)-0.5;
-    page.maxR =page.pw - page.mr;
-    page.maxY =page.ph - page.mt;
+    page.colpt = Math.round(page.sw / 12) - 0.5;
+    page.maxR = page.pw - page.mr;
+    page.maxY = page.ph - page.mt;
     let curry = page.mt, currx = page.ml;
     let px = page.ml, py = page.mt;
 
@@ -671,93 +671,3 @@ function mmToPt(mm) {
     return Math.round(mm * ptPerMm);
 }
 // +***********  FUNCIONES DE PRUEBA
-
-function unwind(data, parentKey = '', result = [], fields = new Map()) {
-    if (Array.isArray(data)) {
-        data.forEach((item, index) => {
-            const newKey = parentKey ? `${parentKey}.${index}` : `${index}`;
-            unwind(item, newKey, result, fields);
-        });
-    } else if (typeof data === 'object' && data !== null) {
-        Object.keys(data).forEach(key => {
-            const newKey = parentKey ? `${parentKey}.${key}` : key;
-
-            // Agregar campo y su tipo de datos
-            if (!fields.has(key)) {
-                fields.set(key, typeof data[key]);
-            }
-
-            unwind(data[key], newKey, result, fields);
-        });
-    } else {
-        result.push({ key: parentKey, value: data });
-    }
-
-    // Convertir el Map a un array de objetos con nombre y tipo
-    const fieldsArray = Array.from(fields, ([name, type]) => ({ name, type }));
-    return { result, fields: fieldsArray };
-}
-
-
-
-
-
-
-
-
-
-
-
-/*function unwind2(data, parentKey = '', result = []) {
-    if (Array.isArray(data)) {
-        data.forEach((item, index) => {
-            const newKey = parentKey ? `${parentKey}.${index}` : `${index}`;
-            unwind(item, newKey, result);
-        });
-    } else if (typeof data === 'object' && data !== null) {
-        Object.keys(data).forEach(key => {
-            const newKey = parentKey ? `${parentKey}.${key}` : key;
-            unwind(data[key], newKey, result);
-        });
-    } else {
-        result.push({ key: parentKey, value: data });
-    }
-    return result;
-}*/
-
-function generate(data, groupBy, fields) {
-    const tables = {};
-
-    data.forEach(item => {
-        const groupKey = item[groupBy]; // Agrupar por el criterio recibido
-
-        // Si no existe la tabla para este grupo, se crea
-        if (!tables[groupKey]) {
-            tables[groupKey] = [];
-        }
-
-        // Desenrr el array de elementos que contiene el grupo (puede ser productos, pedidos, etc.)
-        const arrayToUnwind = item[fields.nestedArray]; // Nombre del campo anidado que contiene los detalles (ej: 'productos')
-
-        if (Array.isArray(arrayToUnwind)) {
-            arrayToUnwind.forEach(element => {
-                const row = { [groupBy]: groupKey };
-
-                // Mapear los campos clave del elemento actual a la tabla
-                fields.columns.forEach(field => {
-                    row[field.label] = element[field.key];
-                });
-
-                tables[groupKey].push(row);
-            });
-        }
-    });
-
-    return tables;
-}
-
-
-
-
-
-
