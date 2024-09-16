@@ -47,6 +47,10 @@ const TemplateSchema = new Schema({
             type: 'string',
             default: ''
         },
+        fieldOrder:{
+            type: 'string',
+            default: ''
+        },
         pagination:{
             type: 'string',
             default: '0'
@@ -87,6 +91,12 @@ const TemplateSchema = new Schema({
         siBg:{
             type: 'boolean',
             default: false
+        },
+        originControl:{
+            type: 'string'
+        },
+        formatControl:{
+            type: 'number'
         }
     }],
     headerPage:[{
@@ -124,6 +134,12 @@ const TemplateSchema = new Schema({
         siBg:{
             type: 'boolean',
             default: false
+        },
+        originControl:{
+            type: 'string'
+        },
+        formatControl:{
+            type: 'number'
         }
     }],
     headerGroup:[{
@@ -161,6 +177,12 @@ const TemplateSchema = new Schema({
         siBg:{
             type: 'boolean',
             default: false
+        },
+        originControl:{
+            type: 'string'
+        },
+        formatControl:{
+            type: 'number'
         }
     }]     
 

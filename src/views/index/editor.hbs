@@ -33,10 +33,21 @@
                     data-section="pagina">
                   <button type="button" class="btn btn-outline-secondary">Add. Filtro</button>
                   <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
-                    data-bs-toggle="dropdown" aria-expanded="false">
+                    data-bs-toggle="dropdown" aria-expanded="false" >
                     <span class="visually-hidden">Toggle Dropdown</span>
                   </button>
                   <ul id="listFilterData" class="dropdown-menu dropdown-menu-end">
+                  </ul>
+                </div>
+                <div class="input-group mt-2">
+                  <input type="text" class="form-control" name="fieldOrder" id="in-fieldOrder" value=""
+                    data-section="pagina">
+                  <button type="button" class="btn btn-outline-secondary">Add. Orden</button>
+                  <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                  </button>
+                  <ul id="listOrderData" class="dropdown-menu dropdown-menu-end">
                   </ul>
                 </div>
                 <div class="input-group mt-2">
@@ -116,10 +127,11 @@
                 </div>
                 <label for="pagination">Paginación:</label>
                 <select id="pagination" name="pagination" class="form-select" data-section="pagina">
-                  <option value="0" selected>Centro Página 1</option>
-                  <option value="1" >Centro Página 1 de...</option>
-                  <option value="2" >Borde Página 1</option>
-                  <option value="3" >Borde Página 1 de...</option>
+                  <option value="0">Ninguno</option>
+                  <option value="1" selected>Centro Página 1</option>
+                  <option value="2">Centro Página 1 de...</option>
+                  <option value="3">Borde Página 1</option>
+                  <option value="4">Borde Página 1 de...</option>
                 </select>
               </div>
             </div>
@@ -222,6 +234,21 @@
     <div class="col-md-4 bg-dark bg-opacity-10">
       <div class="scrollable">
         <h5 id="title-properties">titulo</h5>
+        <h6>Origen de datos</h6>
+        <label for="in-originControl">Campo:</label>
+        <select id="in-originControl" name="originControl" class="form-select" role="property">
+          
+        </select>
+        <label for="in-formatControl">Formato:</label>
+        <select id="in-formatControl" name="formatControl" class="form-select" role="property">
+          <option value="0">Ninguno</option>
+          <option value="1">123</option>
+          <option value="2">123.0</option>
+          <option value="3">123.00</option>
+          <option value="4">dd/mm/aaaa</option>
+        </select>
+
+
         <h6>Fuente</h6>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Tamaño</span>
@@ -256,7 +283,7 @@
           <span class="input-group-text" id="basic-addon2">Color</span>
           <input type="color" class="form-control" name="colorBg" id="in-colorBg" role="property">
         </div>
-        
+
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Padding X</span>
           <input type="number" class="form-control text-end" name="paddingX" id="in-paddingX" role="property">

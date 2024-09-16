@@ -9,8 +9,23 @@ const defaults = {
     paddingY: 0,
     colorFont: "#000000",
     colorBg: "#111111",
-    siBg: false
+    siBg: false,
+    originControl: '0',
+    formatControl: '0'
 }
+
+const inputFieldO = document.getElementById('in-fieldOrder');
+const listOrderData = document.getElementById('listOrderData');
+
+// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
+listOrderData.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (event.target.classList.contains('drop-order')) {
+       
+        inputFieldO.value = event.target.textContent;
+        fillLocalDesign(inputFieldO);
+    }
+});
 
 
 const inputField = document.getElementById('in-fieldFilter');
@@ -20,8 +35,9 @@ const listFilterData = document.getElementById('listFilterData');
 listFilterData.addEventListener('click', function (event) {
     event.preventDefault();
     if (event.target.classList.contains('drop-filter')) {
-        // Actualizar el valor del input con el texto del elemento seleccionado
+      
         inputField.value += event.target.textContent;
+        fillLocalDesign(inputField);
     }
 });
 
@@ -32,8 +48,9 @@ const listFilterDataG = document.getElementById('listGroupData');
 listFilterDataG.addEventListener('click', function (event) {
     event.preventDefault();
     if (event.target.classList.contains('drop-group')) {
-        // Actualizar el valor del input con el texto del elemento seleccionado
-        inputFieldG.value += event.target.textContent;
+       
+        inputFieldG.value = event.target.textContent;
+        fillLocalDesign(inputFieldG);
     }
 });
 
@@ -506,6 +523,7 @@ document.getElementById('listDocuments').addEventListener('click', async e => {
     processDataPdf(currentContent);
     addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
     addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
+    
 
 })
 
@@ -638,7 +656,9 @@ async function debugg(activate = false) {
     processDataPdf(currentContent);
     addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
     addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
-
+    addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
+    
+    addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
 
 
     let res = await fetch('/domain/templates-list', {

@@ -1,7 +1,7 @@
 var currentKeys = [], backFilter = {}, workFilter = {}, tgg = true, role, sizeCollection, localDesign = { pagina: {} };
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
-let k_group, k_datepp, dataUnwind = [], keysAndTypes = [];
+let k_group, k_datepp, dataUnwind = [], keysAndTypes = []; originData = [];
 
 
 
@@ -559,7 +559,27 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
 let doc;
 
 async function generarPDF(design) {
-    console.log(design)
+    console.log(design);
+    originData = [...dataUnwind];
+
+    if(design.pagina.fieldFilter){
+        console.log('filtrar')
+        originData = filterArray(dataUnwind, design.pagina.fieldFilter);
+    }
+    if(design.pagina.fieldOrder){
+        console.log('ordenar')
+        originData = ordenarPorCampo(originData, design.pagina.fieldOrder);
+    }
+    if(design.pagina.fieldGroup ){
+        console.log('agrupar')
+        originData = groupByField(originData, design.pagina.fieldGroup);
+    }
+    
+    
+
+   
+    console.log(originData);
+    return
     let localData = [...dataUnwind];
     doc = new jsPDF({
         orientation: design.pagina.orientation,
@@ -578,8 +598,8 @@ async function generarPDF(design) {
         sw: r2d(pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr), 2),
         sh: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt) - mmToPt(design.pagina.mb), 2),
         centerX: r2d((pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr)) / 2 + mmToPt(design.pagina.ml), 2),
-        
-        colpt: r2d((pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr)) / 12 , 2),
+
+        colpt: r2d((pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr)) / 12, 2),
         maxR: r2d(pageSize.getWidth() - mmToPt(design.pagina.mr), 2),
         maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
     };
@@ -605,17 +625,17 @@ async function generarPDF(design) {
             const col = parseInt(item.col);
             const fontSize = parseInt(item.sizeFont);
             const box = {
-                width : r2d(col * page.colpt, 2),       //ancho de la caja
-                height : parseInt(item.height),         //alto de la caja
-                align : parseInt(item.align),
-                paddingX : parseInt(item.paddingX),
-                paddingY : parseInt(item.paddingY),
-                hLine : r2d(fontSize * 1.15, 2) + parseInt(item.paddingY), //alto de linea de texto
+                width: r2d(col * page.colpt, 2),       //ancho de la caja
+                height: parseInt(item.height),         //alto de la caja
+                align: parseInt(item.align),
+                paddingX: parseInt(item.paddingX),
+                paddingY: parseInt(item.paddingY),
+                hLine: r2d(fontSize * 1.15, 2) + parseInt(item.paddingY), //alto de linea de texto
             }
-            
-            
+
+
             printBox(box, item, px, py)
-            
+
             /*const width = r2d(col * page.colpt, 2);
             const height = parseInt(item.height);
             const align = parseInt(item.align);
@@ -645,7 +665,7 @@ async function generarPDF(design) {
         })
         px = page.ml
         py += maxHeight;
-        maxHeight = 0 
+        maxHeight = 0
     })
     const out = doc.output();
     const url = 'data:application/pdf;base64,' + btoa(out);
@@ -679,7 +699,7 @@ function alinear(x, padding, space, fx, textWidth) {
 
 function mmToPt(mm) {
     const ptPerMm = 2.83465;
-    return r2d(mm * ptPerMm,2);
+    return r2d(mm * ptPerMm, 2);
 }
 
 function r2d(num, decimals) {
@@ -777,6 +797,7 @@ function getKeysAndTypes(arr) {
         });
     });
 
+    keysAndTypes = ordenarPorCampo(keysAndTypes, 'campo', true);
     return keysAndTypes;
 }
 
@@ -803,8 +824,7 @@ function groupByField(arr, field) {
 
 function filterArray(arr, condition) {
 
-    const [field, operator, value] = condition.split(/(=|>|<|>=|<=)/).map(str => str.trim());
-
+    const [field, operator, value] = condition.split(/(>=|<=|==|=|>|<)/).map(str => str.trim());
     return arr.filter(item => {
         if (!(field in item)) {
             return false;
@@ -828,6 +848,13 @@ function filterArray(arr, condition) {
                 if (typeof fieldValue === 'string') {
                     // Para cadenas, buscamos coincidencias parciales
                     return fieldValue.includes(conditionValue);
+                } else {
+                    return fieldValue == conditionValue;
+                }
+            case '==':
+                if (typeof fieldValue === 'string') {
+                    // Para cadenas, buscamos coincidencias parciales
+                    return fieldValue == conditionValue;
                 } else {
                     return fieldValue == conditionValue;
                 }
