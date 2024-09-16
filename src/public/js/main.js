@@ -562,22 +562,34 @@ async function generarPDF(design) {
     console.log(design);
     originData = [...dataUnwind];
 
-    if(design.pagina.fieldFilter){
+    if (design.pagina.fieldFilter) {
         console.log('filtrar')
         originData = filterArray(dataUnwind, design.pagina.fieldFilter);
     }
-    if(design.pagina.fieldOrder){
+    if (design.pagina.fieldOrder) {
         console.log('ordenar')
         originData = ordenarPorCampo(originData, design.pagina.fieldOrder);
     }
-    if(design.pagina.fieldGroup ){
+    if (design.pagina.fieldGroup) {
         console.log('agrupar')
         originData = groupByField(originData, design.pagina.fieldGroup);
+    } else {
+        console.log('agrupar null')
+        originData = groupByField(originData, design.pagina.fieldGroup);
     }
-    
-    
 
-   
+    Object.keys(originData).forEach(group => {
+        console.log(`Grupo: ${group}`);
+
+        // Iterar sobre los elementos en cada grupo
+        originData[group].forEach(item => {
+            console.log(item);
+        });
+    });
+
+
+
+
     console.log(originData);
     return
     let localData = [...dataUnwind];
@@ -801,7 +813,7 @@ function getKeysAndTypes(arr) {
     return keysAndTypes;
 }
 
-
+/*
 function groupByField(arr, field) {
     return arr.reduce((acc, item) => {
         const fieldValue = item[field]; // Obtiene el valor del campo por el que quieres agrupar
@@ -820,7 +832,24 @@ function groupByField(arr, field) {
         acc[fieldValue].push(item);
         return acc;
     }, {});
+}*/
+
+function groupByField(arr, field) {
+    return arr.reduce((acc, item) => {
+        const fieldValue = item[field];
+
+        // Si el valor es nulo, undefined o vacío, lo agrupamos bajo una clave especial
+        const key = fieldValue === undefined || fieldValue === null || fieldValue === '' ? 'empty' : fieldValue;
+
+        if (!acc[key]) {
+            acc[key] = [];
+        }
+
+        acc[key].push(item);
+        return acc;
+    }, {});
 }
+
 
 function filterArray(arr, condition) {
 
@@ -887,3 +916,4 @@ function ordenarPorCampo(arr, campo, ordenAscendente = true) {
         }
     });
 }
+
