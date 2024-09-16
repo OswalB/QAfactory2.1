@@ -38,6 +38,14 @@ const TemplateSchema = new Schema({
         },
         mb:{
             type: 'number'
+        },
+        fieldFilter:{
+            type: 'string',
+            default: ''
+        },
+        fieldGroup:{
+            type: 'string',
+            default: ''
         }
     },
     headerReport:[{

@@ -475,6 +475,10 @@ document.getElementById('listDocuments').addEventListener('click', async e => {
     await footer();
     renderFilter();
     paintFilter();
+    processDataPdf(currentContent);
+    addItemList('listFilterData',keysAndTypes,'campo','campo', 'drop-filter');
+    addItemList('listGroupData',keysAndTypes,'campo','campo', 'drop-group');
+
 })
 
 document.getElementById('bodyContainer').addEventListener('dblclick', async e => {
@@ -587,6 +591,7 @@ function afterLoad() {
 };
 
 async function renderTable() {
+    console.log('render')
     let response = await fetch("/core/keys", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',

@@ -1,7 +1,36 @@
 var currentKeys = [], backFilter = {}, workFilter = {}, tgg = true, role, sizeCollection, localDesign = { pagina: {} };
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
-let k_group, k_datepp;
+let k_group, k_datepp, dataUnwind = [], keysAndTypes = [];
+
+const inputField = document.getElementById('in-fieldFilter');
+const listFilterData = document.getElementById('listFilterData');
+
+// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
+listFilterData.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (event.target.classList.contains('drop-filter')) {
+        // Actualizar el valor del input con el texto del elemento seleccionado
+        inputField.value += event.target.textContent;
+    }
+});
+
+const inputFieldG = document.getElementById('in-fieldGroup');
+const listFilterDataG = document.getElementById('listGroupData');
+
+// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
+listFilterDataG.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (event.target.classList.contains('drop-group')) {
+        // Actualizar el valor del input con el texto del elemento seleccionado
+        inputFieldG.value += event.target.textContent;
+    }
+});
+
+
+
+
+
 
 
 
@@ -127,38 +156,16 @@ function addOptionsSelect(selectId, keys, valueKey, labelKey) {
     });
 }
 
-/*
-function addOptionsToSelect(selectId, keys) {
+function addItemList(selectId, keys, valueKey, labelKey, clase) {
     const container = document.getElementById(selectId);
     container.innerHTML = '';
-
-    const op = document.createElement('option');
-    op.setAttribute("value", 0);
-    op.innerHTML = 'Ninguno';
-    container.appendChild(op);
-
     keys.forEach(item => {
-        const op = document.createElement('option');
-        op.setAttribute("value", item.campo);
-        op.innerHTML = item.alias;
-        container.appendChild(op);
+        const option = document.createElement('li');
+        option.innerHTML = `<a class="dropdown-item ${clase}" href="#">${item[labelKey]}</a>`;
+        container.appendChild(option);
     });
 }
 
-function addOptions(selectId, keys) {
-    const container = document.getElementById(selectId);
-    container.innerHTML = '';
-    const op = document.createElement('option');
-    container.appendChild(op);
-
-    keys.forEach(item => {
-        const op = document.createElement('option');
-        op.setAttribute("value", item.campo);
-        op.innerHTML = item.alias;
-        container.appendChild(op);
-    });
-}
-*/
 
 function setFilter() {
 
@@ -573,7 +580,9 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
 
 let doc;
 
-async function generarPDF(design, data) {
+async function generarPDF(design) {
+    console.log(design)
+    let localData = [...dataUnwind];
     doc = new jsPDF({
         orientation: design.pagina.orientation,
         unit: 'pt',
@@ -670,4 +679,162 @@ function mmToPt(mm) {
     const ptPerMm = 2.83465;
     return Math.round(mm * ptPerMm);
 }
-// +***********  FUNCIONES DE PRUEBA
+// +***********  FUNCIONES DE datos pdf
+
+
+function processDataPdf(data) {
+    unwind(data);
+}
+
+
+function unwind(data) {
+
+    data.forEach(documento => {
+        const jsonData = exploreObject(documento);
+        const indexPadre = jsonData.reduce((minIdx, item, index) => {
+            return (minIdx === -1 || item.parent.yo < jsonData[minIdx].parent.yo)
+                ? index
+                : minIdx;
+        }, -1);
+        const padre = jsonData[indexPadre].parent.yo;
+        res = consolidar(jsonData, padre, indexPadre);
+        dataUnwind = [...dataUnwind, ...res];
+    })
+
+    console.log(dataUnwind);
+    keysAndTypes = getKeysAndTypes(dataUnwind);
+    console.log(keysAndTypes);
+
+}
+
+function exploreObject(obj, idPadre, parentKey = '', accumulator = []) {
+    if (typeof exploreObject.counter === 'undefined') {
+        exploreObject.counter = 400;
+    }
+    exploreObject.counter++;
+    let flat = {};
+    const idYo = exploreObject.counter;
+    if (Array.isArray(obj)) {
+        obj.forEach((item, index) => {
+            exploreObject(item, idYo, parentKey, accumulator);
+        });
+    } else if (typeof obj === 'object' && obj !== null) {
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const fullKey = parentKey ? `${parentKey}.${key}` : key;
+                if (Array.isArray(obj[key]) || typeof obj[key] === 'object') {
+                    exploreObject(obj[key], idYo, fullKey, accumulator);
+                } else {
+                    flat[fullKey] = obj[key];
+                }
+            }
+        }
+    }
+    if (Object.keys(flat).length > 0) {
+        accumulator.push({ datos: flat, parent: { cont: exploreObject.counter, yo: idYo, padre: idPadre - 1 } });
+    }
+
+    return accumulator;
+}
+
+function consolidar(arr, padre, indexPadre, accObject = {}, resultados = []) {
+    let tieneHijos = false;
+
+    arr.forEach(item => {
+        if (item.parent.padre === padre) {
+            tieneHijos = true;
+            accObject = { ...accObject, ...item.datos };
+            consolidar(arr, item.parent.yo, indexPadre, accObject, resultados);
+        }
+    });
+
+    if (!tieneHijos) {
+        accObject = { ...arr[indexPadre].datos, ...accObject };
+        resultados.push(accObject);
+    }
+
+    return resultados;
+}
+
+function getKeysAndTypes(arr) {
+    let keysAndTypes = [];
+
+    arr.forEach(item => {
+        Object.keys(item).forEach(key => {
+            // Verificamos si la clave ya fue agregada
+            if (!keysAndTypes.some(field => field.campo === key)) {
+                keysAndTypes.push({
+                    campo: key,
+                    type: typeof item[key]
+                });
+            }
+        });
+    });
+
+    return keysAndTypes;
+}
+
+
+function groupByField(arr, field) {
+    return arr.reduce((acc, item) => {
+        const fieldValue = item[field]; // Obtiene el valor del campo por el que quieres agrupar
+
+        // Si el campo no existe en el objeto, lo ignora
+        if (fieldValue === undefined) {
+            return acc;
+        }
+
+        // Si el valor del campo no tiene un grupo en el acumulador, crea un nuevo grupo
+        if (!acc[fieldValue]) {
+            acc[fieldValue] = [];
+        }
+
+        // Agrega el item al grupo correspondiente
+        acc[fieldValue].push(item);
+        return acc;
+    }, {});
+}
+
+function filterBy(arr, condition) {
+
+    const [field, operator, value] = condition.split(/(=|>|<|>=|<=)/).map(str => str.trim());
+
+    return arr.filter(item => {
+        if (!(field in item)) {
+            return false;
+        }
+
+        let fieldValue = item[field];
+        let conditionValue;
+
+        if (typeof (fieldValue) === 'boolean') {
+            conditionValue = value === 'true' ? true : false;
+        } else if (!isNaN(value)) {
+            conditionValue = parseFloat(value);
+        } else {
+
+            fieldValue = fieldValue.toString().toLowerCase();
+            conditionValue = value.toLowerCase();
+        }
+
+        switch (operator) {
+            case '=':
+                if (typeof fieldValue === 'string') {
+                    // Para cadenas, buscamos coincidencias parciales
+                    return fieldValue.includes(conditionValue);
+                } else {
+                    return fieldValue == conditionValue;
+                }
+            case '>':
+                return fieldValue > conditionValue;
+            case '<':
+                return fieldValue < conditionValue;
+            case '>=':
+                return fieldValue >= conditionValue;
+            case '<=':
+                return fieldValue <= conditionValue;
+            default:
+                return false;
+        }
+    });
+}

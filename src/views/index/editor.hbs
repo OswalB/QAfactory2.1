@@ -21,12 +21,37 @@
             <h2 class="accordion-header" id="heading1">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
-                Configuración de página
+                Configuración
               </button>
             </h2>
             <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1"
               data-bs-parent="#accordionDesign">
               <div class="accordion-body">
+                <h5>Datos</h5>
+                <div class="input-group">
+                  <input type="text" class="form-control" name="fieldFilter" id="in-fieldFilter" value=""
+                    data-section="pagina">
+                  <button type="button" class="btn btn-outline-secondary">Add. Filtro</button>
+                  <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                  </button>
+                  <ul id="listFilterData" class="dropdown-menu dropdown-menu-end">
+                  </ul>
+                </div>
+                <div class="input-group mt-2">
+                  <input type="text" class="form-control" name="fieldGroup" id="in-fieldGroup" value=""
+                    data-section="pagina">
+                  <button type="button" class="btn btn-outline-secondary">Add. Grupo</button>
+                  <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                  </button>
+                  <ul id="listGroupData" class="dropdown-menu dropdown-menu-end">
+                  </ul>
+                </div>
+                <hr>
+                <h5>Pagina</h5>
                 <label for="pageSize">Tamaño:</label>
                 <select id="pageSize" name="size" class="form-select" data-section="pagina">
                   <option value="letter" selected>Letter (216 x 279 mm)</option>
@@ -191,12 +216,12 @@
       <div class="scrollable">
         <h5 id="title-properties">titulo</h5>
         <div class="input-group mb-1">
-          <span class="input-group-text" id="basic-addon2"  >Col(1-12)</span>
-          <input type="number" class="form-control text-end" name="col" id="in-col"  role="property">
+          <span class="input-group-text" id="basic-addon2">Col(1-12)</span>
+          <input type="number" class="form-control text-end" name="col" id="in-col" role="property">
         </div>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Alto</span>
-          <input type="number" class="form-control text-end" name="height" id="in-heiht"  role="property">
+          <input type="number" class="form-control text-end" name="height" id="in-heiht" role="property">
         </div>
         <label class="form-check-label" for="in-siBorde">Borde </label>
         <input type="checkbox" class="form-check-input" name="siBorde" id="in-siBorde" value="" checked role="property">
@@ -210,22 +235,19 @@
         </div>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Tam. fuente</span>
-          <input type="number" class="form-control text-end" name="sizeFont" id="in-sizeFont" 
-            role="property">
+          <input type="number" class="form-control text-end" name="sizeFont" id="in-sizeFont" role="property">
         </div>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Color</span>
-          <input type="color" class="form-control" name="colorFont" id="in-colorFont"        role="property">
+          <input type="color" class="form-control" name="colorFont" id="in-colorFont" role="property">
         </div>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Padding X</span>
-          <input type="number" class="form-control text-end" name="paddingX" id="in-paddingX" 
-            role="property">
+          <input type="number" class="form-control text-end" name="paddingX" id="in-paddingX" role="property">
         </div>
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Padding Y</span>
-          <input type="number" class="form-control text-end" name="paddingY" id="in-paddingY" 
-            role="property">
+          <input type="number" class="form-control text-end" name="paddingY" id="in-paddingY" role="property">
         </div>
 
 
