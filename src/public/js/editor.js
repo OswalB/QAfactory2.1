@@ -1,14 +1,41 @@
 let currentCollection, listTemplates, selectedTemplate, currentInput = {};
 const defaults = {
-    col: 12,
+    col: 6,
     height: 15,
     siBorde: true,
     align: 0,
     sizeFont: 11,
     paddingX: 2,
     paddingY: 0,
-    colorFont: "#000000"
+    colorFont: "#000000",
+    colorBg: "#111111",
+    siBg: false
 }
+
+
+const inputField = document.getElementById('in-fieldFilter');
+const listFilterData = document.getElementById('listFilterData');
+
+// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
+listFilterData.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (event.target.classList.contains('drop-filter')) {
+        // Actualizar el valor del input con el texto del elemento seleccionado
+        inputField.value += event.target.textContent;
+    }
+});
+
+const inputFieldG = document.getElementById('in-fieldGroup');
+const listFilterDataG = document.getElementById('listGroupData');
+
+// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
+listFilterDataG.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (event.target.classList.contains('drop-group')) {
+        // Actualizar el valor del input con el texto del elemento seleccionado
+        inputFieldG.value += event.target.textContent;
+    }
+});
 
 const listSections = ['headerReport', 'headerPage', 'headerGroup'];
 
@@ -17,8 +44,8 @@ document.getElementById("accordionDesign").addEventListener('click', async e => 
     const section = e.target.getAttribute('data-section');
 
     processRole(role, section); // Agrega un input a la sección 'headerReport'
-    
-    
+
+
     /*if (role === 'addHeaderReport') {
         const inputs = document.getElementById('acc-headerReport').querySelectorAll('input');
         const index = inputs.length;
@@ -64,7 +91,7 @@ function processRole(role, section) {
         if (!localDesign[section][index]) {
             localDesign[section][index] = { ...defaults };
         }
-        
+
     } else if (role === 'delSection') {
         const inputs = sectionElement.querySelectorAll('input');
         if (inputs.length > 0) {
@@ -208,7 +235,7 @@ function toggleInputs({ bloquear }) {
                     element.value = ''; // Limpiar valor si está bloqueado
                 }
             } else {
-                const sectionArray = localDesign[currentInput.section];  
+                const sectionArray = localDesign[currentInput.section];
                 if (Array.isArray(sectionArray) && sectionArray[currentInput.index] && sectionArray[currentInput.index].hasOwnProperty(element.name)) {
                     const valor = sectionArray[currentInput.index][element.name];
                     if (element.type === 'checkbox') {
@@ -375,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function fillLocalDesign(input) {
+    console.log(input)
     const role = input.getAttribute('role');
     const fieldName = input.name;
     let fieldValue;
@@ -476,8 +504,8 @@ document.getElementById('listDocuments').addEventListener('click', async e => {
     renderFilter();
     paintFilter();
     processDataPdf(currentContent);
-    addItemList('listFilterData',keysAndTypes,'campo','campo', 'drop-filter');
-    addItemList('listGroupData',keysAndTypes,'campo','campo', 'drop-group');
+    addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
+    addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
 
 })
 
@@ -581,17 +609,75 @@ async function init() {
 
 
     await loadList();
-
+    debugg(true);
 };
+
+async function debugg(activate = false) {
+    if (activate) {
+        console.warn('RECUERDA DESACTIVAR debugg()');
+        
+        backFilter.limitar = 15;
+        activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false });
+    workFilter.currentPage = 1;
+    let m = 'Order';
+    let t = 'Ordenes ca';
+    currentCollection = { "titulo": t, "modelo": m };
+    workFilter.modelo = m;
+    let boton = document.getElementById('btnChose');
+    boton.innerHTML = t;
+    workFilter.filterStatus = 'off';
+    
+    backFilter.otrosMatch = [{state:0 }];
+    showAlertFilter();
+    setFilter();
+    loadFilter();
+    await renderTable();
+    await footer();
+    renderFilter();
+    paintFilter();
+    processDataPdf(currentContent);
+    addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
+    addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
+
+
+
+    let res = await fetch('/domain/templates-list', {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({
+            "modelo": currentCollection.modelo,
+            fx: 'list'
+        })
+    });
+    listTemplates = await res.json();
+    if (listTemplates.fail) {
+        toastr.error(listTemplates.message);
+        return;
+    }
+
+    listTemplates.forEach(item => {
+        item.descripcion = `${item.idTemplate}: ${item.descripcion}`
+    })
+    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion')
+
+
+
+
+    
+
+    }
+}
 
 function afterLoad() {
     fadeInputs();
-    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false });
+    activeButtons({ btnSel: true, btnV: true, btnE: true, btnG: true });
     selectedTemplate = 0;
 };
 
 async function renderTable() {
-    console.log('render')
+    
     let response = await fetch("/core/keys", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',

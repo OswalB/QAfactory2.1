@@ -114,6 +114,13 @@
                   <span class="input-group-text" id="basic-addon2">Der.</span>
                   <input type="number" class="form-control" name="mb" id="in-mb" value="19" data-section="pagina">
                 </div>
+                <label for="pagination">Paginación:</label>
+                <select id="pagination" name="pagination" class="form-select" data-section="pagina">
+                  <option value="0" selected>Centro Página 1</option>
+                  <option value="1" >Centro Página 1 de...</option>
+                  <option value="2" >Borde Página 1</option>
+                  <option value="3" >Borde Página 1 de...</option>
+                </select>
               </div>
             </div>
           </div>
@@ -215,16 +222,15 @@
     <div class="col-md-4 bg-dark bg-opacity-10">
       <div class="scrollable">
         <h5 id="title-properties">titulo</h5>
+        <h6>Fuente</h6>
         <div class="input-group mb-1">
-          <span class="input-group-text" id="basic-addon2">Col(1-12)</span>
-          <input type="number" class="form-control text-end" name="col" id="in-col" role="property">
+          <span class="input-group-text" id="basic-addon2">Tamaño</span>
+          <input type="number" class="form-control text-end" name="sizeFont" id="in-sizeFont" role="property">
         </div>
         <div class="input-group mb-1">
-          <span class="input-group-text" id="basic-addon2">Alto</span>
-          <input type="number" class="form-control text-end" name="height" id="in-heiht" role="property">
+          <span class="input-group-text" id="basic-addon2">Color</span>
+          <input type="color" class="form-control" name="colorFont" id="in-colorFont" role="property">
         </div>
-        <label class="form-check-label" for="in-siBorde">Borde </label>
-        <input type="checkbox" class="form-check-input" name="siBorde" id="in-siBorde" value="" checked role="property">
         <div class="input-group mb-1 mt-1">
           <span class="input-group-text" for="in-align">Alineación:</span>
           <select id="in-align" name="align" class="form-select" role="property">
@@ -233,14 +239,24 @@
             <option value="2">Derecha</option>
           </select>
         </div>
+        <h6>Cuadro</h6>
         <div class="input-group mb-1">
-          <span class="input-group-text" id="basic-addon2">Tam. fuente</span>
-          <input type="number" class="form-control text-end" name="sizeFont" id="in-sizeFont" role="property">
+          <span class="input-group-text" id="basic-addon2">Ancho(1 a 12)</span>
+          <input type="number" class="form-control text-end" name="col" id="in-col" role="property">
         </div>
+        <div class="input-group mb-1">
+          <span class="input-group-text" id="basic-addon2">Alto</span>
+          <input type="number" class="form-control text-end" name="height" id="in-heiht" role="property">
+        </div>
+        <label class="form-check-label" for="in-siBorde">Borde </label>
+        <input type="checkbox" class="form-check-input" name="siBorde" id="in-siBorde" value="" checked role="property">
+        <label class="form-check-label" for="in-siBg">Fondo </label>
+        <input type="checkbox" class="form-check-input" name="siBg" id="in-siBg" value="" checked role="property">
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Color</span>
-          <input type="color" class="form-control" name="colorFont" id="in-colorFont" role="property">
+          <input type="color" class="form-control" name="colorBg" id="in-colorBg" role="property">
         </div>
+        
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Padding X</span>
           <input type="number" class="form-control text-end" name="paddingX" id="in-paddingX" role="property">

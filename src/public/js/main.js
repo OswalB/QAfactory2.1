@@ -3,29 +3,7 @@ let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
 let k_group, k_datepp, dataUnwind = [], keysAndTypes = [];
 
-const inputField = document.getElementById('in-fieldFilter');
-const listFilterData = document.getElementById('listFilterData');
 
-// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
-listFilterData.addEventListener('click', function (event) {
-    event.preventDefault();
-    if (event.target.classList.contains('drop-filter')) {
-        // Actualizar el valor del input con el texto del elemento seleccionado
-        inputField.value += event.target.textContent;
-    }
-});
-
-const inputFieldG = document.getElementById('in-fieldGroup');
-const listFilterDataG = document.getElementById('listGroupData');
-
-// Delegación de eventos: escuchamos los clicks en el contenedor de la lista
-listFilterDataG.addEventListener('click', function (event) {
-    event.preventDefault();
-    if (event.target.classList.contains('drop-group')) {
-        // Actualizar el valor del input con el texto del elemento seleccionado
-        inputFieldG.value += event.target.textContent;
-    }
-});
 
 
 
@@ -588,24 +566,28 @@ async function generarPDF(design) {
         unit: 'pt',
         format: design.pagina.size
     });
+
     const pageSize = doc.internal.pageSize;
     const page = {
-        ml: mmToPt(design.pagina.ml),
-        mr: mmToPt(design.pagina.mr),
-        mt: mmToPt(design.pagina.mt),
-        mb: mmToPt(design.pagina.mb),
-        pw: Math.round(pageSize.getWidth()),
-        ph: Math.round(pageSize.getHeight())
-    }
-    page.sw = Math.round(page.pw - page.ml - page.mr);   //ancho del espacio imprimible
-    page.sh = Math.round(page.ph - page.mt - page.mb);
-    page.centerX = (page.sw / 2) + page.ml;
-    page.ymax = page.ph - page.mb;
-    page.colpt = Math.round(page.sw / 12) - 0.5;
-    page.maxR = page.pw - page.mr;
-    page.maxY = page.ph - page.mt;
-    let curry = page.mt, currx = page.ml;
-    let px = page.ml, py = page.mt;
+        ml: r2d(mmToPt(design.pagina.ml), 2),
+        mr: r2d(mmToPt(design.pagina.mr), 2),
+        mt: r2d(mmToPt(design.pagina.mt), 2),
+        mb: r2d(mmToPt(design.pagina.mb), 2),
+        pw: r2d(pageSize.getWidth(), 2),
+        ph: r2d(pageSize.getHeight(), 2),
+        sw: r2d(pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr), 2),
+        sh: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt) - mmToPt(design.pagina.mb), 2),
+        centerX: r2d((pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr)) / 2 + mmToPt(design.pagina.ml), 2),
+        
+        colpt: r2d((pageSize.getWidth() - mmToPt(design.pagina.ml) - mmToPt(design.pagina.mr)) / 12 , 2),
+        maxR: r2d(pageSize.getWidth() - mmToPt(design.pagina.mr), 2),
+        maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
+    };
+
+    let curry = page.mt;
+    let currx = page.ml;
+    let px = page.ml;
+    let py = page.mt;
 
     doc.text(5, 15, 'v1.007');
     doc.rect(page.ml, page.mt, page.sw, page.sh);
@@ -618,15 +600,29 @@ async function generarPDF(design) {
             return;
         }
         let maxHeight = 0;
-        design[section].forEach(item => {
-
-            let col = Math.max(1, Math.min(12, parseInt(item.col)));
-            const width = col * page.colpt;
+        design[section].forEach((item, index) => {
+            //let col = Math.max(1, Math.min(12, parseInt(item.col)));
+            const col = parseInt(item.col);
+            const fontSize = parseInt(item.sizeFont);
+            const box = {
+                width : r2d(col * page.colpt, 2),       //ancho de la caja
+                height : parseInt(item.height),         //alto de la caja
+                align : parseInt(item.align),
+                paddingX : parseInt(item.paddingX),
+                paddingY : parseInt(item.paddingY),
+                hLine : r2d(fontSize * 1.15, 2) + parseInt(item.paddingY), //alto de linea de texto
+            }
+            
+            
+            printBox(box, item, px, py)
+            
+            /*const width = r2d(col * page.colpt, 2);
             const height = parseInt(item.height);
             const align = parseInt(item.align);
-            const fontSize = parseInt(item.sizeFont);
+            
             const paddingX = parseInt(item.paddingX);
             const paddingY = parseInt(item.paddingY);
+            const hLine = r2d(fontSize * 1.15, 2) + paddingY; //alto de linea de texto
             ({ px, py, maxHeight } = testWidth(px, py, width, page.maxR, page.ml, maxHeight));
             maxHeight = height > maxHeight ? height : maxHeight;
             let lineY = py + fontSize + paddingY;
@@ -645,11 +641,11 @@ async function generarPDF(design) {
                 lineY += fontSize;
             })
 
-            px += width;
+            px += width;   */
         })
         px = page.ml
         py += maxHeight;
-        maxHeight = 0
+        maxHeight = 0 
     })
     const out = doc.output();
     const url = 'data:application/pdf;base64,' + btoa(out);
@@ -658,6 +654,12 @@ async function generarPDF(design) {
     x.document.open();
     x.document.write(iframe);
     x.document.close();
+}
+
+function printBox(box, item, px, py) {
+    if (item.siBorde) {
+        doc.rect(px, py, box.width, box.height);
+    }
 }
 
 function testWidth(px, py, width, maxR, ml, maxHeight) {
@@ -670,14 +672,19 @@ function testWidth(px, py, width, maxR, ml, maxHeight) {
 
 function alinear(x, padding, space, fx, textWidth) {
     if (fx === 0) return x + padding;
-    if (fx === 1) return x + (space - textWidth) / 2;
+    if (fx === 1) return r2d(x + (space - textWidth) / 2, 2);
     if (fx === 2) return x + space - textWidth - padding;
     return x;
 }
 
 function mmToPt(mm) {
     const ptPerMm = 2.83465;
-    return Math.round(mm * ptPerMm);
+    return r2d(mm * ptPerMm,2);
+}
+
+function r2d(num, decimals) {
+    var factor = Math.pow(10, decimals);
+    return Math.round(num * factor) / factor;
 }
 // +***********  FUNCIONES DE datos pdf
 
@@ -685,7 +692,6 @@ function mmToPt(mm) {
 function processDataPdf(data) {
     unwind(data);
 }
-
 
 function unwind(data) {
 
@@ -795,7 +801,7 @@ function groupByField(arr, field) {
     }, {});
 }
 
-function filterBy(arr, condition) {
+function filterArray(arr, condition) {
 
     const [field, operator, value] = condition.split(/(=|>|<|>=|<=)/).map(str => str.trim());
 
@@ -835,6 +841,22 @@ function filterBy(arr, condition) {
                 return fieldValue <= conditionValue;
             default:
                 return false;
+        }
+    });
+}
+
+function ordenarPorCampo(arr, campo, ordenAscendente = true) {
+    return arr.sort((a, b) => {
+        if (typeof a[campo] === 'string') {
+            // Comparación para strings
+            return ordenAscendente
+                ? a[campo].localeCompare(b[campo])
+                : b[campo].localeCompare(a[campo]);
+        } else {
+            // Comparación para números u otros tipos de datos
+            return ordenAscendente
+                ? a[campo] - b[campo]
+                : b[campo] - a[campo];
         }
     });
 }

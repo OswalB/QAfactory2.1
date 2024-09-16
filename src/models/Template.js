@@ -46,6 +46,10 @@ const TemplateSchema = new Schema({
         fieldGroup:{
             type: 'string',
             default: ''
+        },
+        pagination:{
+            type: 'string',
+            default: '0'
         }
     },
     headerReport:[{
@@ -76,6 +80,13 @@ const TemplateSchema = new Schema({
         },
         paddingY:{
             type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
         }
     }],
     headerPage:[{
@@ -106,6 +117,13 @@ const TemplateSchema = new Schema({
         },
         paddingY:{
             type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
         }
     }],
     headerGroup:[{
@@ -136,6 +154,13 @@ const TemplateSchema = new Schema({
         },
         paddingY:{
             type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
         }
     }]     
 
