@@ -647,34 +647,35 @@ async function generarPDF(design) {
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
         console.log(py)
+        let indexPage = 0;
         originData[group].forEach(item => {
             console.log(item)
             if (siPrint.HR) {
-                py = renglon(design.headerReport, item, page, px, py);
+                ({py:py, indexPage: indexPage} = renglon(design.headerReport, item, page, px, py, indexPage));
                 siPrint.HR = false;
             }
             if (siPrint.HP) {
-                py = renglon(design.headerPage, item, page, px, py);
+                ({py:py, indexPage: indexPage} = renglon(design.headerPage, item, page, px, py, indexPage));
                 siPrint.HP = false;
             }
             if (siPrint.HG) {
-                py = renglon(design.headerGroup, item, page, px, py);
+                ({py:py, indexPage: indexPage} = renglon(design.headerGroup, item, page, px, py, indexPage));
                 siPrint.HG = false;
             }
             if (siPrint.HD) {
-                py = renglon(design.headerDetail, item, page, px, py);
+                ({py:py, indexPage: indexPage}  = renglon(design.headerDetail, item, page, px, py, indexPage));
                 siPrint.HD = false;
             }
             if (siPrint.DD) {
-                py = renglon(design.detail, item, page, px, py);
+                ({py:py, indexPage: indexPage}  = renglon(design.detail, item, page, px, py, indexPage));
                 //siPrint.HD = false;
             }
         });
-        console.log(py)
+        
     });
 
     //console.log(JSON.stringify(jsonPDF, null, 2));
-
+    console.log(jsonPDF);
 
     //return
 
@@ -710,7 +711,7 @@ async function generarPDF(design) {
 
 }
 
-function renglon(design, data, page, px, py) {
+function renglon(design, data, page, px, py, indexPage) {
     console.log(design);
     console.log(data)
     let sumW = 0, filas = 0, startRow = true;
@@ -737,8 +738,7 @@ function renglon(design, data, page, px, py) {
             item.originControl = '0';
         }
         item.originControl = item.originControl ? item.originControl : '0';
-        const cadena = item.originControl === '0' ? item.texto : data[item.originControl] || ''
-        console.log(cadena, item.sw)
+        const cadena = item.originControl === '0' ? item.texto : data[item.originControl] || '';
         
         
         item.lineas = doc.splitTextToSize(String(cadena), item.sw);
@@ -763,6 +763,11 @@ function renglon(design, data, page, px, py) {
         }
         let lineY = rowY + item.lineH + paddingY;
         doc.setFontSize(fontSize);
+
+        if(rowY + carry > page.maxY){
+            indexPage++;
+            rowX = px, rowY = py
+        }
         item.lineas.forEach(linea => {
             const textWidth = r2d(doc.getTextWidth(linea), 2);
             const lineX = alinear(rowX, paddingX, item.width, align, textWidth);
@@ -773,7 +778,7 @@ function renglon(design, data, page, px, py) {
                 sf: parseInt(item.sizeFont),
                 cf: item.colorFont,
                 tx: linea
-            }, 0);
+            }, indexPage    );
 
             lineY += item.lineH;
         });
@@ -787,14 +792,14 @@ function renglon(design, data, page, px, py) {
                 hb: item.height,
                 fll: fillBox,
                 cb: item.colorBg
-            }, 0);
+            }, indexPage);
         }
         rowX += item.width;
         carry = item.height;
     })
 
 
-    return rowY + carry;
+    return {py:rowY + carry, indexPage: indexPage };
 
 }
 
