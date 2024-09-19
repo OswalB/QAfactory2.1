@@ -1,7 +1,7 @@
 var currentKeys = [], backFilter = {}, workFilter = {}, tgg = true, role, sizeCollection, localDesign = { pagina: {} };
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
-let k_group, k_datepp, dataUnwind = [], keysAndTypes = []; originData = [];
+let k_group, k_datepp, dataUnwind = [], keysAndTypes = []; originData = [], jsonPDF = [];
 
 
 
@@ -556,49 +556,19 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
         });
 }
 
+
+//-------------------------- pdf geneator  --------------------------------------
+
 let doc;
 
 async function generarPDF(design) {
-    console.log(design);
-    originData = [...dataUnwind];
-
-    if (design.pagina.fieldFilter) {
-        console.log('filtrar')
-        originData = filterArray(dataUnwind, design.pagina.fieldFilter);
-    }
-    if (design.pagina.fieldOrder) {
-        console.log('ordenar')
-        originData = ordenarPorCampo(originData, design.pagina.fieldOrder);
-    }
-    if (design.pagina.fieldGroup) {
-        console.log('agrupar')
-        originData = groupByField(originData, design.pagina.fieldGroup);
-    } else {
-        console.log('agrupar null')
-        originData = groupByField(originData, design.pagina.fieldGroup);
-    }
-
-    Object.keys(originData).forEach(group => {
-        console.log(`Grupo: ${group}`);
-
-        // Iterar sobre los elementos en cada grupo
-        originData[group].forEach(item => {
-            console.log(item);
-        });
-    });
-
-
-
-
-    console.log(originData);
-    return
-    let localData = [...dataUnwind];
     doc = new jsPDF({
         orientation: design.pagina.orientation,
         unit: 'pt',
         format: design.pagina.size
     });
 
+    jsonPDF = [];
     const pageSize = doc.internal.pageSize;
     const page = {
         ml: r2d(mmToPt(design.pagina.ml), 2),
@@ -616,69 +586,118 @@ async function generarPDF(design) {
         maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
     };
 
-    let curry = page.mt;
-    let currx = page.ml;
     let px = page.ml;
     let py = page.mt;
+
+    //printPattern(page.ml, page.colpt, page.mt, page.sh);
 
     doc.text(5, 15, 'v1.007');
     doc.rect(page.ml, page.mt, page.sw, page.sh);
 
-    const listSections = ['headerReport', 'headerPage', 'headerGroup'];
 
-    listSections.forEach(section => {
-        if (!Array.isArray(design[section])) {
-            console.log(`Sección ${section} no es un array válido. Continuando...`);
-            return;
+    console.log(design);
+    originData = [...dataUnwind];
+
+    if (design.pagina.fieldFilter) {
+        originData = filterArray(dataUnwind, design.pagina.fieldFilter);
+    }
+    if (design.pagina.fieldOrder) {
+        originData = ordenarPorCampo(originData, design.pagina.fieldOrder);
+    }
+    if (design.pagina.fieldGroup) {
+        originData = groupByField(originData, design.pagina.fieldGroup);
+    } else {
+        originData = groupByField(originData, design.pagina.fieldGroup);
+    }
+
+
+    const testPDF = [
+        {
+            text: [
+                { x: 100, y: 120, sf: 10, cf: '#000000', tx: 'pag 1 primer texto' },
+                { x: 100, y: 170, sf: 18, cf: '#880000', tx: 'pag 1 second texton para..' }
+            ],
+            box: [
+                { x: 100, y: 100, wb: 88, hb: 25, fll: '', cb: '#888000' },
+                { x: 100, y: 150, wb: 98, hb: 25, fll: '', cb: '#888000' }
+            ]
+        },
+        {
+            text: [
+                { x: 200, y: 120, sf: 10, cf: '#000000', tx: 'textp segunda pagina' },
+                { x: 200, y: 170, sf: 18, cf: '#880000', tx: 'second texton para.. pag 2' }
+            ],
+            box: [
+                { x: 200, y: 100, wb: 88, hb: 25, fll: 'F', cb: '#008000' },
+                { x: 200, y: 150, wb: 98, hb: 25, fll: 'F', cb: '#000090' }
+            ]
+        },
+    ]
+
+
+
+    const siPrint = {
+        HR: true,
+        HP: true,
+        HG: true,
+        HD: true,
+        DD: true
+    }
+
+    Object.keys(originData).forEach(group => {
+        console.log(`Grupo: ${group}`);
+        console.log(py)
+        originData[group].forEach(item => {
+            console.log(item)
+            if (siPrint.HR) {
+                py = renglon(design.headerReport, item, page, px, py);
+                siPrint.HR = false;
+            }
+            if (siPrint.HP) {
+                py = renglon(design.headerPage, item, page, px, py);
+                siPrint.HP = false;
+            }
+            if (siPrint.HG) {
+                py = renglon(design.headerGroup, item, page, px, py);
+                siPrint.HG = false;
+            }
+            if (siPrint.HD) {
+                py = renglon(design.headerDetail, item, page, px, py);
+                siPrint.HD = false;
+            }
+            if (siPrint.DD) {
+                py = renglon(design.detail, item, page, px, py);
+                //siPrint.HD = false;
+            }
+        });
+        console.log(py)
+    });
+
+    //console.log(JSON.stringify(jsonPDF, null, 2));
+
+
+    //return
+
+    jsonPDF.forEach((pagina, index) => {
+        if (index > 0) {
+            newPage()
         }
-        let maxHeight = 0;
-        design[section].forEach((item, index) => {
-            //let col = Math.max(1, Math.min(12, parseInt(item.col)));
-            const col = parseInt(item.col);
-            const fontSize = parseInt(item.sizeFont);
-            const box = {
-                width: r2d(col * page.colpt, 2),       //ancho de la caja
-                height: parseInt(item.height),         //alto de la caja
-                align: parseInt(item.align),
-                paddingX: parseInt(item.paddingX),
-                paddingY: parseInt(item.paddingY),
-                hLine: r2d(fontSize * 1.15, 2) + parseInt(item.paddingY), //alto de linea de texto
-            }
-
-
-            printBox(box, item, px, py)
-
-            /*const width = r2d(col * page.colpt, 2);
-            const height = parseInt(item.height);
-            const align = parseInt(item.align);
-            
-            const paddingX = parseInt(item.paddingX);
-            const paddingY = parseInt(item.paddingY);
-            const hLine = r2d(fontSize * 1.15, 2) + paddingY; //alto de linea de texto
-            ({ px, py, maxHeight } = testWidth(px, py, width, page.maxR, page.ml, maxHeight));
-            maxHeight = height > maxHeight ? height : maxHeight;
-            let lineY = py + fontSize + paddingY;
-
-            doc.setTextColor(item.colorFont);
-            doc.setFontSize(fontSize);
-            const lines = doc.splitTextToSize(item.texto, width - (paddingX * 2));
-            if (item.siBorde) {
-                doc.rect(px, py, width, height);
-            }
-
-            lines.forEach(fila => {
-                const textWidth = doc.getTextWidth(fila);
-                let lineX = alinear(px, paddingX, width, align, textWidth);
-                doc.text(lineX, lineY, fila);
-                lineY += fontSize;
-            })
-
-            px += width;   */
+        pagina.box.forEach(caja => {
+            if (!caja.fll) return;
+            doc.setFillColor(caja.cb);
+            doc.rect(caja.x, caja.y, caja.wb, caja.hb, caja.fll);
+        });
+        pagina.text.forEach(texto => {
+            doc.setTextColor(texto.cf);
+            doc.setFontSize(texto.sf);
+            doc.text(texto.tx, texto.x, texto.y)
         })
-        px = page.ml
-        py += maxHeight;
-        maxHeight = 0
     })
+
+
+
+
+
     const out = doc.output();
     const url = 'data:application/pdf;base64,' + btoa(out);
     const iframe = "<iframe width='100%' height='100%' src='" + url + "'></iframe>";
@@ -686,6 +705,119 @@ async function generarPDF(design) {
     x.document.open();
     x.document.write(iframe);
     x.document.close();
+
+
+
+}
+
+function renglon(design, data, page, px, py) {
+    console.log(design);
+    console.log(data)
+    let sumW = 0, filas = 0, startRow = true;
+    design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
+        const paddingX = parseInt(item.paddingX);
+        const paddingY = parseInt(item.paddingY);
+        const fontSize = parseInt(item.sizeFont);
+        const height = parseInt(item.height);
+        const align = parseInt(item.align);
+        item.width = r2d(item.col * page.colpt, 2);
+        sumW += item.width;
+        item.startRow = startRow;
+
+        if (sumW > page.sw) {
+            sumW = item.width;
+            filas += 1;
+            item.startRow = true;
+        }
+        startRow = false;
+        item.fila = filas;
+        item.sw = item.width - paddingX - paddingX;
+        doc.setFontSize(fontSize);
+        if (!item.hasOwnProperty('originControl')) {
+            item.originControl = '0';
+        }
+        item.originControl = item.originControl ? item.originControl : '0';
+        const cadena = item.originControl === '0' ? item.texto : data[item.originControl] || ''
+        console.log(cadena, item.sw)
+        
+        
+        item.lineas = doc.splitTextToSize(String(cadena), item.sw);
+        item.lineH = r2d(fontSize, 2);
+        const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
+        item.height = newH > height ? newH : height;
+    })
+    console.log(design)
+
+    maxHeightRow(design)
+
+    let rowX = px, rowY = py        //copia (x,y) iniciales
+    let carry = 0;
+    design.forEach((item, index) => {    //push campo texto y caja
+        const paddingY = parseInt(item.paddingY);
+        const paddingX = parseInt(item.paddingX);
+        const align = parseInt(item.align);
+        const fontSize = parseInt(item.sizeFont);
+        if (item.startRow) {
+            rowY += carry;
+            rowX = px
+        }
+        let lineY = rowY + item.lineH + paddingY;
+        doc.setFontSize(fontSize);
+        item.lineas.forEach(linea => {
+            const textWidth = r2d(doc.getTextWidth(linea), 2);
+            const lineX = alinear(rowX, paddingX, item.width, align, textWidth);
+
+            addElementToJsonPDF('text', {
+                x: lineX,
+                y: lineY,
+                sf: parseInt(item.sizeFont),
+                cf: item.colorFont,
+                tx: linea
+            }, 0);
+
+            lineY += item.lineH;
+        });
+
+        if (item.siBorde || item.siBg) {
+            const fillBox = item.siBorde && item.siBg ? 'FD' : item.siBg ? 'F' : 'S';
+            addElementToJsonPDF('box', {
+                x: rowX,
+                y: rowY,
+                wb: item.width,
+                hb: item.height,
+                fll: fillBox,
+                cb: item.colorBg
+            }, 0);
+        }
+        rowX += item.width;
+        carry = item.height;
+    })
+
+
+    return rowY + carry;
+
+}
+
+function maxHeightRow(items) {
+    let filas = items.reduce((acc, item) => {
+        if (!acc[item.fila]) {
+            acc[item.fila] = [];
+        }
+        acc[item.fila].push(item);
+        return acc;
+    }, {});
+
+    for (let fila in filas) {
+        let maxHeight = Math.max(...filas[fila].map(item => item.height));
+        filas[fila].forEach(item => {
+            item.height = maxHeight;
+        });
+    }
+}
+
+function newPage() {
+    console.log('codigo para una nueva pagina');
+    doc.addPage();
 }
 
 function printBox(box, item, px, py) {
@@ -704,7 +836,7 @@ function testWidth(px, py, width, maxR, ml, maxHeight) {
 
 function alinear(x, padding, space, fx, textWidth) {
     if (fx === 0) return x + padding;
-    if (fx === 1) return r2d(x + (space - textWidth) / 2, 2);
+    if (fx === 1) return r2d(x + ((space - textWidth) / 2), 2);
     if (fx === 2) return x + space - textWidth - padding;
     return x;
 }
@@ -813,27 +945,6 @@ function getKeysAndTypes(arr) {
     return keysAndTypes;
 }
 
-/*
-function groupByField(arr, field) {
-    return arr.reduce((acc, item) => {
-        const fieldValue = item[field]; // Obtiene el valor del campo por el que quieres agrupar
-
-        // Si el campo no existe en el objeto, lo ignora
-        if (fieldValue === undefined) {
-            return acc;
-        }
-
-        // Si el valor del campo no tiene un grupo en el acumulador, crea un nuevo grupo
-        if (!acc[fieldValue]) {
-            acc[fieldValue] = [];
-        }
-
-        // Agrega el item al grupo correspondiente
-        acc[fieldValue].push(item);
-        return acc;
-    }, {});
-}*/
-
 function groupByField(arr, field) {
     return arr.reduce((acc, item) => {
         const fieldValue = item[field];
@@ -849,7 +960,6 @@ function groupByField(arr, field) {
         return acc;
     }, {});
 }
-
 
 function filterArray(arr, condition) {
 
@@ -917,3 +1027,43 @@ function ordenarPorCampo(arr, campo, ordenAscendente = true) {
     });
 }
 
+function addElementToJsonPDF(type, properties, pageIndex) {
+    // Si la página no existe, la creamos
+    if (!jsonPDF[pageIndex]) {
+        jsonPDF[pageIndex] = { text: [], box: [] }; // Inicializamos con arrays vacíos para text y box
+    }
+
+    // Agregar el elemento al array correspondiente
+    if (type === 'text') {
+        jsonPDF[pageIndex].text.push({
+            x: properties.x,
+            y: properties.y,
+            sf: properties.sf,
+            cf: properties.cf,
+            tx: properties.tx
+        });
+    } else if (type === 'box') {
+        jsonPDF[pageIndex].box.push({
+            x: properties.x,
+            y: properties.y,
+            wb: properties.wb,
+            hb: properties.hb,
+            fll: properties.fll,
+            cb: properties.cb
+        });
+    }
+}
+
+function printPattern(marginL, wCol, marginT, spaceH) {
+
+    doc.setLineWidth(1);
+    doc.setDrawColor(255, 0, 0);
+    y1 = marginT;
+    y2 = marginT + spaceH;
+    for (var filas = 0; filas < 12; filas++) {
+        x1 = marginL + (filas * wCol)
+        x2 = x1;
+        console.log(x1, y1, x2, y2)
+        doc.line(x1, y1, x2, y2);
+    }
+}

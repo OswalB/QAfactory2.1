@@ -54,7 +54,7 @@ listFilterDataG.addEventListener('click', function (event) {
     }
 });
 
-const listSections = ['headerReport', 'headerPage', 'headerGroup'];
+const listSections = ['headerReport', 'headerPage', 'headerGroup', 'headerDetail', 'detail'];
 
 document.getElementById("accordionDesign").addEventListener('click', async e => {
     const role = e.target.getAttribute('role');
@@ -345,7 +345,7 @@ document.getElementById("in-template").addEventListener('change', async e => {
     }
 
     fillDesign();
-    console.log(localDesign);
+    
 
 });
 
@@ -412,14 +412,14 @@ document.addEventListener('DOMContentLoaded', () => {
             activeButtons({ btnSel: true, btnV: true, btnE: true, btnG: true });
             fillLocalDesign(input);
 
-            console.log(localDesign);
+            //console.log(localDesign);
         }
     });
 });
 
 
 function fillLocalDesign(input) {
-    console.log(input)
+    
     const role = input.getAttribute('role');
     const fieldName = input.name;
     let fieldValue;

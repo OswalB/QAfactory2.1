@@ -93,7 +93,8 @@ const TemplateSchema = new Schema({
             default: false
         },
         originControl:{
-            type: 'string'
+            type: 'string',
+            default: '0'
         },
         formatControl:{
             type: 'number'
@@ -136,7 +137,8 @@ const TemplateSchema = new Schema({
             default: false
         },
         originControl:{
-            type: 'string'
+            type: 'string',
+            default: '0'
         },
         formatControl:{
             type: 'number'
@@ -179,7 +181,96 @@ const TemplateSchema = new Schema({
             default: false
         },
         originControl:{
+            type: 'string',
+            default: '0'
+        },
+        formatControl:{
+            type: 'number'
+        }
+    }],
+    headerDetail:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
             type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
+        },
+        originControl:{
+            type: 'string',
+            default: '0'
+        },
+        formatControl:{
+            type: 'number'
+        }
+    }],
+    detail:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
+            type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
+        },
+        originControl:{
+            type: 'string',
+            default: '0'
         },
         formatControl:{
             type: 'number'
