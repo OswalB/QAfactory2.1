@@ -644,34 +644,77 @@ async function generarPDF(design) {
         DD: true
     }
 
+    Object.assign(siPrint, { HR: false, HP: false, HD: false });
+
+    let indexPage = 0;
+    let printStatus = 1;    //inicio de informe
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
         console.log(py)
-        let indexPage = 0;
-        originData[group].forEach(item => {
-            console.log(item)
-            if (siPrint.HR) {
-                ({py:py, indexPage: indexPage} = renglon(design.headerReport, item, page, px, py, indexPage));
-                siPrint.HR = false;
+        let watchDog = 0;
+        const maxWdog =10;
+        do {
+            console.log('printstatus',printStatus)
+            watchDog++;
+            switch (printStatus) {
+                case 0:         //siguiene item
+                    Object.assign(siPrint, {
+                        HR: false,
+                        HP: false,
+                        HG: false,
+                        HD: false,
+                        DD: true
+                    });
+                    break;
+                case 1:         //inicio informe
+                    Object.assign(siPrint, {
+                        HR: true,
+                        HP: true,
+                        HG: true,
+                        HD: true,
+                        DD: true
+                    });
+                    break;
+                case 2:         //nueva pagina
+                    Object.assign(siPrint, {
+                        HR: false,
+                        HP: true,
+                        HG: true,
+                        HD: true,
+                        DD: true
+                    });
+                    break;
+                default:
+                    console.log('printStatus no reconocido');
             }
-            if (siPrint.HP) {
-                ({py:py, indexPage: indexPage} = renglon(design.headerPage, item, page, px, py, indexPage));
-                siPrint.HP = false;
-            }
-            if (siPrint.HG) {
-                ({py:py, indexPage: indexPage} = renglon(design.headerGroup, item, page, px, py, indexPage));
-                siPrint.HG = false;
-            }
-            if (siPrint.HD) {
-                ({py:py, indexPage: indexPage}  = renglon(design.headerDetail, item, page, px, py, indexPage));
-                siPrint.HD = false;
-            }
-            if (siPrint.DD) {
-                ({py:py, indexPage: indexPage}  = renglon(design.detail, item, page, px, py, indexPage));
-                //siPrint.HD = false;
-            }
-        });
-        
+            originData[group].forEach(item => {
+                //console.log(item)
+                if (siPrint.HR) {
+                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerReport, item, page, px, py, indexPage));
+                    
+                }
+                if (siPrint.HP) {
+                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerPage, item, page, px, py, indexPage));
+                    
+                }
+                if (siPrint.HG) {
+                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerGroup, item, page, px, py, indexPage));
+                    
+                }
+                if (siPrint.HD) {
+                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerDetail, item, page, px, py, indexPage));
+                    
+                }
+                if (siPrint.DD) {
+                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.detail, item, page, px, py, indexPage));
+                    
+                }
+            });
+            if(watchDog/maxWdog >0.95) console.warn('funcion infinita?')
+        } while (printStatus === 0 );
+
+
+
     });
 
     //console.log(JSON.stringify(jsonPDF, null, 2));
@@ -712,9 +755,10 @@ async function generarPDF(design) {
 }
 
 function renglon(design, data, page, px, py, indexPage) {
-    console.log(design);
-    console.log(data)
+    //console.log(design);
+    //console.log(data)
     let sumW = 0, filas = 0, startRow = true;
+    printStatus = 0;
     design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
         const paddingX = parseInt(item.paddingX);
         const paddingY = parseInt(item.paddingY);
@@ -739,14 +783,12 @@ function renglon(design, data, page, px, py, indexPage) {
         }
         item.originControl = item.originControl ? item.originControl : '0';
         const cadena = item.originControl === '0' ? item.texto : data[item.originControl] || '';
-        
-        
         item.lineas = doc.splitTextToSize(String(cadena), item.sw);
         item.lineH = r2d(fontSize, 2);
         const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
         item.height = newH > height ? newH : height;
     })
-    console.log(design)
+    //console.log(design)
 
     maxHeightRow(design)
 
@@ -764,9 +806,12 @@ function renglon(design, data, page, px, py, indexPage) {
         let lineY = rowY + item.lineH + paddingY;
         doc.setFontSize(fontSize);
 
-        if(rowY + carry > page.maxY){
+        if (rowY + item.height > page.maxY) {       //desborde de pagina
             indexPage++;
-            rowX = px, rowY = py
+            printStatus = 2;
+            px = page.ml;
+            py = page.mt;
+            return { py: py, indexPage: indexPage, printStatus: printStatus };
         }
         item.lineas.forEach(linea => {
             const textWidth = r2d(doc.getTextWidth(linea), 2);
@@ -778,7 +823,7 @@ function renglon(design, data, page, px, py, indexPage) {
                 sf: parseInt(item.sizeFont),
                 cf: item.colorFont,
                 tx: linea
-            }, indexPage    );
+            }, indexPage);
 
             lineY += item.lineH;
         });
@@ -799,7 +844,7 @@ function renglon(design, data, page, px, py, indexPage) {
     })
 
 
-    return {py:rowY + carry, indexPage: indexPage };
+    return { py: rowY + carry, indexPage: indexPage, printStatus: printStatus };
 
 }
 
