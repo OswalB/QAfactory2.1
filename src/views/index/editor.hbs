@@ -33,7 +33,7 @@
                     data-section="pagina">
                   <button type="button" class="btn btn-outline-secondary">Add. Filtro</button>
                   <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
-                    data-bs-toggle="dropdown" aria-expanded="false" >
+                    data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="visually-hidden">Toggle Dropdown</span>
                   </button>
                   <ul id="listFilterData" class="dropdown-menu dropdown-menu-end">
@@ -252,8 +252,6 @@
               </div>
             </div>
           </div>
-
-
           <!-- secciones: DETALLE detalle-->
           <div class="accordion-item">
             <h2 class="accordion-header" id="heading6">
@@ -284,6 +282,40 @@
             </div>
           </div>
 
+          <!-- secciones: footer DETALLE -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading7">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse7" aria-expanded="false" aria-controls="collapse7">
+                Pié de detalle
+              </button>
+            </h2>
+            <div id="collapse7" class="accordion-collapse collapse" aria-labelledby="heading7"
+              data-bs-parent="#accordionDesign">
+              <div class="accordion-body">
+                <div id="acc-footerDetail">
+
+                </div>
+                <div class="row mt-2" style="width: 100%;">
+                  <div class="col-8">
+                    <a data-section="footerDetail" role="addSection" class="btn btn-success w-100" href="#">
+                      <i data-section="footerDetail" role="addSection" class="fa fa-plus-square"></i> Add
+                    </a>
+                  </div>
+                  <div class="col-4">
+                    <a data-section="footerDetail" role="delSection" class="btn btn-danger w-100" href="#">
+                      <i data-section="footerDetail" role="delSection" class="fa fa-trash"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
 
 
         </div>
@@ -297,7 +329,7 @@
         <h6>Origen de datos</h6>
         <label for="in-originControl">Campo:</label>
         <select id="in-originControl" name="originControl" class="form-select" role="property">
-          
+
         </select>
         <label for="in-formatControl">Formato:</label>
         <select id="in-formatControl" name="formatControl" class="form-select" role="property">
@@ -351,6 +383,10 @@
         <div class="input-group mb-1">
           <span class="input-group-text" id="basic-addon2">Padding Y</span>
           <input type="number" class="form-control text-end" name="paddingY" id="in-paddingY" role="property">
+        </div>
+        <div class="">
+          <label class="form-check-label" for="in-forceNewRow">Forzar nueva fila </label>
+          <input type="checkbox" class="form-check-input ml-4" name="forceNewRow" id="in-forceNewRow" value=""  role="property">
         </div>
 
 

@@ -54,7 +54,14 @@ listFilterDataG.addEventListener('click', function (event) {
     }
 });
 
-const listSections = ['headerReport', 'headerPage', 'headerGroup', 'headerDetail', 'detail'];
+const listSections = [
+    'headerReport', 
+    'headerPage', 
+    'headerGroup', 
+    'headerDetail', 
+    'detail', 
+    'footerDetail'
+];
 
 document.getElementById("accordionDesign").addEventListener('click', async e => {
     const role = e.target.getAttribute('role');

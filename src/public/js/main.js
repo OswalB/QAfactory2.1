@@ -585,9 +585,7 @@ async function generarPDF(design) {
         maxR: r2d(pageSize.getWidth() - mmToPt(design.pagina.mr), 2),
         maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
     };
-
-    let px = page.ml;
-    let py = page.mt;
+    console.log(page)
 
     //printPattern(page.ml, page.colpt, page.mt, page.sh);
 
@@ -610,7 +608,9 @@ async function generarPDF(design) {
         originData = groupByField(originData, design.pagina.fieldGroup);
     }
 
+    addFields(originData);
 
+    
     const testPDF = [
         {
             text: [
@@ -634,91 +634,108 @@ async function generarPDF(design) {
         },
     ]
 
-
-
-    const siPrint = {
-        HR: true,
-        HP: true,
-        HG: true,
-        HD: true,
-        DD: true
-    }
-
-    Object.assign(siPrint, { HR: false, HP: false, HD: false });
-
+    const siPrint = {};
     let indexPage = 0;
-    let printStatus = 1;    //inicio de informe
+    let absY = page.mt;
+    let printStatus = priorityPrint(1, -1);    //inicio de informe
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
-        console.log(py)
-        let watchDog = 0;
-        const maxWdog =10;
-        do {
-            console.log('printstatus',printStatus)
-            watchDog++;
-            switch (printStatus) {
-                case 0:         //siguiene item
-                    Object.assign(siPrint, {
-                        HR: false,
-                        HP: false,
-                        HG: false,
-                        HD: false,
-                        DD: true
-                    });
-                    break;
-                case 1:         //inicio informe
-                    Object.assign(siPrint, {
-                        HR: true,
-                        HP: true,
-                        HG: true,
-                        HD: true,
-                        DD: true
-                    });
-                    break;
-                case 2:         //nueva pagina
-                    Object.assign(siPrint, {
-                        HR: false,
-                        HP: true,
-                        HG: true,
-                        HD: true,
-                        DD: true
-                    });
-                    break;
-                default:
-                    console.log('printStatus no reconocido');
-            }
-            originData[group].forEach(item => {
-                //console.log(item)
+        printStatus = priorityPrint(3, printStatus);     //printStatus ==0?printStatus:3
+        originData[group].forEach(item => {
+            let watchDog = 0;
+            const maxWdog = 500;
+            do {
+                watchDog++;
+                switch (printStatus) {
+                    case 0:         //siguiene item
+                        Object.assign(siPrint, {
+                            HR: false,
+                            HP: false,
+                            HG: false,
+                            HD: false,
+                            DD: true,
+                            FD: false
+                        });
+                        break;
+                    case 1:         //inicio informe
+                        Object.assign(siPrint, {
+                            HR: true,
+                            HP: true,
+                            HG: true,
+                            HD: true,
+                            DD: true,
+                            FD: false
+                        });
+                        break;
+                    case 2:         //nueva pagina
+                        Object.assign(siPrint, {
+                            HR: false,
+                            HP: true,
+                            HG: true,
+                            HD: true,
+                            DD: true,
+                            FD: false
+                        });
+                        break;
+                    case 3:         //nueva GRUPO
+                        Object.assign(siPrint, {
+                            HR: false,
+                            HP: false,
+                            HG: true,
+                            HD: true,
+                            DD: true,
+                            FD: false
+                        });
+                        break;
+                    default:
+                        console.log('printStatus no reconocido');
+                }
+
                 if (siPrint.HR) {
-                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerReport, item, page, px, py, indexPage));
-                    
+                    ({ absY, indexPage, printStatus } = renglon(design.headerReport, item, page, absY, indexPage));
+
                 }
                 if (siPrint.HP) {
-                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerPage, item, page, px, py, indexPage));
-                    
+                    ({ absY, indexPage, printStatus } = renglon(design.headerPage, item, page, absY, indexPage));
+
                 }
                 if (siPrint.HG) {
-                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerGroup, item, page, px, py, indexPage));
-                    
+                    ({ absY, indexPage, printStatus } = renglon(design.headerGroup, item, page, absY, indexPage));
+                    console.log('-------------',indexPage,printStatus)
+                    if(printStatus == 2){
+                        siPrint.HD =false;
+                        siPrint.DD =false;
+                        console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
+                    }
                 }
                 if (siPrint.HD) {
-                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.headerDetail, item, page, px, py, indexPage));
-                    
+                    ({ absY, indexPage, printStatus } = renglon(design.headerDetail, item, page, absY, indexPage));
+                    if(printStatus == 2){
+                        
+                        siPrint.DD =false;
+                        console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
+                    }
                 }
                 if (siPrint.DD) {
-                    ({ py: py, indexPage: indexPage, printStatus: printStatus } = renglon(design.detail, item, page, px, py, indexPage));
-                    
+                    ({ absY, indexPage, printStatus } = renglon(design.detail, item, page, absY, indexPage));
                 }
-            });
-            if(watchDog/maxWdog >0.95) console.warn('funcion infinita?')
-        } while (printStatus === 0 );
-
-
-
+                if (siPrint.FD) {
+                    console.log('pie de detallee******************');
+                    ({ absY, indexPage, printStatus } = renglon(design.footerDetail, item, page, absY, indexPage));
+                }
+                if (watchDog / maxWdog > 0.95) console.warn('funcion infinita?')
+                //console.log('printstatus despues', printStatus)
+                if(watchDog>0)console.warn('reintento de impresion:',watchDog)
+                console.log(printStatus, watchDog)    
+            } while (printStatus != 0 && watchDog < maxWdog);
+        });
+        console.log('fin de grupo aqui deberia estar el pie???')
+        
+        //printStatus=3
     });
 
     //console.log(JSON.stringify(jsonPDF, null, 2));
-    console.log(jsonPDF);
+    //console.log(jsonPDF);
 
     //return
 
@@ -754,17 +771,16 @@ async function generarPDF(design) {
 
 }
 
-function renglon(design, data, page, px, py, indexPage) {
-    //console.log(design);
-    //console.log(data)
+function renglon(design, data, page, pty, indexPage) {
+        //console.log(design[0].originControl , design[0].texto);
+    console.log(design)
     let sumW = 0, filas = 0, startRow = true;
-    printStatus = 0;
+    let printStatus = priorityPrint(0, -2);
     design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
         const paddingX = parseInt(item.paddingX);
         const paddingY = parseInt(item.paddingY);
         const fontSize = parseInt(item.sizeFont);
         const height = parseInt(item.height);
-        const align = parseInt(item.align);
         item.width = r2d(item.col * page.colpt, 2);
         sumW += item.width;
         item.startRow = startRow;
@@ -788,31 +804,37 @@ function renglon(design, data, page, px, py, indexPage) {
         const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
         item.height = newH > height ? newH : height;
     })
-    //console.log(design)
 
-    maxHeightRow(design)
 
-    let rowX = px, rowY = py        //copia (x,y) iniciales
+    maxHeightRow(design);
+
+    let rowX = page.ml, rowY = pty        //copia (x,y) iniciales
     let carry = 0;
+    let totalHeight = 0;
+    design.forEach((item, index) => {
+        if (item.startRow) {
+            totalHeight += item.height;
+        }
+    })
+    if (rowY + totalHeight > page.maxY) {       //desborde de pagina
+        console.log('**** Rechazado: ',design, data);
+        return {
+            absY: page.mt,
+            indexPage: indexPage + 1,
+            printStatus: priorityPrint(2, printStatus)
+        };
+    }
     design.forEach((item, index) => {    //push campo texto y caja
         const paddingY = parseInt(item.paddingY);
         const paddingX = parseInt(item.paddingX);
         const align = parseInt(item.align);
         const fontSize = parseInt(item.sizeFont);
-        if (item.startRow) {
+        if (item.startRow || item.forceNewRow) {            //nuevo renglon
             rowY += carry;
-            rowX = px
+            rowX = page.ml;
         }
         let lineY = rowY + item.lineH + paddingY;
         doc.setFontSize(fontSize);
-
-        if (rowY + item.height > page.maxY) {       //desborde de pagina
-            indexPage++;
-            printStatus = 2;
-            px = page.ml;
-            py = page.mt;
-            return { py: py, indexPage: indexPage, printStatus: printStatus };
-        }
         item.lineas.forEach(linea => {
             const textWidth = r2d(doc.getTextWidth(linea), 2);
             const lineX = alinear(rowX, paddingX, item.width, align, textWidth);
@@ -842,9 +864,30 @@ function renglon(design, data, page, px, py, indexPage) {
         rowX += item.width;
         carry = item.height;
     })
+    return { absY: rowY + carry, indexPage: indexPage, printStatus: printStatus };
 
+}
 
-    return { py: rowY + carry, indexPage: indexPage, printStatus: printStatus };
+function priorityPrint(callStatus, prev) {
+    if(callStatus == 2 || callStatus == 3){
+        console.warn(callStatus, prev);
+    }else{
+        console.log(callStatus, prev);
+    }
+    
+    switch (callStatus) {
+        case 1:         //imp. hederReport
+            return 1;
+        case 3:         //imp. hederGroup
+            if (prev == 1) return 1;
+            if (prev == 0) return 3;
+            return 3;
+        case 2:         //imp. hederPage
+            return 2;
+        case 0:         //imp. detalle
+        if (prev == -2) return 0;
+
+    }
 
 }
 
@@ -992,6 +1035,10 @@ function getKeysAndTypes(arr) {
     });
 
     keysAndTypes = ordenarPorCampo(keysAndTypes, 'campo', true);
+    keysAndTypes.push(
+        {campo: '_#', type: 'number'},
+        {campo: '_##', type: 'string'},
+    );
     return keysAndTypes;
 }
 
@@ -1009,6 +1056,19 @@ function groupByField(arr, field) {
         acc[key].push(item);
         return acc;
     }, {});
+}
+
+function addFields(arr){
+    let totalCount = 0;
+    Object.keys(arr).forEach((group, index)=> {
+        registros = arr[group].length;
+        arr[group].forEach((item, index) => {
+            totalCount++;
+            subtc = `${index+1} de ${registros}`
+            item['_#'] = totalCount;
+            item['_##'] = subtc;
+        })
+    })
 }
 
 function filterArray(arr, condition) {
