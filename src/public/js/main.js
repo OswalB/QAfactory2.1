@@ -637,17 +637,17 @@ async function generarPDF(design) {
     const siPrint = {};
     let indexPage = 0;
     let absY = page.mt;
-    let printStatus = priorityPrint(1, -1);    //inicio de informe
+    let printStatus = priorityPrint('startReport', -1);    //inicio de informe
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
-        printStatus = priorityPrint(3, printStatus);     //printStatus ==0?printStatus:3
+        printStatus = priorityPrint('newGroup', printStatus);     
         originData[group].forEach(item => {
             let watchDog = 0;
             const maxWdog = 500;
             do {
                 watchDog++;
                 switch (printStatus) {
-                    case 0:         //siguiene item
+                    case 'nextItem':         
                         Object.assign(siPrint, {
                             HR: false,
                             HP: false,
@@ -657,7 +657,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 1:         //inicio informe
+                    case 'startReport':         
                         Object.assign(siPrint, {
                             HR: true,
                             HP: true,
@@ -667,7 +667,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 2:         //nueva pagina
+                    case 'newPage':         
                         Object.assign(siPrint, {
                             HR: false,
                             HP: true,
@@ -677,7 +677,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 3:         //nueva GRUPO
+                    case 'newGroup':         
                         Object.assign(siPrint, {
                             HR: false,
                             HP: false,
@@ -702,7 +702,7 @@ async function generarPDF(design) {
                 if (siPrint.HG) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerGroup, item, page, absY, indexPage));
                     console.log('-------------',indexPage,printStatus)
-                    if(printStatus == 2){
+                    if(printStatus == 'newPage'){
                         siPrint.HD =false;
                         siPrint.DD =false;
                         console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
@@ -710,7 +710,7 @@ async function generarPDF(design) {
                 }
                 if (siPrint.HD) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerDetail, item, page, absY, indexPage));
-                    if(printStatus == 2){
+                    if(printStatus == 'newPage'){
                         
                         siPrint.DD =false;
                         console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
@@ -727,10 +727,10 @@ async function generarPDF(design) {
                 //console.log('printstatus despues', printStatus)
                 if(watchDog>0)console.warn('reintento de impresion:',watchDog)
                 console.log(printStatus, watchDog)    
-            } while (printStatus != 0 && watchDog < maxWdog);
+            } while (printStatus != 'nextItem' && watchDog < maxWdog);
         });
         console.log('fin de grupo aqui deberia estar el pie???')
-        
+
         //printStatus=3
     });
 
@@ -775,7 +775,7 @@ function renglon(design, data, page, pty, indexPage) {
         //console.log(design[0].originControl , design[0].texto);
     console.log(design)
     let sumW = 0, filas = 0, startRow = true;
-    let printStatus = priorityPrint(0, -2);
+    let printStatus = priorityPrint('nextItem', -2);
     design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
         const paddingX = parseInt(item.paddingX);
         const paddingY = parseInt(item.paddingY);
@@ -821,7 +821,7 @@ function renglon(design, data, page, pty, indexPage) {
         return {
             absY: page.mt,
             indexPage: indexPage + 1,
-            printStatus: priorityPrint(2, printStatus)
+            printStatus: priorityPrint('newPage', printStatus)
         };
     }
     design.forEach((item, index) => {    //push campo texto y caja
@@ -869,23 +869,23 @@ function renglon(design, data, page, pty, indexPage) {
 }
 
 function priorityPrint(callStatus, prev) {
-    if(callStatus == 2 || callStatus == 3){
+    if(callStatus == 'newPage' || callStatus == 'newGroup'){
         console.warn(callStatus, prev);
     }else{
         console.log(callStatus, prev);
     }
     
     switch (callStatus) {
-        case 1:         //imp. hederReport
-            return 1;
-        case 3:         //imp. hederGroup
-            if (prev == 1) return 1;
-            if (prev == 0) return 3;
-            return 3;
-        case 2:         //imp. hederPage
-            return 2;
-        case 0:         //imp. detalle
-        if (prev == -2) return 0;
+        case 'startReport':         //imp. hederReport
+            return 'startReport';
+        case 'newGroup':         //imp. hederGroup
+            if (prev == 'startReport') return 'startReport';
+            if (prev == 'nextItem') return 'newGroup';
+            return 'newGroup';
+        case 'newPage':         //imp. hederPage
+            return 'newPage';
+        case 'nextItem':         //imp. detalle
+        if (prev == -2) return 'nextItem';
 
     }
 
