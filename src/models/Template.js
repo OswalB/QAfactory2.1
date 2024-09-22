@@ -342,7 +342,11 @@ const TemplateSchema = new Schema({
         forceNewRow:{
             type: 'boolean',
             default: false
-        }
+        },fxControl:{
+            type: 'string',
+            default: '0'
+        },
+
     }]     
 
 },{

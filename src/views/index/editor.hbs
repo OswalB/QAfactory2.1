@@ -331,6 +331,21 @@
         <select id="in-originControl" name="originControl" class="form-select" role="property">
 
         </select>
+        <label for="in-fxControl">Función:</label>
+        <select id="in-fxControl" name="fxControl" class="form-select" role="property">
+          <option value="0">Ninguno</option>
+          <option value="sum">Suma</option>
+          <option value="av">Promedio</option>
+          <option value="min">Mínimo</option>
+          <option value="max">Máximo</option>
+          <option value="std">Desviación estándar</option>
+          <option value="var">Varianza</option>
+          <option value="med">Mediana</option>
+          <option value="range">Rango</option>
+          <option value="moda">Moda</option>
+        </select>
+
+        </select>
         <label for="in-formatControl">Formato:</label>
         <select id="in-formatControl" name="formatControl" class="form-select" role="property">
           <option value="0">Ninguno</option>
@@ -386,7 +401,8 @@
         </div>
         <div class="">
           <label class="form-check-label" for="in-forceNewRow">Forzar nueva fila </label>
-          <input type="checkbox" class="form-check-input ml-4" name="forceNewRow" id="in-forceNewRow" value=""  role="property">
+          <input type="checkbox" class="form-check-input ml-4" name="forceNewRow" id="in-forceNewRow" value=""
+            role="property">
         </div>
 
 

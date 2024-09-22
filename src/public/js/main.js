@@ -608,9 +608,9 @@ async function generarPDF(design) {
         originData = groupByField(originData, design.pagina.fieldGroup);
     }
 
-    addFields(originData);
+    addFields(originData, design);
 
-    
+    //return;
     const testPDF = [
         {
             text: [
@@ -640,14 +640,14 @@ async function generarPDF(design) {
     let printStatus = priorityPrint('startReport', -1);    //inicio de informe
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
-        printStatus = priorityPrint('newGroup', printStatus);     
+        printStatus = priorityPrint('newGroup', printStatus);
         originData[group].forEach(item => {
             let watchDog = 0;
             const maxWdog = 500;
             do {
                 watchDog++;
                 switch (printStatus) {
-                    case 'nextItem':         
+                    case 'nextItem':
                         Object.assign(siPrint, {
                             HR: false,
                             HP: false,
@@ -657,7 +657,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 'startReport':         
+                    case 'startReport':
                         Object.assign(siPrint, {
                             HR: true,
                             HP: true,
@@ -667,7 +667,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 'newPage':         
+                    case 'newPage':
                         Object.assign(siPrint, {
                             HR: false,
                             HP: true,
@@ -677,7 +677,7 @@ async function generarPDF(design) {
                             FD: false
                         });
                         break;
-                    case 'newGroup':         
+                    case 'newGroup':
                         Object.assign(siPrint, {
                             HR: false,
                             HP: false,
@@ -685,6 +685,16 @@ async function generarPDF(design) {
                             HD: true,
                             DD: true,
                             FD: false
+                        });
+                        break;
+                    case 'endGroup':
+                        Object.assign(siPrint, {
+                            HR: false,
+                            HP: false,
+                            HG: false,
+                            HD: false,
+                            DD: false,
+                            FD: true
                         });
                         break;
                     default:
@@ -701,18 +711,18 @@ async function generarPDF(design) {
                 }
                 if (siPrint.HG) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerGroup, item, page, absY, indexPage));
-                    console.log('-------------',indexPage,printStatus)
-                    if(printStatus == 'newPage'){
-                        siPrint.HD =false;
-                        siPrint.DD =false;
+                    console.log('-------------', indexPage, printStatus)
+                    if (printStatus == 'newPage') {
+                        siPrint.HD = false;
+                        siPrint.DD = false;
                         console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
                     }
                 }
                 if (siPrint.HD) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerDetail, item, page, absY, indexPage));
-                    if(printStatus == 'newPage'){
-                        
-                        siPrint.DD =false;
+                    if (printStatus == 'newPage') {
+
+                        siPrint.DD = false;
                         console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
                     }
                 }
@@ -725,13 +735,13 @@ async function generarPDF(design) {
                 }
                 if (watchDog / maxWdog > 0.95) console.warn('funcion infinita?')
                 //console.log('printstatus despues', printStatus)
-                if(watchDog>0)console.warn('reintento de impresion:',watchDog)
-                console.log(printStatus, watchDog)    
+                if (watchDog > 0) console.warn('reintento de impresion:', watchDog)
+                console.log(printStatus, 'wd:', watchDog)
             } while (printStatus != 'nextItem' && watchDog < maxWdog);
         });
         console.log('fin de grupo aqui deberia estar el pie???')
 
-        //printStatus=3
+        //printStatus = priorityPrint('endGroup', printStatus)
     });
 
     //console.log(JSON.stringify(jsonPDF, null, 2));
@@ -772,8 +782,8 @@ async function generarPDF(design) {
 }
 
 function renglon(design, data, page, pty, indexPage) {
-        //console.log(design[0].originControl , design[0].texto);
-    console.log(design)
+    //console.log(design[0].originControl , design[0].texto);
+    console.log(design, data)
     let sumW = 0, filas = 0, startRow = true;
     let printStatus = priorityPrint('nextItem', -2);
     design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
@@ -798,7 +808,18 @@ function renglon(design, data, page, pty, indexPage) {
             item.originControl = '0';
         }
         item.originControl = item.originControl ? item.originControl : '0';
-        const cadena = item.originControl === '0' ? item.texto : data[item.originControl] || '';
+        console.log(data._endGroup, data.formulas);
+        let cadena;
+        if(data.formulas && !data._endGroup){
+            const formula = `${item.fxControl}_${item.originControl}`;
+            const valorFx = data.formulas[formula];
+            console.log(formula, valorFx)
+            cadena = item.originControl === '0' ? item.texto : valorFx || '';
+            
+        }else{
+            cadena = item.originControl === '0' ? item.texto : data[item.originControl] || '';
+        }
+        
         item.lineas = doc.splitTextToSize(String(cadena), item.sw);
         item.lineH = r2d(fontSize, 2);
         const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
@@ -817,7 +838,7 @@ function renglon(design, data, page, pty, indexPage) {
         }
     })
     if (rowY + totalHeight > page.maxY) {       //desborde de pagina
-        console.log('**** Rechazado: ',design, data);
+        console.log('**** Rechazado: ', design, data);
         return {
             absY: page.mt,
             indexPage: indexPage + 1,
@@ -864,17 +885,23 @@ function renglon(design, data, page, pty, indexPage) {
         rowX += item.width;
         carry = item.height;
     })
+    console.log(data._endGroup)
+    if (data._endGroup) {
+        console.warn('EndGroup fin de function renglon')
+        data._endGroup = false;
+        printStatus = priorityPrint('endGroup', printStatus)
+    }
     return { absY: rowY + carry, indexPage: indexPage, printStatus: printStatus };
 
 }
 
 function priorityPrint(callStatus, prev) {
-    if(callStatus == 'newPage' || callStatus == 'newGroup'){
+    if (callStatus == 'newPage' || callStatus == 'newGroup') {
         console.warn(callStatus, prev);
-    }else{
+    } else {
         console.log(callStatus, prev);
     }
-    
+
     switch (callStatus) {
         case 'startReport':         //imp. hederReport
             return 'startReport';
@@ -885,7 +912,10 @@ function priorityPrint(callStatus, prev) {
         case 'newPage':         //imp. hederPage
             return 'newPage';
         case 'nextItem':         //imp. detalle
-        if (prev == -2) return 'nextItem';
+            if (prev == -2) return 'nextItem';
+        case 'endGroup':
+            if (prev == 'endGroup') return ('nextItem')
+            return 'endGroup';
 
     }
 
@@ -1036,8 +1066,8 @@ function getKeysAndTypes(arr) {
 
     keysAndTypes = ordenarPorCampo(keysAndTypes, 'campo', true);
     keysAndTypes.push(
-        {campo: '_#', type: 'number'},
-        {campo: '_##', type: 'string'},
+        { campo: '_#', type: 'number' },
+        { campo: '_##', type: 'string' },
     );
     return keysAndTypes;
 }
@@ -1058,15 +1088,37 @@ function groupByField(arr, field) {
     }, {});
 }
 
-function addFields(arr){
+function addFields(arr, design) {
+    let setFx=[];
+    design.footerDetail.forEach(campo=>{
+        if(campo.originControl && campo.originControl !== '0'){
+            if(campo.fxControl && campo.fxControl !== '0'){
+                setFx.push({[campo.originControl] : campo.fxControl});
+            }
+        }
+    })
+    console.log(setFx);
+    
     let totalCount = 0;
-    Object.keys(arr).forEach((group, index)=> {
+    Object.keys(arr).forEach((group, index) => {
         registros = arr[group].length;
         arr[group].forEach((item, index) => {
             totalCount++;
-            subtc = `${index+1} de ${registros}`
+            subtc = `${index + 1} de ${registros}`
             item['_#'] = totalCount;
             item['_##'] = subtc;
+            item['_endGroup'] = (index + 1) == registros ? true : false;
+            if((index + 1) == registros){
+                item.formulas={};
+                setFx.forEach(f =>{
+                    const k =Object.keys(f);
+                    const array = arr[group].map(item => item[k]);
+                    const res = dataFx(array,f[k]);
+                    const campo = `${f[k]}_${[k]}`;
+                    item.formulas[campo] = res; 
+                })
+
+            }
         })
     })
 }
@@ -1177,3 +1229,81 @@ function printPattern(marginL, wCol, marginT, spaceH) {
         doc.line(x1, y1, x2, y2);
     }
 }
+
+function calcularDesviacionEstandar(valores) {
+    const media = valores.reduce((acumulador, valor) => acumulador + valor, 0) / valores.length;
+    const sumaCuadrados = valores.reduce((acumulador, valor) => {
+        const diferencia = valor - media;
+        return acumulador + Math.pow(diferencia, 2);
+    }, 0);
+    const varianza = sumaCuadrados / valores.length;
+    return Math.sqrt(varianza);
+}
+
+function calcularMediana(array) {
+    array.sort((a, b) => a - b);
+    const mitad = Math.floor(array.length / 2);
+    return array.length % 2 !== 0 ? array[mitad] : (array[mitad - 1] + array[mitad]) / 2;
+}
+
+function calcularModa(array) {
+    const frecuencia = {};
+    array.forEach(valor => {
+        frecuencia[valor] = (frecuencia[valor] || 0) + 1;
+    });
+    let moda = null;
+    let maxFrecuencia = 0;
+    for (let valor in frecuencia) {
+        if (frecuencia[valor] > maxFrecuencia) {
+            maxFrecuencia = frecuencia[valor];
+            moda = Number(valor);
+        }
+    }
+    return moda;
+}
+
+function calcularVarianza(array) {
+    const media = array.reduce((acumulador, valor) => acumulador + valor, 0) / array.length;
+    const sumaCuadrados = array.reduce((acumulador, valor) => {
+        const diferencia = valor - media;
+        return acumulador + Math.pow(diferencia, 2);
+    }, 0);
+    return sumaCuadrados / array.length;
+}
+
+
+
+function dataFx(array, fx) {
+    switch (fx) {
+        case 'sum':  // Suma
+            return array.reduce((acumulador, valor) => acumulador + valor, 0);
+
+        case 'av':   // Promedio
+            return array.reduce((acumulador, valor) => acumulador + valor, 0) / array.length;
+
+        case 'min':  // Mínimo
+            return Math.min(...array);
+
+        case 'max':  // Máximo
+            return Math.max(...array);
+
+        case 'std':  // Desviación estándar
+            return calcularDesviacionEstandar(array);
+
+        case 'var': // Varianza
+            return calcularVarianza(array);
+
+        case 'med':  // Mediana
+            return calcularMediana(array);
+
+        case 'range':  // Rango 
+            return Math.max(...array) - Math.min(...array);
+
+        case 'moda':  // Moda
+            return calcularModa(array);
+
+        default:
+            throw new Error('Operación no reconocida');
+    }
+}
+
