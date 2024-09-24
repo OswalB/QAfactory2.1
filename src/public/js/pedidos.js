@@ -413,7 +413,7 @@ async function renderModalAverias(codeSelected, data) {
         };
     });
 
-    addOptions('loteVenta', dataOptions)
+    addOptionsSelect( 'loteVenta', dataOptions, 'campo', 'alias', false)
     document.getElementById('modal-title').innerHTML = `Averias de ${data.nombre}`;
     const response = await fetch("/core/editor-content", {
         headers: { 'content-type': 'application/json' },
@@ -433,7 +433,7 @@ async function renderModalAverias(codeSelected, data) {
             alias: objeto.titulo
         };
     });
-    addOptions('causal', dataOptions2);
+    addOptionsSelect('causal', dataOptions2, 'campo', 'alias',false);
 
     return;
     $('#modalEditor').modal('show');

@@ -119,14 +119,19 @@ async function renderFilter() {
 
 }
 
-function addOptionsSelect(selectId, keys, valueKey, labelKey) {
+function addOptionsSelect(selectId, keys, valueKey, labelKey, firstDisabled = false) {
     const container = document.getElementById(selectId);
     container.innerHTML = '';
     const defaultOption = document.createElement('option');
-    defaultOption.setAttribute("value", 0);
-    defaultOption.textContent = 'Ninguno';
+    if (cero) {
+        defaultOption.setAttribute("value", 0);
+        defaultOption.textContent = 'Ninguno';
+    } else {
+
+    }
+
     container.appendChild(defaultOption);
-    keys.forEach(item => {
+    keys.forEach((item, index) => {
         const option = document.createElement('option');
         option.setAttribute("value", item[valueKey]);
         option.textContent = item[labelKey];
@@ -565,7 +570,7 @@ async function generarPDF(design) {
     doc = new jsPDF({
         orientation: design.pagina.orientation,
         unit: 'pt',
-        format: design.pagina.size
+        format: formatPaper(design.pagina.size)
     });
 
     jsonPDF = [];
@@ -795,7 +800,7 @@ function renglon(design, data, page, pty, indexPage) {
         sumW += item.width;
         item.startRow = startRow;
 
-        if (sumW > page.sw) {
+        if (sumW > (page.sw * 1.01)) {
             sumW = item.width;
             filas += 1;
             item.startRow = true;
@@ -804,22 +809,26 @@ function renglon(design, data, page, pty, indexPage) {
         item.fila = filas;
         item.sw = item.width - paddingX - paddingX;
         doc.setFontSize(fontSize);
+        if (item.formatControl != '0' || item.formatControl) {        //formato en texto origen
+            //item.texto = formatearDato(item.texto,item.formatControl);
+        }
+
         if (!item.hasOwnProperty('originControl')) {
             item.originControl = '0';
         }
         item.originControl = item.originControl ? item.originControl : '0';
         console.log(data._endGroup, data.formulas);
         let cadena;
-        if(data.formulas && !data._endGroup){
+        if (data.formulas && !data._endGroup) {
             const formula = `${item.fxControl}_${item.originControl}`;
             const valorFx = data.formulas[formula];
             console.log(formula, valorFx)
             cadena = item.originControl === '0' ? item.texto : valorFx || '';
-            
-        }else{
-            cadena = item.originControl === '0' ? item.texto : data[item.originControl] || '';
+
+        } else {
+            cadena = item.originControl === '0' ? item.texto : data[item.originControl] || item.texto;
         }
-        
+
         item.lineas = doc.splitTextToSize(String(cadena), item.sw);
         item.lineH = r2d(fontSize, 2);
         const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
@@ -837,7 +846,8 @@ function renglon(design, data, page, pty, indexPage) {
             totalHeight += item.height;
         }
     })
-    if (rowY + totalHeight > page.maxY) {       //desborde de pagina
+    if (rowY + totalHeight > (page.maxY * 1.02)) {       //desborde de pagina
+        console.log(rowY + totalHeight, page.maxY, (page.maxY * 1.01))
         console.log('**** Rechazado: ', design, data);
         return {
             absY: page.mt,
@@ -976,12 +986,11 @@ function r2d(num, decimals) {
 // +***********  FUNCIONES DE datos pdf
 
 
-function processDataPdf(data) {
-    unwind(data);
-}
 
 function unwind(data) {
 
+    console.log(data)
+    dataUnwind = [], keysAndTypes = [];
     data.forEach(documento => {
         const jsonData = exploreObject(documento);
         const indexPadre = jsonData.reduce((minIdx, item, index) => {
@@ -1089,16 +1098,16 @@ function groupByField(arr, field) {
 }
 
 function addFields(arr, design) {
-    let setFx=[];
-    design.footerDetail.forEach(campo=>{
-        if(campo.originControl && campo.originControl !== '0'){
-            if(campo.fxControl && campo.fxControl !== '0'){
-                setFx.push({[campo.originControl] : campo.fxControl});
+    let setFx = [];
+    design.footerDetail.forEach(campo => {
+        if (campo.originControl && campo.originControl !== '0') {
+            if (campo.fxControl && campo.fxControl !== '0') {
+                setFx.push({ [campo.originControl]: campo.fxControl });
             }
         }
     })
     console.log(setFx);
-    
+
     let totalCount = 0;
     Object.keys(arr).forEach((group, index) => {
         registros = arr[group].length;
@@ -1108,14 +1117,14 @@ function addFields(arr, design) {
             item['_#'] = totalCount;
             item['_##'] = subtc;
             item['_endGroup'] = (index + 1) == registros ? true : false;
-            if((index + 1) == registros){
-                item.formulas={};
-                setFx.forEach(f =>{
-                    const k =Object.keys(f);
+            if ((index + 1) == registros) {
+                item.formulas = {};
+                setFx.forEach(f => {
+                    const k = Object.keys(f);
                     const array = arr[group].map(item => item[k]);
-                    const res = dataFx(array,f[k]);
+                    const res = dataFx(array, f[k]);
                     const campo = `${f[k]}_${[k]}`;
-                    item.formulas[campo] = res; 
+                    item.formulas[campo] = res;
                 })
 
             }
@@ -1271,8 +1280,6 @@ function calcularVarianza(array) {
     return sumaCuadrados / array.length;
 }
 
-
-
 function dataFx(array, fx) {
     switch (fx) {
         case 'sum':  // Suma
@@ -1306,4 +1313,169 @@ function dataFx(array, fx) {
             throw new Error('Operación no reconocida');
     }
 }
+
+function formatPaper(sizeType) {
+    //tamaños personalizados
+    switch (sizeType) {
+        case 'half-letter':
+            return [mmToPt(139.7), mmToPt(215.9)];
+        case 'folio':
+            return [mmToPt(215.9), mmToPt(330)];
+        default:
+            return sizeType;
+    }
+}
+
+function formatearDatoborrar(valor, formato) {
+    const esNumero = !isNaN(valor) && !isNaN(parseFloat(valor));
+    if (esNumero) {
+        return formatearNumero(valor, formato);
+    } else if (valor instanceof Date || !isNaN(Date.parse(valor))) {
+        const fechaLocal = new Date(valor); // Convertir la fecha ISO a local
+        return formatearFecha(fechaLocal, formato);
+    }
+    return valor; // Devolver el valor original si no es ni número ni fecha
+}
+
+function formatearNumero(numero, formato) {
+    let opciones = { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true };
+
+    switch (formato) {
+        case '123':
+            opciones.maximumFractionDigits = 0; // Sin decimales
+            break;
+        case '123.0':
+            opciones.minimumFractionDigits = 1;
+            opciones.maximumFractionDigits = 1;
+            break;
+        case '123.00':
+            opciones.minimumFractionDigits = 2;
+            opciones.maximumFractionDigits = 2;
+            break;
+        case '123.000':
+            opciones.minimumFractionDigits = 3;
+            opciones.maximumFractionDigits = 3;
+            break;
+        case '123.0000':
+            opciones.minimumFractionDigits = 4;
+            opciones.maximumFractionDigits = 4;
+            break;
+        default:
+            return numero; // Devolver el número original si el formato no coincide
+    }
+
+    // Aplicar el formato con separadores de miles
+    return numero.toLocaleString('es-ES', opciones);
+}
+
+function formatearFecha(fecha, formato) {
+    const opcionesFechaCorta = { day: '2-digit', month: '2-digit', year: '2-digit' };
+    const opcionesFechaMesTexto = { day: '2-digit', month: 'short', year: '2-digit' };
+    const opcionesFechaMesTextoMedio = { day: '2-digit', month: 'short', year: 'numeric' };
+    const opcionesFechaMesTextoLargo = { day: '2-digit', month: 'long', year: 'numeric' };
+    const opcionesHoraCompleta = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    const opcionesHora12Horas = { hour: '2-digit', minute: '2-digit', hour12: true };
+    const opcionesHora12HorasSegundos = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+
+    switch (formato) {
+        case 'dd/mm/aa':
+            return fecha.toLocaleDateString('es-ES', opcionesFechaCorta);
+
+        case 'dd/mmm/aa':
+            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTexto);
+
+        case 'dd/mmm/aaa':
+            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoMedio);
+
+        case 'dd/mmmm/aaa':
+            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoLargo);
+
+        case 'dd/mmm/aaa-00:00':
+            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoLargo) + ' ' + fecha.toLocaleTimeString('es-ES', opcionesHoraCompleta);
+
+        case 'hh:mm:ss':
+            return fecha.toLocaleTimeString('es-ES', opcionesHoraCompleta);
+
+        case 'hh:mm':
+            return fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+        case 'hhh:mm':
+            return fecha.toLocaleTimeString('es-ES', opcionesHora12Horas);
+
+        case 'hhh:mm:ss':
+            return fecha.toLocaleTimeString('es-ES', opcionesHora12HorasSegundos);
+
+        default:
+            return fecha; // Devolver la fecha original si el formato no coincide
+    }
+}
+
+function formatearDato(dato, formato) {
+    // Verificar si el dato es un número
+    const esNumero = !isNaN(dato) && !isNaN(parseFloat(dato));
+
+    // Si es un número, llamamos a formatearNumero
+    if (esNumero) {
+        let opciones = { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true };
+
+        switch (formato) {
+            case '123':
+                opciones.maximumFractionDigits = 0; // Sin decimales
+                break;
+            case '123.0':
+                opciones.minimumFractionDigits = 1;
+                opciones.maximumFractionDigits = 1;
+                break;
+            case '123.00':
+                opciones.minimumFractionDigits = 2;
+                opciones.maximumFractionDigits = 2;
+                break;
+            case '123.000':
+                opciones.minimumFractionDigits = 3;
+                opciones.maximumFractionDigits = 3;
+                break;
+            case '123.0000':
+                opciones.minimumFractionDigits = 4;
+                opciones.maximumFractionDigits = 4;
+                break;
+            default:
+                return dato; // Devolver el número original si el formato no coincide
+        }
+
+        return parseFloat(dato).toLocaleString('es-ES', opciones);
+    }
+
+    // Si no es un número, asumimos que es una fecha (en formato ISO)
+    const esFecha = !isNaN(Date.parse(dato));
+
+    if (esFecha) {
+        const fecha = new Date(dato);
+        switch (formato) {
+            case 'dd/mm/aa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            case 'dd/mmm/aa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' });
+            case 'dd/mmm/aaa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            case 'dd/mmmm/aaa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            case 'dd/mmm/aaa-00:00':
+                return `${fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })} ${fecha.toLocaleTimeString('es-ES')}`;
+            case 'hh:mm:ss':
+                return fecha.toLocaleTimeString('es-ES');
+            case 'hh:mm':
+                return fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            case 'hhh:mm':
+                return fecha.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true });
+            case 'hhh:mm:ss':
+                return fecha.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+            default:
+                return dato; // Devolver el dato original si el formato no coincide
+        }
+    }
+
+    // Si no es ni número ni fecha, devolver el dato original
+    return dato;
+}
+
 

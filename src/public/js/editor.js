@@ -21,7 +21,7 @@ const listOrderData = document.getElementById('listOrderData');
 listOrderData.addEventListener('click', function (event) {
     event.preventDefault();
     if (event.target.classList.contains('drop-order')) {
-       
+
         inputFieldO.value = event.target.textContent;
         fillLocalDesign(inputFieldO);
     }
@@ -35,7 +35,7 @@ const listFilterData = document.getElementById('listFilterData');
 listFilterData.addEventListener('click', function (event) {
     event.preventDefault();
     if (event.target.classList.contains('drop-filter')) {
-      
+
         inputField.value += event.target.textContent;
         fillLocalDesign(inputField);
     }
@@ -48,18 +48,18 @@ const listFilterDataG = document.getElementById('listGroupData');
 listFilterDataG.addEventListener('click', function (event) {
     event.preventDefault();
     if (event.target.classList.contains('drop-group')) {
-       
+
         inputFieldG.value = event.target.textContent;
         fillLocalDesign(inputFieldG);
     }
 });
 
 const listSections = [
-    'headerReport', 
-    'headerPage', 
-    'headerGroup', 
-    'headerDetail', 
-    'detail', 
+    'headerReport',
+    'headerPage',
+    'headerGroup',
+    'headerDetail',
+    'detail',
     'footerDetail'
 ];
 
@@ -327,7 +327,7 @@ document.getElementById("in-template").addEventListener('change', async e => {
     document.getElementById('title-properties').innerHTML = titulo
     selectedTemplate = parseInt(document.getElementById('in-template').value);
     const vis = selectedTemplate === 0 ? false : true;
-    activeButtons({ btnSel: true, btnV: vis, btnE: vis, btnG: false });
+    activeButtons({ btnSel: true, btnV: vis, btnE: vis, btnG: false , frmD: true});
     const res = await fetch('/domain/templates-list', {
         headers: {
             'Content-Type': 'application/json'
@@ -343,6 +343,8 @@ document.getElementById("in-template").addEventListener('change', async e => {
         toastr.error(data.message);
         return;
     }
+
+    //verificar si este codigo es necesario!!!!
     localDesign = data[0];
     if (typeof localDesign.pagina !== 'object') {
         localDesign.pagina = {};
@@ -351,14 +353,15 @@ document.getElementById("in-template").addEventListener('change', async e => {
         localDesign.headerReport = [];
     }
 
+    renderListDesign();
     fillDesign();
-    
+
 
 });
 
 document.getElementById("btn-genPDF").addEventListener('click', async e => {
     if (!currentCollection) return;
-    activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false });
+    activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
     const res = await fetch('/domain/templates-list', {
         headers: {
             'Content-Type': 'application/json'
@@ -378,12 +381,14 @@ document.getElementById("btn-genPDF").addEventListener('click', async e => {
     listTemplates.forEach(item => {
         item.descripcion = `${item.idTemplate}: ${item.descripcion}`
     })
-    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion')
+    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion');
+    //renderListDesign(listTemplates);
 
 });
 
 document.getElementById("btnVerpdf").addEventListener('click', async e => {
     generarPDF(localDesign);
+
 })
 
 document.getElementById("btnGuardarTemplate").addEventListener('click', async e => {
@@ -416,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = event.target;
 
         if (input.matches('input, select')) {
-            activeButtons({ btnSel: true, btnV: true, btnE: true, btnG: true });
+            activeButtons({ btnSel: true, btnV: true, btnE: true, btnG: true, frmD: true });
             fillLocalDesign(input);
 
             //console.log(localDesign);
@@ -426,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function fillLocalDesign(input) {
-    
+
     const role = input.getAttribute('role');
     const fieldName = input.name;
     let fieldValue;
@@ -511,7 +516,7 @@ document.getElementById('btnNuevo').addEventListener('click', async e => {
 })
 
 document.getElementById('listDocuments').addEventListener('click', async e => {
-    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false });
+    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false , frmD:false});
     workFilter.currentPage = 1;
     let m = e.target.getAttribute('_modelo');
     let t = e.target.getAttribute('_titulo');
@@ -527,10 +532,10 @@ document.getElementById('listDocuments').addEventListener('click', async e => {
     await footer();
     renderFilter();
     paintFilter();
-    processDataPdf(currentContent);
+    //processDataPdf(currentContent);
     addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
     addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
-    
+
 
 })
 
@@ -598,14 +603,18 @@ function fillDesign() {
 
 
 function activeButtons(config) {
+    console.log()
     const btnSel = document.getElementById('in-template');
     const btnV = document.getElementById('btnVerpdf');
     const btnE = document.getElementById('btnEditarTemplate');
     const btnG = document.getElementById('btnGuardarTemplate');
+    const frmD = document.getElementById('formDesign');
     btnSel.style.display = config.btnSel ? '' : 'none';
     btnV.style.display = config.btnV ? '' : 'none';
     btnE.style.display = config.btnE ? '' : 'none';
     btnG.style.display = config.btnG ? '' : 'none';
+    frmD.style.display = config.frmD ? '' : 'none';
+    workFilter.PDFmode = config.frmD;
     //btnC.textContent = `Cancelar ${esPedido ? 'Pedido' : 'Averia'}`
 }
 
@@ -634,77 +643,78 @@ async function init() {
 
 
     await loadList();
-    debugg(true);
+    debugg(false);
 };
 
 async function debugg(activate = false) {
     if (activate) {
         console.warn('RECUERDA DESACTIVAR debugg()');
-        
+
         backFilter.limitar = 15;
-        activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false });
-    workFilter.currentPage = 1;
-    let m = 'Order';
-    let t = 'Ordenes ca';
-    currentCollection = { "titulo": t, "modelo": m };
-    workFilter.modelo = m;
-    let boton = document.getElementById('btnChose');
-    boton.innerHTML = t;
-    workFilter.filterStatus = 'off';
-    
-    backFilter.otrosMatch = [{state:0 }];
-    showAlertFilter();
-    setFilter();
-    loadFilter();
-    await renderTable();
-    await footer();
-    renderFilter();
-    paintFilter();
-    processDataPdf(currentContent);
-    addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
-    addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
-    addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
-    
-    addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
+        activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false , frmD: true});
+        workFilter.currentPage = 1;
+        let m = 'Order';
+        let t = 'Ordenes ca';
+        currentCollection = { "titulo": t, "modelo": m };
+        workFilter.modelo = m;
+        let boton = document.getElementById('btnChose');
+        boton.innerHTML = t;
+        workFilter.filterStatus = 'off';
+
+        backFilter.otrosMatch = [{ state: 0 }];
+        showAlertFilter();
+        setFilter();
+        loadFilter();
+        await renderTable();
+        await footer();
+        renderFilter();
+        paintFilter();
+        processDataPdf(currentContent);
+        addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
+        addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
+        addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
+
+        addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
 
 
-    let res = await fetch('/domain/templates-list', {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify({
-            "modelo": currentCollection.modelo,
-            fx: 'list'
+        let res = await fetch('/domain/templates-list', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: JSON.stringify({
+                "modelo": currentCollection.modelo,
+                fx: 'list'
+            })
+        });
+        listTemplates = await res.json();
+        if (listTemplates.fail) {
+            toastr.error(listTemplates.message);
+            return;
+        }
+
+        listTemplates.forEach(item => {
+            item.descripcion = `${item.idTemplate}: ${item.descripcion}`
         })
-    });
-    listTemplates = await res.json();
-    if (listTemplates.fail) {
-        toastr.error(listTemplates.message);
-        return;
-    }
-
-    listTemplates.forEach(item => {
-        item.descripcion = `${item.idTemplate}: ${item.descripcion}`
-    })
-    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion')
+        addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion')
 
 
 
 
-    
+
 
     }
 }
 
 function afterLoad() {
     fadeInputs();
-    activeButtons({ btnSel: true, btnV: true, btnE: true, btnG: true });
+    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false, frmD: false });
     selectedTemplate = 0;
+    workFilter.PDFmode =false;
 };
 
 async function renderTable() {
-    
+
     let response = await fetch("/core/keys", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -776,6 +786,9 @@ async function renderTable() {
         })
     })
 
+    if(!workFilter.PDFmode) return;
+    unwind(currentContent)
+    renderListDesign();
 }
 
 async function loadList() {
@@ -790,6 +803,16 @@ async function loadList() {
         `;
         container.appendChild(li);
     })
+}
+
+function renderListDesign() {
+    unwind(currentContent);
+    //processDataPdf(currentContent);
+    addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
+    addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
+    addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
+
+    addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
 }
 
 

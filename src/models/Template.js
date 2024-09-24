@@ -97,7 +97,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',
@@ -145,7 +145,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',
@@ -193,7 +193,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',
@@ -241,7 +241,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',
@@ -289,7 +289,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',
@@ -337,7 +337,7 @@ const TemplateSchema = new Schema({
             default: '0'
         },
         formatControl:{
-            type: 'number'
+            type: 'string'
         },
         forceNewRow:{
             type: 'boolean',

@@ -10,7 +10,7 @@
 </div>
 
 <!-- formulario editor de plantillas PDF -->
-<div class="container mt-4" id="formDesign">
+<div class="container mt-4" id="formDesign" style="display: none;">
   <div class="row">
     <!-- Columna 1: Acordeón design PDF-->
     <div class="col-md-8">
@@ -348,11 +348,21 @@
         </select>
         <label for="in-formatControl">Formato:</label>
         <select id="in-formatControl" name="formatControl" class="form-select" role="property">
-          <option value="0">Ninguno</option>
-          <option value="1">123</option>
-          <option value="2">123.0</option>
-          <option value="3">123.00</option>
-          <option value="4">dd/mm/aaaa</option>
+          <option value=""></option>
+          <option value="123">123</option>
+          <option value="123.0">123.0</option>
+          <option value="123.00">123.00</option>
+          <option value="123.000">123.000</option>
+          <option value="123.0000">123.0000</option>
+          <option value="dd/mm/aa">dd/mm/aa</option>
+          <option value="dd/mmm/aa">dd/mmm/aa</option>
+          <option value="dd/mmm/aaa">dd/mmm/aaa</option>
+          <option value="dd/mmmm/aaa">dd/mmmm/aaa</option>
+          <option value="dd/mmm/aaa-00:00">dd/mmm/aaa-00:00</option>
+          <option value="hh:mm:ss">hh:mm:ss</option>
+          <option value="hh:mm">hh:mm</option>
+          <option value="hhh:mm">hhh:mm</option>
+          <option value="hhh:mm:ss">hhh:mm:ss</option>
         </select>
 
 

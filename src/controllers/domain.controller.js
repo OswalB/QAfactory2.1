@@ -340,7 +340,7 @@ apiCtrl.savePedido = async (req, res, next) => {
         let response;
         lastId = await Serial.findOne();
         if (!lastId) {
-            let newSerial =  new Serial({ serialOrders: 0, serialAverias: 0, serialPlanillas: 0 });
+            let newSerial =  new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 0,serialPdf:0 });
             await newSerial.save();
             lastId = await Serial.findOne();
         }
@@ -353,6 +353,7 @@ apiCtrl.savePedido = async (req, res, next) => {
         data.documentos[0].seller = user.salesGroup;
         data.documentos[0].sellerName = user.name;
         data.documentos[0].consecutivo = counter;
+        console.log('datos de pedido', data)
         response = await guardar(data);
         res.json(response);
     } catch (error) {

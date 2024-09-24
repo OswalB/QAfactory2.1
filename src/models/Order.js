@@ -13,7 +13,7 @@ const OrderSchema = new Schema({
         default: 'true'
     },
     createdAt:{
-        type: 'string',
+        type: 'date',
         requiered: true,
         alias: 'Fecha creación'
     },seller:{
