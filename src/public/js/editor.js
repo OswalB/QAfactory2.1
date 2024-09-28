@@ -10,8 +10,8 @@ const defaults = {
     colorFont: "#000000",
     colorBg: "#111111",
     siBg: false,
-    originControl: '0',
-    formatControl: '0'
+    originControl: '',
+    formatControl: ''
 }
 
 const inputFieldO = document.getElementById('in-fieldOrder');
@@ -321,13 +321,19 @@ function defaultValues() {
 }
 
 document.getElementById("in-template").addEventListener('change', async e => {
+    await updateTemplate();
+
+
+});
+
+async function updateTemplate() {
     currentInput.section = '';
     toggleInputs({ bloquear: true });
     const titulo = updateTitle();
     document.getElementById('title-properties').innerHTML = titulo
     selectedTemplate = parseInt(document.getElementById('in-template').value);
     const vis = selectedTemplate === 0 ? false : true;
-    activeButtons({ btnSel: true, btnV: vis, btnE: vis, btnG: false , frmD: true});
+    activeButtons({ btnSel: true, btnV: vis, btnE: vis, btnG: false, frmD: true });
     const res = await fetch('/domain/templates-list', {
         headers: {
             'Content-Type': 'application/json'
@@ -355,11 +361,14 @@ document.getElementById("in-template").addEventListener('change', async e => {
 
     renderListDesign();
     fillDesign();
-
-
-});
+}
 
 document.getElementById("btn-genPDF").addEventListener('click', async e => {
+
+    await openDesign();
+});
+
+async function openDesign() {
     if (!currentCollection) return;
     activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
     const res = await fetch('/domain/templates-list', {
@@ -381,10 +390,10 @@ document.getElementById("btn-genPDF").addEventListener('click', async e => {
     listTemplates.forEach(item => {
         item.descripcion = `${item.idTemplate}: ${item.descripcion}`
     })
-    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion');
+    listTemplates.unshift({ idTemplate: '', descripcion: '<Ninguno>', });
+    addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion', false);
     //renderListDesign(listTemplates);
-
-});
+}
 
 document.getElementById("btnVerpdf").addEventListener('click', async e => {
     generarPDF(localDesign);
@@ -516,10 +525,17 @@ document.getElementById('btnNuevo').addEventListener('click', async e => {
 })
 
 document.getElementById('listDocuments').addEventListener('click', async e => {
-    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false , frmD:false});
-    workFilter.currentPage = 1;
+
     let m = e.target.getAttribute('_modelo');
     let t = e.target.getAttribute('_titulo');
+    loadDocuments(m, t);
+
+})
+
+async function loadDocuments(m, t) {
+    activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false, frmD: false });
+    workFilter.currentPage = 1;
+
     currentCollection = { "titulo": t, "modelo": m };
     workFilter.modelo = m;
     let boton = document.getElementById('btnChose');
@@ -535,9 +551,7 @@ document.getElementById('listDocuments').addEventListener('click', async e => {
     //processDataPdf(currentContent);
     addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
     addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
-
-
-})
+}
 
 document.getElementById('bodyContainer').addEventListener('dblclick', async e => {
     let idt = e.target.getAttribute('_id');
@@ -625,7 +639,7 @@ async function init() {
 
     backFilter.filterBy = '0';
     backFilter.filterTxt = '';
-    backFilter.limitar = 10;
+    backFilter.limitar = 11;
     backFilter.max = '';
     backFilter.min = '';
     backFilter.datemax = '';
@@ -643,78 +657,40 @@ async function init() {
 
 
     await loadList();
-    debugg(false);
+
 };
 
 async function debugg(activate = false) {
     if (activate) {
+
         console.warn('RECUERDA DESACTIVAR debugg()');
+        await loadDocuments('Order', 'debugg orders')
+        document.getElementById('in-filterBy').value = 'state';
+        document.getElementById('in-min').value = '0';
+        document.getElementById('in-max').value = '0';
 
-        backFilter.limitar = 15;
-        activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false , frmD: true});
-        workFilter.currentPage = 1;
-        let m = 'Order';
-        let t = 'Ordenes ca';
-        currentCollection = { "titulo": t, "modelo": m };
-        workFilter.modelo = m;
-        let boton = document.getElementById('btnChose');
-        boton.innerHTML = t;
-        workFilter.filterStatus = 'off';
+        await refreshFilter('active');
 
-        backFilter.otrosMatch = [{ state: 0 }];
-        showAlertFilter();
-        setFilter();
-        loadFilter();
-        await renderTable();
-        await footer();
-        renderFilter();
-        paintFilter();
-        processDataPdf(currentContent);
-        addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
-        addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
-        addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
-
-        addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
-
-
-        let res = await fetch('/domain/templates-list', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: "POST",
-            body: JSON.stringify({
-                "modelo": currentCollection.modelo,
-                fx: 'list'
-            })
-        });
-        listTemplates = await res.json();
-        if (listTemplates.fail) {
-            toastr.error(listTemplates.message);
-            return;
-        }
-
-        listTemplates.forEach(item => {
-            item.descripcion = `${item.idTemplate}: ${item.descripcion}`
-        })
-        addOptionsSelect('in-template', listTemplates, 'idTemplate', 'descripcion')
-
-
-
+        await refreshFilter('active');
+        activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
+        await openDesign();
+        document.getElementById("in-template").value ='500'
+        await updateTemplate();
 
 
 
     }
 }
 
-function afterLoad() {
+async function afterLoad() {
     fadeInputs();
     activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false, frmD: false });
     selectedTemplate = 0;
-    workFilter.PDFmode =false;
+    workFilter.PDFmode = false;
+    await debugg(true);
 };
 
 async function renderTable() {
-
     let response = await fetch("/core/keys", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -786,7 +762,7 @@ async function renderTable() {
         })
     })
 
-    if(!workFilter.PDFmode) return;
+    if (!workFilter.PDFmode) return;
     unwind(currentContent)
     renderListDesign();
 }
@@ -811,8 +787,9 @@ function renderListDesign() {
     addItemList('listFilterData', keysAndTypes, 'campo', 'campo', 'drop-filter');
     addItemList('listGroupData', keysAndTypes, 'campo', 'campo', 'drop-group');
     addItemList('listOrderData', keysAndTypes, 'campo', 'campo', 'drop-order');
-
-    addOptionsSelect('in-originControl', keysAndTypes, 'campo', 'campo');
+    const tempKey = [...keysAndTypes];
+    tempKey.unshift({ campo: '', alias: '<Ninguno>', });
+    addOptionsSelect('in-originControl', tempKey, 'campo', 'campo');
 }
 
 

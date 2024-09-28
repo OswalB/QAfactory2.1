@@ -94,10 +94,11 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
@@ -142,10 +143,11 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
@@ -190,10 +192,11 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
@@ -238,10 +241,11 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
@@ -286,10 +290,11 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
@@ -334,17 +339,18 @@ const TemplateSchema = new Schema({
         },
         originControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
         formatControl:{
-            type: 'string'
+            type: 'string',
+            default: ''
         },
         forceNewRow:{
             type: 'boolean',
             default: false
         },fxControl:{
             type: 'string',
-            default: '0'
+            default: ''
         },
 
     }]     

@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadFilter();
     await renderTable();
     await footer();
-    afterLoad();
+    await afterLoad();
 
 })
 
@@ -113,28 +113,25 @@ function paintFilter() {
 }
 
 async function renderFilter() {
+    const tempKey = [...currentKeys]
+    tempKey.unshift({ campo: '0', alias: '<Ninguno>', });
 
-    addOptionsSelect('in-sortBy', currentKeys, 'campo', 'alias');
-    addOptionsSelect('in-filterBy', currentKeys, 'campo', 'alias');
+    addOptionsSelect('in-sortBy', tempKey, 'campo', 'alias');
+    addOptionsSelect('in-filterBy', tempKey, 'campo', 'alias');
 
 }
 
 function addOptionsSelect(selectId, keys, valueKey, labelKey, firstDisabled = false) {
     const container = document.getElementById(selectId);
     container.innerHTML = '';
-    const defaultOption = document.createElement('option');
-    if (cero) {
-        defaultOption.setAttribute("value", 0);
-        defaultOption.textContent = 'Ninguno';
-    } else {
-
-    }
-
-    container.appendChild(defaultOption);
     keys.forEach((item, index) => {
         const option = document.createElement('option');
         option.setAttribute("value", item[valueKey]);
         option.textContent = item[labelKey];
+        if (index === 0) {
+            option.disabled = firstDisabled;
+            option.selected = true;
+        }
         container.appendChild(option);
     });
 }
@@ -167,6 +164,11 @@ function setFilter() {
     k_valorBoolean.value = backFilter.valorBoolean;
     k_group.value = backFilter.group;
     k_datepp.value = backFilter.datepp;
+
+
+
+    //debugg:
+
 
 
 }
@@ -590,7 +592,7 @@ async function generarPDF(design) {
         maxR: r2d(pageSize.getWidth() - mmToPt(design.pagina.mr), 2),
         maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
     };
-    console.log(page)
+    //console.log(page)
 
     //printPattern(page.ml, page.colpt, page.mt, page.sh);
 
@@ -598,7 +600,6 @@ async function generarPDF(design) {
     doc.rect(page.ml, page.mt, page.sw, page.sh);
 
 
-    console.log(design);
     originData = [...dataUnwind];
 
     if (design.pagina.fieldFilter) {
@@ -615,33 +616,62 @@ async function generarPDF(design) {
 
     addFields(originData, design);
 
-    //return;
-    const testPDF = [
-        {
-            text: [
-                { x: 100, y: 120, sf: 10, cf: '#000000', tx: 'pag 1 primer texto' },
-                { x: 100, y: 170, sf: 18, cf: '#880000', tx: 'pag 1 second texton para..' }
-            ],
-            box: [
-                { x: 100, y: 100, wb: 88, hb: 25, fll: '', cb: '#888000' },
-                { x: 100, y: 150, wb: 98, hb: 25, fll: '', cb: '#888000' }
-            ]
-        },
-        {
-            text: [
-                { x: 200, y: 120, sf: 10, cf: '#000000', tx: 'textp segunda pagina' },
-                { x: 200, y: 170, sf: 18, cf: '#880000', tx: 'second texton para.. pag 2' }
-            ],
-            box: [
-                { x: 200, y: 100, wb: 88, hb: 25, fll: 'F', cb: '#008000' },
-                { x: 200, y: 150, wb: 98, hb: 25, fll: 'F', cb: '#000090' }
-            ]
-        },
-    ]
+    let result = '';
+    let indexPage = 0;
+    let absY = 0;           //page.mt;
+    let sw = configSw({ HR: true, HP: true })
+    Object.keys(originData).forEach(group => {
+        originData[group].forEach(dataSet => {
+            if(dataSet._startGroup && !sw.HR){
+                sw = configSw({ HG: true });
+            }
+            if (sw.HR) {
+                ({ absY, indexPage, result } = printPDF(design.headerReport, dataSet, page, absY, indexPage));
+                if (result === 'next') sw = configSw({ HP: true });
+            }
+            do {                    //Repeat
+                if (sw.HP) {
+                    ({ absY, indexPage, result } = printPDF(design.headerPage, dataSet, page, absY, indexPage));
+                    if (result === 'next') sw = configSw({ HG: true });
+                }
+                if (sw.HG) {
+                    ({ absY, indexPage, result } = printPDF(design.headerGroup, dataSet, page, absY, indexPage));
+                    if (result === 'next') sw = configSw({ HD: true });
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, HG: true});
+                        result = 'repeat'
+                    }
+                }
+                if (sw.HD) {
+                    ({ absY, indexPage, result } = printPDF(design.headerDetail, dataSet, page, absY, indexPage));
+                    if (result === 'next') sw = configSw({  DET: true });
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, HG: true, HD: true });
+                        result = 'repeat'
+                    }
+                }
+                if (sw.DET) {
+                    ({ absY, indexPage, result } = printPDF(design.detail, dataSet, page, absY, indexPage));
+                    if (result === 'next') sw = configSw({ DET: true });
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, HG: true, HD: true, DET:true });
+                        result = 'repeat'
+                    }
+                }
+            } while (result === 'repeat')
+
+        })
+
+    })
+
+
+    return;
+
+
 
     const siPrint = {};
-    let indexPage = 0;
-    let absY = page.mt;
+    //let indexPage = 0;
+    //let absY = page.mt;
     let printStatus = priorityPrint('startReport', -1);    //inicio de informe
     Object.keys(originData).forEach(group => {
         console.log(`Grupo: ${group}`);
@@ -703,7 +733,6 @@ async function generarPDF(design) {
                         });
                         break;
                     default:
-                        console.log('printStatus no reconocido');
                 }
 
                 if (siPrint.HR) {
@@ -716,41 +745,28 @@ async function generarPDF(design) {
                 }
                 if (siPrint.HG) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerGroup, item, page, absY, indexPage));
-                    console.log('-------------', indexPage, printStatus)
                     if (printStatus == 'newPage') {
                         siPrint.HD = false;
                         siPrint.DD = false;
-                        console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
                     }
                 }
                 if (siPrint.HD) {
                     ({ absY, indexPage, printStatus } = renglon(design.headerDetail, item, page, absY, indexPage));
                     if (printStatus == 'newPage') {
-
                         siPrint.DD = false;
-                        console.warn('ATENCION: ACABAR DE COMPLETAR FALSE PARA FOOTERS')
                     }
                 }
                 if (siPrint.DD) {
                     ({ absY, indexPage, printStatus } = renglon(design.detail, item, page, absY, indexPage));
                 }
                 if (siPrint.FD) {
-                    console.log('pie de detallee******************');
                     ({ absY, indexPage, printStatus } = renglon(design.footerDetail, item, page, absY, indexPage));
                 }
-                if (watchDog / maxWdog > 0.95) console.warn('funcion infinita?')
-                //console.log('printstatus despues', printStatus)
-                if (watchDog > 0) console.warn('reintento de impresion:', watchDog)
-                console.log(printStatus, 'wd:', watchDog)
             } while (printStatus != 'nextItem' && watchDog < maxWdog);
         });
-        console.log('fin de grupo aqui deberia estar el pie???')
-
-        //printStatus = priorityPrint('endGroup', printStatus)
     });
 
-    //console.log(JSON.stringify(jsonPDF, null, 2));
-    //console.log(jsonPDF);
+
 
     //return
 
@@ -786,9 +802,34 @@ async function generarPDF(design) {
 
 }
 
-function renglon(design, data, page, pty, indexPage) {
+function printPDF(template, dataSet, page, absY, indexPage) {
+
+    absY++;
+    
+    if (absY > 7) {           //overflow page
+        console.warn('No se imprime', template[0].texto, 'absy:', absY);
+        absY = 0;
+        return { absY, indexPage: 0, result: 'newPage' }
+    }
+    let testTexto
+    if(template[1]) testTexto = dataSet[template[1].originControl] || '';
+    console.log(template[0].texto,'//',testTexto, 'absy:', absY);
+    return { absY, indexPage: 0, result: 'next' }
+
+}
+
+function configSw({ HR = false, HP = false, HG = false, HD = false, DET = false, FD = false, FG = false, FP = false, FR = false } = {}) {
+    return { HR, HP, HG, HD, DET, FD, FG, FP, FR };
+}
+
+
+
+
+
+
+function renglonBORRAR(design, data, page, pty, indexPage) {
     //console.log(design[0].originControl , design[0].texto);
-    console.log(design, data)
+    //console.log(design, data)
     let sumW = 0, filas = 0, startRow = true;
     let printStatus = priorityPrint('nextItem', -2);
     design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
@@ -800,7 +841,7 @@ function renglon(design, data, page, pty, indexPage) {
         sumW += item.width;
         item.startRow = startRow;
 
-        if (sumW > (page.sw * 1.01)) {
+        if (sumW > (page.sw * 1.01)) {          //establece nueva linea
             sumW = item.width;
             filas += 1;
             item.startRow = true;
@@ -809,17 +850,45 @@ function renglon(design, data, page, pty, indexPage) {
         item.fila = filas;
         item.sw = item.width - paddingX - paddingX;
         doc.setFontSize(fontSize);
-        if (item.formatControl != '0' || item.formatControl) {        //formato en texto origen
-            //item.texto = formatearDato(item.texto,item.formatControl);
-        }
 
-        if (!item.hasOwnProperty('originControl')) {
-            item.originControl = '0';
+        /*if (item.formatControl != '0' || item.formatControl) {        //formato en texto origen
+            //item.texto = formatearDato(item.texto,item.formatControl);
+        }*/
+        //log('data para formatear:', data);
+        //console.log('design para formatear:', item);
+        //console.log('texto antes de proceso:', item.texto)
+        const hayFormulas = data.formulas && typeof data.formulas === 'object' && Object.keys(data.formulas).length > 0;
+        //console.warn('hayFormulas:', hayFormulas);
+        //console.log(data.formulas, typeof data.formulas === 'object')
+        if (hayFormulas && item.originControl && !data._endGroup) {
+            console.log(hayFormulas, item.originControl, !data._endGroup)
+            console.warn('hay formulas y es ultimo renglon, texto antes fx:', item.texto)
+            const formula = `${item.fxControl}_${item.originControl}`;
+            const valorFx = data.formulas[formula];
+            item.texto = valorFx
+            //console.log('hay formulas y es ultimo renglon, texto despues fx:', item.texto)
+        } else if (item.originControl && !hayFormulas) {
+            //console.log('solo es origin control, texto antes :', item.texto)
+
+            item.texto = data[item.originControl] || '';
+            //console.log('solo es origin control, texto despues :', item.texto)
+
         }
-        item.originControl = item.originControl ? item.originControl : '0';
-        console.log(data._endGroup, data.formulas);
-        let cadena;
-        if (data.formulas && !data._endGroup) {
+        //console.log('en todos los casos, texto antes de format :', item.texto)
+        if (item.formatControl) {
+            item.texto = formatearDato(item.texto, item.formatControl);
+        }
+        if (!item.texto) console.warn('UNDEF...')
+        //console.log('en todos los casos, texto despues de format :', item.texto)
+        //console.log('FIN de formateo datos')
+        /*if (!item.hasOwnProperty('originControl')) {
+            item.originControl = '0';
+        }*/
+
+        //item.originControl = item.originControl ? item.originControl : '0';
+        //console.log(data._endGroup, data.formulas);
+        //let cadena;
+        /*if (data.formulas && !data._endGroup) {
             const formula = `${item.fxControl}_${item.originControl}`;
             const valorFx = data.formulas[formula];
             console.log(formula, valorFx)
@@ -827,9 +896,9 @@ function renglon(design, data, page, pty, indexPage) {
 
         } else {
             cadena = item.originControl === '0' ? item.texto : data[item.originControl] || item.texto;
-        }
+        }*/
 
-        item.lineas = doc.splitTextToSize(String(cadena), item.sw);
+        item.lineas = doc.splitTextToSize(String(item.texto), item.sw);
         item.lineH = r2d(fontSize, 2);
         const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
         item.height = newH > height ? newH : height;
@@ -847,8 +916,8 @@ function renglon(design, data, page, pty, indexPage) {
         }
     })
     if (rowY + totalHeight > (page.maxY * 1.02)) {       //desborde de pagina
-        console.log(rowY + totalHeight, page.maxY, (page.maxY * 1.01))
-        console.log('**** Rechazado: ', design, data);
+        //console.log(rowY + totalHeight, page.maxY, (page.maxY * 1.01))
+        //console.log('**** Rechazado: ', design, data);
         return {
             absY: page.mt,
             indexPage: indexPage + 1,
@@ -895,7 +964,7 @@ function renglon(design, data, page, pty, indexPage) {
         rowX += item.width;
         carry = item.height;
     })
-    console.log(data._endGroup)
+    //console.log(data._endGroup)
     if (data._endGroup) {
         console.warn('EndGroup fin de function renglon')
         data._endGroup = false;
@@ -905,11 +974,11 @@ function renglon(design, data, page, pty, indexPage) {
 
 }
 
-function priorityPrint(callStatus, prev) {
+/*function priorityPrint(callStatus, prev) {
     if (callStatus == 'newPage' || callStatus == 'newGroup') {
-        console.warn(callStatus, prev);
+        // console.warn(callStatus, prev);
     } else {
-        console.log(callStatus, prev);
+        // console.log(callStatus, prev);
     }
 
     switch (callStatus) {
@@ -929,7 +998,12 @@ function priorityPrint(callStatus, prev) {
 
     }
 
-}
+}*/
+
+
+
+
+// +***********  FUNCIONES DE datos pdf rev 26/sep
 
 function maxHeightRow(items) {
     let filas = items.reduce((acc, item) => {
@@ -949,7 +1023,7 @@ function maxHeightRow(items) {
 }
 
 function newPage() {
-    console.log('codigo para una nueva pagina');
+    //console.log('codigo para una nueva pagina');
     doc.addPage();
 }
 
@@ -983,9 +1057,6 @@ function r2d(num, decimals) {
     var factor = Math.pow(10, decimals);
     return Math.round(num * factor) / factor;
 }
-// +***********  FUNCIONES DE datos pdf
-
-
 
 function unwind(data) {
 
@@ -1005,7 +1076,6 @@ function unwind(data) {
 
     console.log(dataUnwind);
     keysAndTypes = getKeysAndTypes(dataUnwind);
-    console.log(keysAndTypes);
 
 }
 
@@ -1100,8 +1170,8 @@ function groupByField(arr, field) {
 function addFields(arr, design) {
     let setFx = [];
     design.footerDetail.forEach(campo => {
-        if (campo.originControl && campo.originControl !== '0') {
-            if (campo.fxControl && campo.fxControl !== '0') {
+        if (campo.originControl) {
+            if (campo.fxControl) {
                 setFx.push({ [campo.originControl]: campo.fxControl });
             }
         }
@@ -1116,12 +1186,16 @@ function addFields(arr, design) {
             subtc = `${index + 1} de ${registros}`
             item['_#'] = totalCount;
             item['_##'] = subtc;
+            item['_startGroup'] = index == 0 ? true : false;
             item['_endGroup'] = (index + 1) == registros ? true : false;
             if ((index + 1) == registros) {
                 item.formulas = {};
                 setFx.forEach(f => {
                     const k = Object.keys(f);
-                    const array = arr[group].map(item => item[k]);
+                    //const array = arr[group].map(item => item[k]);
+                    const array = arr[group].map(item => {
+                        return item && item[k] !== undefined && item[k] !== null ? item[k] : 0;
+                    });
                     const res = dataFx(array, f[k]);
                     const campo = `${f[k]}_${[k]}`;
                     item.formulas[campo] = res;
@@ -1326,91 +1400,8 @@ function formatPaper(sizeType) {
     }
 }
 
-function formatearDatoborrar(valor, formato) {
-    const esNumero = !isNaN(valor) && !isNaN(parseFloat(valor));
-    if (esNumero) {
-        return formatearNumero(valor, formato);
-    } else if (valor instanceof Date || !isNaN(Date.parse(valor))) {
-        const fechaLocal = new Date(valor); // Convertir la fecha ISO a local
-        return formatearFecha(fechaLocal, formato);
-    }
-    return valor; // Devolver el valor original si no es ni número ni fecha
-}
-
-function formatearNumero(numero, formato) {
-    let opciones = { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true };
-
-    switch (formato) {
-        case '123':
-            opciones.maximumFractionDigits = 0; // Sin decimales
-            break;
-        case '123.0':
-            opciones.minimumFractionDigits = 1;
-            opciones.maximumFractionDigits = 1;
-            break;
-        case '123.00':
-            opciones.minimumFractionDigits = 2;
-            opciones.maximumFractionDigits = 2;
-            break;
-        case '123.000':
-            opciones.minimumFractionDigits = 3;
-            opciones.maximumFractionDigits = 3;
-            break;
-        case '123.0000':
-            opciones.minimumFractionDigits = 4;
-            opciones.maximumFractionDigits = 4;
-            break;
-        default:
-            return numero; // Devolver el número original si el formato no coincide
-    }
-
-    // Aplicar el formato con separadores de miles
-    return numero.toLocaleString('es-ES', opciones);
-}
-
-function formatearFecha(fecha, formato) {
-    const opcionesFechaCorta = { day: '2-digit', month: '2-digit', year: '2-digit' };
-    const opcionesFechaMesTexto = { day: '2-digit', month: 'short', year: '2-digit' };
-    const opcionesFechaMesTextoMedio = { day: '2-digit', month: 'short', year: 'numeric' };
-    const opcionesFechaMesTextoLargo = { day: '2-digit', month: 'long', year: 'numeric' };
-    const opcionesHoraCompleta = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    const opcionesHora12Horas = { hour: '2-digit', minute: '2-digit', hour12: true };
-    const opcionesHora12HorasSegundos = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-
-    switch (formato) {
-        case 'dd/mm/aa':
-            return fecha.toLocaleDateString('es-ES', opcionesFechaCorta);
-
-        case 'dd/mmm/aa':
-            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTexto);
-
-        case 'dd/mmm/aaa':
-            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoMedio);
-
-        case 'dd/mmmm/aaa':
-            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoLargo);
-
-        case 'dd/mmm/aaa-00:00':
-            return fecha.toLocaleDateString('es-ES', opcionesFechaMesTextoLargo) + ' ' + fecha.toLocaleTimeString('es-ES', opcionesHoraCompleta);
-
-        case 'hh:mm:ss':
-            return fecha.toLocaleTimeString('es-ES', opcionesHoraCompleta);
-
-        case 'hh:mm':
-            return fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-        case 'hhh:mm':
-            return fecha.toLocaleTimeString('es-ES', opcionesHora12Horas);
-
-        case 'hhh:mm:ss':
-            return fecha.toLocaleTimeString('es-ES', opcionesHora12HorasSegundos);
-
-        default:
-            return fecha; // Devolver la fecha original si el formato no coincide
-    }
-}
-
 function formatearDato(dato, formato) {
+    if (dato == undefined) return '-';
     // Verificar si el dato es un número
     const esNumero = !isNaN(dato) && !isNaN(parseFloat(dato));
 

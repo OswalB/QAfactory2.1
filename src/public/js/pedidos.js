@@ -412,7 +412,7 @@ async function renderModalAverias(codeSelected, data) {
             alias: `${objeto.loteOut} ${objeto.vencido ? 'Vencido' : ''}`
         };
     });
-
+    dataOptions.unshift({campo:'', alias:'<Ninguno>',});
     addOptionsSelect( 'loteVenta', dataOptions, 'campo', 'alias', false)
     document.getElementById('modal-title').innerHTML = `Averias de ${data.nombre}`;
     const response = await fetch("/core/editor-content", {
@@ -433,6 +433,7 @@ async function renderModalAverias(codeSelected, data) {
             alias: objeto.titulo
         };
     });
+    dataOptions2.unshift({campo:'', alias:'<Ninguno>',});
     addOptionsSelect('causal', dataOptions2, 'campo', 'alias',false);
 
     return;
