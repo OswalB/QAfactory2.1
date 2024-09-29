@@ -1,6 +1,6 @@
 let currentCollection, listTemplates, selectedTemplate, currentInput = {};
 const defaults = {
-    col: 6,
+    col: 4,
     height: 15,
     siBorde: true,
     align: 0,
@@ -60,7 +60,9 @@ const listSections = [
     'headerGroup',
     'headerDetail',
     'detail',
-    'footerDetail'
+    'footerDetail',
+    'footerGroup',
+    'footerReport'
 ];
 
 document.getElementById("accordionDesign").addEventListener('click', async e => {

@@ -353,7 +353,113 @@ const TemplateSchema = new Schema({
             default: ''
         },
 
-    }]     
+    }],
+    footerGroup:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
+            type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
+        },
+        originControl:{
+            type: 'string',
+            default: ''
+        },
+        formatControl:{
+            type: 'string',
+            default: ''
+        },
+        forceNewRow:{
+            type: 'boolean',
+            default: false
+        },fxControl:{
+            type: 'string',
+            default: ''
+        },
+
+    }],
+    footerReport:[{
+        col:{
+            type: 'number'
+        },
+        height:{
+            type: 'number'
+        },
+        siBorde:{
+            type: 'boolean',
+            default: false
+        },
+        texto:{
+            type: 'string'
+        },
+        align:{
+            type: 'number',
+        },
+        sizeFont:{
+            type: 'number'
+        },
+        colorFont:{
+            type: 'string'
+        },
+        paddingX:{
+            type: 'number'
+        },
+        paddingY:{
+            type: 'number'
+        },
+        colorBg:{
+            type: 'string'
+        },
+        siBg:{
+            type: 'boolean',
+            default: false
+        },
+        originControl:{
+            type: 'string',
+            default: ''
+        },
+        formatControl:{
+            type: 'string',
+            default: ''
+        },
+        forceNewRow:{
+            type: 'boolean',
+            default: false
+        },fxControl:{
+            type: 'string',
+            default: ''
+        },
+
+    }]       
 
 },{
     timestamps: true,

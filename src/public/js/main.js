@@ -2,7 +2,7 @@ var currentKeys = [], backFilter = {}, workFilter = {}, tgg = true, role, sizeCo
 let k_filterBy, k_filterTxt, k_limitar, k_max, k_min, k_saltar;
 let k_datemax, k_datemin, k_sortBy, k_sortOder, k_valorBoolean
 let k_group, k_datepp, dataUnwind = [], keysAndTypes = []; originData = [], jsonPDF = [];
-
+let _escape = false;
 
 
 
@@ -615,16 +615,17 @@ async function generarPDF(design) {
     }
 
     addFields(originData, design);
-
+    _escape = false;
     let result = '';
     let indexPage = 0;
     let absY = 0;           //page.mt;
     let sw = configSw({ HR: true, HP: true })
-    Object.keys(originData).forEach(group => {
+    Object.keys(originData).forEach((group, index) => {
         originData[group].forEach(dataSet => {
-            if(dataSet._startGroup && !sw.HR){
-                sw = configSw({ HG: true });
-            }
+            const EOG = dataSet._endGroup;
+            const EOR = (Object.keys(originData).length == index + 1) && dataSet._endGroup;
+
+            if (dataSet._startGroup && !sw.HR) sw = configSw({ HG: dataSet._startGroup && !sw.HR, });
             if (sw.HR) {
                 ({ absY, indexPage, result } = printPDF(design.headerReport, dataSet, page, absY, indexPage));
                 if (result === 'next') sw = configSw({ HP: true });
@@ -632,19 +633,19 @@ async function generarPDF(design) {
             do {                    //Repeat
                 if (sw.HP) {
                     ({ absY, indexPage, result } = printPDF(design.headerPage, dataSet, page, absY, indexPage));
-                    if (result === 'next') sw = configSw({ HG: true });
+                    if (result === 'next' && ! sw.caso345) sw = configSw({ HG: true });
                 }
                 if (sw.HG) {
                     ({ absY, indexPage, result } = printPDF(design.headerGroup, dataSet, page, absY, indexPage));
-                    if (result === 'next') sw = configSw({ HD: true });
+                    if (result === 'next' && ! sw.caso345) sw = configSw({ HD: true });
                     if (result === 'newPage') {
-                        sw = configSw({ HP: true, HG: true});
+                        sw = configSw({ HP: true, HG: true });
                         result = 'repeat'
                     }
                 }
                 if (sw.HD) {
                     ({ absY, indexPage, result } = printPDF(design.headerDetail, dataSet, page, absY, indexPage));
-                    if (result === 'next') sw = configSw({  DET: true });
+                    if (result === 'next') sw = configSw({ DET: true });
                     if (result === 'newPage') {
                         sw = configSw({ HP: true, HG: true, HD: true });
                         result = 'repeat'
@@ -654,11 +655,39 @@ async function generarPDF(design) {
                     ({ absY, indexPage, result } = printPDF(design.detail, dataSet, page, absY, indexPage));
                     if (result === 'next') sw = configSw({ DET: true });
                     if (result === 'newPage') {
-                        sw = configSw({ HP: true, HG: true, HD: true, DET:true });
+                        sw = configSw({ HP: true, HG: true, HD: true, DET: true });
+                        result = 'repeat'
+                    }
+                    if (result === 'next' && EOG) {
+                        sw = configSw({ FD: true });
                         result = 'repeat'
                     }
                 }
-            } while (result === 'repeat')
+                if (sw.FD) {
+                    ({ absY, indexPage, result } = printPDF(design.footerDetail, dataSet, page, absY, indexPage));
+                    if (result === 'next') sw = configSw({ DET: true });
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, HG: true, FD: true, caso345: true });
+                        result = 'repeat'
+                    }
+                    if (result === 'next' && EOG) sw = configSw({ FG: true });
+                }
+                if (sw.FG) {
+                    ({ absY, indexPage, result } = printPDF(design.footerGroup, dataSet, page, absY, indexPage));
+                    if (result === 'next' && EOR) sw = configSw({ FR: true });
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, HG: true, FG: true, caso345: true });
+                        result = 'repeat'
+                    }
+                }
+                if (sw.FR) {
+                    ({ absY, indexPage, result } = printPDF(design.footerReport, dataSet, page, absY, indexPage));
+                    if (result === 'newPage') {
+                        sw = configSw({ HP: true, FR: true, caso345: true });
+                        result = 'repeat'
+                    }
+                }
+            } while (result === 'repeat' && !_escape)
 
         })
 
@@ -805,21 +834,34 @@ async function generarPDF(design) {
 function printPDF(template, dataSet, page, absY, indexPage) {
 
     absY++;
-    
+
     if (absY > 7) {           //overflow page
-        console.warn('No se imprime', template[0].texto, 'absy:', absY);
+        console.warn('No se imprime', template[0].texto, 'absy:', absY, 'page',indexPage);
+        indexPage++;
         absY = 0;
-        return { absY, indexPage: 0, result: 'newPage' }
+        return { absY, indexPage, result: 'newPage' }
     }
-    let testTexto
-    if(template[1]) testTexto = dataSet[template[1].originControl] || '';
-    console.log(template[0].texto,'//',testTexto, 'absy:', absY);
-    return { absY, indexPage: 0, result: 'next' }
+    let testTexto ='';
+    if (template[1]){
+        const fx = template[1].fxControl?template[1].fxControl:false;
+        const origin = template[1].originControl?template[1].originControl:false;
+        if(fx && origin){           //hay formulas
+            testTexto = dataSet[`__${fx}_${origin}`];
+        }else if(origin) {
+            testTexto = dataSet[template[1].originControl] || '';
+        }else{
+            testTexto = dataSet[texto] || '';
+        }
+
+        
+    } ;
+    console.log(template[0].texto, '//', testTexto, 'absy:', absY);
+    return { absY, indexPage, result: 'next' }
 
 }
 
-function configSw({ HR = false, HP = false, HG = false, HD = false, DET = false, FD = false, FG = false, FP = false, FR = false } = {}) {
-    return { HR, HP, HG, HD, DET, FD, FG, FP, FR };
+function configSw({ HR = false, HP = false, HG = false, HD = false, DET = false, FD = false, FG = false, FP = false, FR = false, caso345= false } = {}) {
+    return { HR, HP, HG, HD, DET, FD, FG, FP, FR, caso345 };
 }
 
 
@@ -1177,7 +1219,7 @@ function addFields(arr, design) {
         }
     })
     console.log(setFx);
-
+    let arrayReport = [];
     let totalCount = 0;
     Object.keys(arr).forEach((group, index) => {
         registros = arr[group].length;
@@ -1189,7 +1231,7 @@ function addFields(arr, design) {
             item['_startGroup'] = index == 0 ? true : false;
             item['_endGroup'] = (index + 1) == registros ? true : false;
             if ((index + 1) == registros) {
-                item.formulas = {};
+                //item.formulas = {};
                 setFx.forEach(f => {
                     const k = Object.keys(f);
                     //const array = arr[group].map(item => item[k]);
@@ -1197,8 +1239,8 @@ function addFields(arr, design) {
                         return item && item[k] !== undefined && item[k] !== null ? item[k] : 0;
                     });
                     const res = dataFx(array, f[k]);
-                    const campo = `${f[k]}_${[k]}`;
-                    item.formulas[campo] = res;
+                    const campo = `__${f[k]}_${[k]}`;
+                    item[campo] = res;
                 })
 
             }
