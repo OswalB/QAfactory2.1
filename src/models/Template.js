@@ -1,471 +1,479 @@
-const {Schema, model}= require('mongoose');
+const { Schema, model } = require('mongoose');
 const TemplateSchema = new Schema({
-    idTemplate:{
+    idTemplate: {
         type: 'number',
         required: true,
         unique: true,
         alias: 'ID'
     },
-    descripcion:{
+    descripcion: {
         type: 'string',
         required: true,
         alias: 'Descripcion'
     },
-    model:{
+    model: {
         type: 'string',
         requiered: true,
         alias: 'Modelo'
     },
-    pagina:{
-        orientation:{
+    pagina: {
+        orientation: {
             type: 'string',
             alias: 'Orientacion',
             default: 'p'
         },
-        size:{
+        size: {
             type: 'string',
             default: 'letter',
             alias: 'Tamaño'
         },
-        ml:{
+        ml: {
             type: 'number'
         },
-        mr:{
+        mr: {
             type: 'number'
         },
-        mt:{
+        mt: {
             type: 'number'
         },
-        mb:{
+        mb: {
             type: 'number'
         },
-        fieldFilter:{
+        fieldFilter: {
             type: 'string',
             default: ''
         },
-        fieldGroup:{
+        fieldGroup: {
             type: 'string',
             default: ''
         },
-        fieldOrder:{
+        fieldOrder: {
             type: 'string',
             default: ''
         },
-        pagination:{
+        pagination: {
             type: 'string',
             default: '0'
+        }, 
+        tableStyle: {
+            type: 'string',
+            default: ''
         }
-    },
-    headerReport:[{
-        col:{
+},
+    headerReport: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
-            type: 'boolean',
-            default: false
-        }
-    }],
-    headerPage:[{
-        col:{
-            type: 'number'
-        },
-        height:{
-            type: 'number'
-        },
-        siBorde:{
-            type: 'boolean',
-            default: false
-        },
-        texto:{
-            type: 'string'
-        },
-        align:{
-            type: 'number',
-        },
-        sizeFont:{
-            type: 'number'
-        },
-        colorFont:{
-            type: 'string'
-        },
-        paddingX:{
-            type: 'number'
-        },
-        paddingY:{
-            type: 'number'
-        },
-        colorBg:{
-            type: 'string'
-        },
-        siBg:{
-            type: 'boolean',
-            default: false
-        },
-        originControl:{
-            type: 'string',
-            default: ''
-        },
-        formatControl:{
-            type: 'string',
-            default: ''
-        },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
         }
     }],
-    headerGroup:[{
-        col:{
+    headerPage: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
         }
     }],
-    headerDetail:[{
-        col:{
+    headerGroup: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
         }
     }],
-    detail:[{
-        col:{
+    headerDetail: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
         }
     }],
-    footerDetail:[{
-        col:{
+    detail: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
-        },fxControl:{
+        }
+    }],
+    footerDetail: [{
+        col: {
+            type: 'number'
+        },
+        height: {
+            type: 'number'
+        },
+        siBorde: {
+            type: 'boolean',
+            default: false
+        },
+        texto: {
+            type: 'string'
+        },
+        align: {
+            type: 'number',
+        },
+        sizeFont: {
+            type: 'number'
+        },
+        colorFont: {
+            type: 'string'
+        },
+        paddingX: {
+            type: 'number'
+        },
+        paddingY: {
+            type: 'number'
+        },
+        colorBg: {
+            type: 'string'
+        },
+        siBg: {
+            type: 'boolean',
+            default: false
+        },
+        originControl: {
+            type: 'string',
+            default: ''
+        },
+        formatControl: {
+            type: 'string',
+            default: ''
+        },
+        forceNewRow: {
+            type: 'boolean',
+            default: false
+        }, fxControl: {
             type: 'string',
             default: ''
         },
 
     }],
-    footerGroup:[{
-        col:{
+    footerGroup: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
-        },fxControl:{
+        },
+        forceNewPage: {
+            type: 'boolean',
+            default: false
+        }, fxControl: {
             type: 'string',
             default: ''
         },
 
     }],
-    footerReport:[{
-        col:{
+    footerReport: [{
+        col: {
             type: 'number'
         },
-        height:{
+        height: {
             type: 'number'
         },
-        siBorde:{
+        siBorde: {
             type: 'boolean',
             default: false
         },
-        texto:{
+        texto: {
             type: 'string'
         },
-        align:{
+        align: {
             type: 'number',
         },
-        sizeFont:{
+        sizeFont: {
             type: 'number'
         },
-        colorFont:{
+        colorFont: {
             type: 'string'
         },
-        paddingX:{
+        paddingX: {
             type: 'number'
         },
-        paddingY:{
+        paddingY: {
             type: 'number'
         },
-        colorBg:{
+        colorBg: {
             type: 'string'
         },
-        siBg:{
+        siBg: {
             type: 'boolean',
             default: false
         },
-        originControl:{
+        originControl: {
             type: 'string',
             default: ''
         },
-        formatControl:{
+        formatControl: {
             type: 'string',
             default: ''
         },
-        forceNewRow:{
+        forceNewRow: {
             type: 'boolean',
             default: false
-        },fxControl:{
+        }, fxControl: {
             type: 'string',
             default: ''
         },
 
-    }]       
+    }]
 
-},{
+}, {
     timestamps: true,
-    versionKey: false 
+        versionKey: false
 });
 
 
 
-module.exports = model('Template',TemplateSchema);
+module.exports = model('Template', TemplateSchema);

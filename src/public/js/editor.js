@@ -453,7 +453,9 @@ function fillLocalDesign(input) {
     } else {
         fieldValue = input.value;
     }
-
+    if (section && !localDesign[section]){
+        localDesign[section] = [];
+    }
     if (section && localDesign[section]) {
         if (indice !== null && indice !== undefined) {
             const index = parseInt(indice);
@@ -676,7 +678,7 @@ async function debugg(activate = false) {
         await refreshFilter('active');
         activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
         await openDesign();
-        document.getElementById("in-template").value ='500'
+        document.getElementById("in-template").value ='200'
         await updateTemplate();
 
 

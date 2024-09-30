@@ -62,6 +62,14 @@
                   </ul>
                 </div>
                 <hr>
+                <h5>Tabla</h5>
+                <label for="tableStyle">Estilo:</label>
+                <select id="tableStyle" name="tableStyle" class="form-select" data-section="pagina">
+                  <option value="" selected>Ninguno</option>
+                  <option value='{"bgTitle": "#424242", "txtTitle": "#f5f5f5", "bgDark": "#e0e0e0", "bgLight":"#f5f5f5", "txtCell":"#424242"}'>GREY</option>
+                  
+                </select>
+                <hr>
                 <h5>Pagina</h5>
                 <label for="pageSize">Tamaño:</label>
                 <select id="pageSize" name="size" class="form-select" data-section="pagina">
@@ -468,6 +476,11 @@
         <div class="">
           <label class="form-check-label" for="in-forceNewRow">Forzar nueva fila </label>
           <input type="checkbox" class="form-check-input ml-4" name="forceNewRow" id="in-forceNewRow" value=""
+            role="property">
+        </div>
+        <div class="">
+          <label class="form-check-label" for="in-forceNewPage">Forzar nueva PAGINA </label>
+          <input type="checkbox" class="form-check-input ml-4" name="forceNewPage" id="in-forceNewPage" value=""
             role="property">
         </div>
 
