@@ -54,8 +54,8 @@ async function generarPDF(design) {
     let indexPage = 0;
     let absY = page.mt;
     let sw = configSw({ HR: true, HP: true })
-    const tableStyle = design.pagina.tableStyle?JSON.parse(design.pagina.tableStyle):'';
-    console.log('estilo de tabla:',tableStyle);
+    const tableStyle = design.pagina.tableStyle ? JSON.parse(design.pagina.tableStyle) : '';
+    console.log('estilo de tabla:', tableStyle);
     Object.keys(originData).forEach((group, index) => {
         originData[group].forEach(dataSet => {
             const EOG = dataSet._endGroup;
@@ -80,7 +80,7 @@ async function generarPDF(design) {
                     }
                 }
                 if (sw.HD) {
-                    ({ absY, indexPage, result } = printPDF(design.headerDetail, dataSet, page, absY, indexPage,tableStyle));
+                    ({ absY, indexPage, result } = printPDF(design.headerDetail, dataSet, page, absY, indexPage, tableStyle));
                     if (result === 'next') sw = configSw({ DET: true });
                     if (result === 'newPage') {
                         sw = configSw({ HP: true, HG: true, HD: true });
@@ -200,7 +200,6 @@ function numerateMarks(style, properties) {
         const x = alinear(properties.ml, 0, properties.sw, styleAlign, width);
         doc.setPage(pg);
         doc.text(footerText, x, y);
-        doc.text("\u25A1", 20, y);
     }
 
 }
@@ -210,8 +209,8 @@ function numerateMarks(style, properties) {
 
 
 
-function printPDF(template, dataSet, page, absY, indexPage,tableStyle) {
-    if(tableStyle)console.log(tableStyle.bgDark);
+function printPDF(template, dataSet, page, absY, indexPage, tableStyle) {
+    if (tableStyle) console.log(tableStyle.bgDark);
     if (template.length < 1) return { absY, indexPage, result: 'next' };
     layOut(template, dataSet, page, absY, indexPage);
     maxHeightRow(template);
@@ -260,16 +259,26 @@ function printPDF(template, dataSet, page, absY, indexPage,tableStyle) {
 
             lineY += item.lineH;
         });
-
-        if (item.siBorde || item.siBg) {
-            const fillBox = item.siBorde && item.siBg ? 'FD' : item.siBg ? 'F' : 'S';
+        if (!template[0]._bgTitle) {
+            if (item.siBorde || item.siBg) {
+                const fillBox = item.siBorde && item.siBg ? 'FD' : item.siBg ? 'F' : 'S';
+                addElementToJsonPDF('box', {
+                    x: rowX,
+                    y: rowY,
+                    wb: item.width,
+                    hb: item.height,
+                    fll: fillBox,
+                    cb: item.colorBg
+                }, indexPage);
+            }
+        }else{
             addElementToJsonPDF('box', {
                 x: rowX,
                 y: rowY,
                 wb: item.width,
                 hb: item.height,
-                fll: fillBox,
-                cb: item.colorBg
+                fll: 'FD',
+                cb: template[0]._bgTitle
             }, indexPage);
         }
         rowX += item.width;
@@ -499,7 +508,21 @@ function groupByField(arr, field) {
 }
 
 function addFields(arr, design) {
+    const tableStyle = design.pagina.tableStyle ? JSON.parse(design.pagina.tableStyle) : '';
     let setFx = [];
+    if (design.headerDetail) {
+        design.headerDetail[0]._bgTitle = tableStyle.bgTitle;
+        design.headerDetail[0]._txtTitle = tableStyle.txtTitle;
+    }
+    if (design.footerDetail) {
+        design.footerDetail[0]._bgTitle = tableStyle.bgTitle;
+        design.footerDetail[0]._txtTitle = tableStyle.txtTitle;
+    }
+    if (design.detail) {
+        design.detail[0]._bgDark = tableStyle.bgDark;
+        design.detail[0]._bgLight = tableStyle.bgLight;
+        design.detail[0]._txtCell = tableStyle.txtCell;
+    }
     design.footerDetail.forEach(campo => {
         if (campo.originControl) {
             if (campo.fxControl) {
@@ -515,6 +538,7 @@ function addFields(arr, design) {
         arr[group].forEach((item, index) => {
             totalCount++;
             subtc = `${index + 1} de ${registros}`
+            item['_par'] = index % 2 === 0;;
             item['_#'] = totalCount;
             item['_##'] = subtc;
             item['_startGroup'] = index == 0 ? true : false;
