@@ -95,7 +95,7 @@ document.getElementById("accordionDesign").addEventListener('click', async e => 
 })
 
 
-
+/*
 function processRole(role, section) {
     // Definir el ID del contenedor basado en la sección
     const containerId = `acc-${section}`;
@@ -134,10 +134,62 @@ function processRole(role, section) {
     }
 }
 
+*/
+
+function processRole(role, section) {
+    // Definir el ID del contenedor basado en la sección
+    const containerId = `acc-${section}`;
+    const sectionElement = document.getElementById(containerId);
+
+    if (!sectionElement) {
+        console.log(`No se encontró el contenedor para la sección: ${section}`);
+        return;
+    }
+
+    // Obtener el índice actual desde currentInput
+    const currentIndex = parseInt(currentInput.index, 10);
+
+    if (role === 'addSection') {
+        const inputs = sectionElement.querySelectorAll('input');
+        const index = currentIndex + 1; // Insertar debajo del input actual
+        console.log(`Insertando input debajo del índice: ${currentIndex}, en sección: ${section}`);
+
+        // Crear el nuevo input
+        renderInputs(containerId, index, section);
+
+        // Actualizar el array localDesign
+        if (!localDesign[section]) {
+            localDesign[section] = [];
+        }
+
+        // Insertar en el array en la posición correcta
+        if (localDesign[section]) {
+            localDesign[section].splice(index, 0, { ...defaults });
+        }
+
+    } else if (role === 'delSection') {
+        const inputs = sectionElement.querySelectorAll('input');
+        if (inputs.length > 0 && inputs[currentIndex]) {
+            const inputToRemove = inputs[currentIndex];
+            sectionElement.removeChild(inputToRemove); // Eliminar el input actual
+
+            // Actualizar el array localDesign eliminando el elemento correspondiente
+            if (localDesign[section]) {
+                localDesign[section].splice(currentIndex, 1);
+            }
+
+            console.log(`Eliminado input en sección: ${section}, índice: ${currentIndex}`);
+        } else {
+            console.log(`No se encontró input en el índice: ${currentIndex} para eliminar en la sección: ${section}`);
+        }
+    } else {
+        console.log(`Acción no válida: ${role}`);
+    }
+}
 
 
 
-
+/*
 function renderInputs(container, index, section, value = '') {
     const containerElement = document.getElementById(container);
     if (index === 0) {
@@ -154,32 +206,88 @@ function renderInputs(container, index, section, value = '') {
     input.value = value;
     containerElement.appendChild(input);
 }
+*/
 
+function renderInputs(container, index, section, value = '') {
+    const containerElement = document.getElementById(container);
+    
+    // Crear el nuevo input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control';
+    input.placeholder = '';
+    input.name = 'texto';
+    input.setAttribute('data-index', index);
+    input.setAttribute('data-section', section);
+    input.style.width = '100%';
+    input.value = value;
 
+    // Obtener todos los inputs actuales en el contenedor
+    const inputs = containerElement.querySelectorAll('input');
+    
+    if (inputs.length > 0 && index < inputs.length) {
+        // Insertar el input en la posición específica
+        const referenceNode = inputs[index];
+        containerElement.insertBefore(input, referenceNode);
+    } else {
+        // Si el índice es mayor o no hay inputs, añadirlo al final
+        containerElement.appendChild(input);
+    }
+
+    // Actualizar los índices de los inputs siguientes
+    actualizarIndices(containerElement);
+}
+
+function actualizarIndices(containerElement) {
+    // Actualiza el atributo data-index de cada input para reflejar su nueva posición en el DOM
+    const inputs = containerElement.querySelectorAll('input');
+    inputs.forEach((input, i) => {
+        input.setAttribute('data-index', i);
+    });
+}
 
 
 
 
 const formSection = document.getElementById('accordionDesign');
+
 formSection.addEventListener('focus', function (event) {
     const input = event.target;
+
+    // Quitar las clases de todos los inputs antes de agregarla al actual
+    const allInputs = formSection.querySelectorAll('input');
+    allInputs.forEach(el => {
+        el.classList.remove('bg-info', 'bg-opacity-10', 'border', 'border-info');
+    });
+
+    // Verificar si el input tiene los atributos data-section y data-index
     if (input.hasAttribute('data-section') && input.hasAttribute('data-index')) {
         currentInput = {
             section: input.getAttribute('data-section'),
             index: input.getAttribute('data-index'),
             fieldName: input.name
         }
+
+        // Agregar las clases de estilo solo al input que tiene el foco y cumple las condiciones
+        input.classList.add('bg-info', 'bg-opacity-10', 'border', 'border-info');
+
         toggleInputs({ bloquear: false });
-        console.log('seccion: ', currentInput.section, currentInput.index)
+        console.log('seccion: ', currentInput.section, currentInput.index);
+
     } else {
+        // Si el input no cumple las condiciones y el role no es 'property', bloquear inputs
         if (role != 'property') {
             currentInput.section = '';
             toggleInputs({ bloquear: true });
         }
     }
+
+    // Actualizar el título
     const titulo = updateTitle();
-    document.getElementById('title-properties').innerHTML = titulo
-}, true); // 'true' para que el evento se capture en la fase de captura
+    document.getElementById('title-properties').innerHTML = titulo;
+}, true);
+
+
 
 
 
@@ -398,7 +506,7 @@ async function openDesign() {
 }
 
 document.getElementById("btnVerpdf").addEventListener('click', async e => {
-    generarPDF(localDesign);
+    generarPDF();
 
 })
 
@@ -678,7 +786,7 @@ async function debugg(activate = false) {
         await refreshFilter('active');
         activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
         await openDesign();
-        document.getElementById("in-template").value ='200'
+        document.getElementById("in-template").value ='500'
         await updateTemplate();
 
 

@@ -2,7 +2,9 @@ let _escape = false, dataUnwind = [], keysAndTypes = []; originData = [], jsonPD
 let localDesign = { pagina: {} }, doc;
 
 
-async function generarPDF(design) {
+async function generarPDF() {
+    //const design =  Object.assign({}, localDesign);
+    const design = JSON.parse(JSON.stringify(localDesign));
     doc = new jsPDF({
         orientation: design.pagina.orientation,
         unit: 'pt',
@@ -26,12 +28,10 @@ async function generarPDF(design) {
         maxR: r2d(pageSize.getWidth() - mmToPt(design.pagina.mr), 2),
         maxY: r2d(pageSize.getHeight() - mmToPt(design.pagina.mt), 2),
     };
-    //console.log(page)
 
-    //printPattern(page.ml, page.colpt, page.mt, page.sh);
 
-    doc.text(5, 15, 'v1.007');
-    doc.rect(page.ml, page.mt, page.sw, page.sh);
+    //doc.text(5, 15, 'v1.007');
+    //doc.rect(page.ml, page.mt, page.sw, page.sh);
 
 
     originData = [...dataUnwind];
@@ -55,7 +55,6 @@ async function generarPDF(design) {
     let absY = page.mt;
     let sw = configSw({ HR: true, HP: true })
     const tableStyle = design.pagina.tableStyle ? JSON.parse(design.pagina.tableStyle) : '';
-    console.log('estilo de tabla:', tableStyle);
     Object.keys(originData).forEach((group, index) => {
         originData[group].forEach(dataSet => {
             const EOG = dataSet._endGroup;
@@ -88,7 +87,7 @@ async function generarPDF(design) {
                     }
                 }
                 if (sw.DET) {
-                    ({ absY, indexPage, result } = printPDF(design.detail, dataSet, page, absY, indexPage));
+                    ({ absY, indexPage, result } = printPDF(design.detail, dataSet, page, absY, indexPage, tableStyle));
                     if (result === 'next') sw = configSw({ DET: true });
                     if (result === 'newPage') {
                         sw = configSw({ HP: true, HG: true, HD: true, DET: true });
@@ -141,6 +140,7 @@ async function generarPDF(design) {
         pagina.box.forEach(caja => {
             if (!caja.fll) return;
             doc.setFillColor(caja.cb);
+            doc.setDrawColor(caja.cd);
             doc.rect(caja.x, caja.y, caja.wb, caja.hb, caja.fll);
         });
         pagina.text.forEach(texto => {
@@ -151,7 +151,7 @@ async function generarPDF(design) {
     })
 
 
-    numerateMarks(localDesign.pagina.pagination, page);
+    numerateMarks(design.pagina.pagination, page);
 
 
     const out = doc.output();
@@ -227,13 +227,13 @@ function printPDF(template, dataSet, page, absY, indexPage, tableStyle) {
     });
 
     if (rowY + totalHeight > (page.maxY * 1.02)) {       //desborde de pagina
-        console.warn('No se imprime', 'absy:', absY, 'page', indexPage);
         indexPage++;
         absY = page.mt;
         return { absY, indexPage, result: 'newPage' }
     }
 
-
+    const copyX = rowX, copyY = rowY;
+    let endX, endY;
     template.forEach((item, index) => {    //push campo texto y caja
         const paddingY = parseInt(item.paddingY);
         const paddingX = parseInt(item.paddingX);
@@ -248,18 +248,20 @@ function printPDF(template, dataSet, page, absY, indexPage, tableStyle) {
         item.lineas.forEach(linea => {
             const textWidth = r2d(doc.getTextWidth(linea), 2);
             const lineX = alinear(rowX, paddingX, item.width, align, textWidth);
-
+            let colorFont = item.colorFont;
+            if (template[0]._bgTitle) colorFont = template[0]._txtTitle;
+            if (template[0]._bgDark) colorFont = template[0]._txtCell;
             addElementToJsonPDF('text', {
                 x: lineX,
                 y: lineY,
                 sf: parseInt(item.sizeFont),
-                cf: item.colorFont,
+                cf: colorFont,
                 tx: linea
             }, indexPage);
 
             lineY += item.lineH;
         });
-        if (!template[0]._bgTitle) {
+        if (!template[0]._bgTitle && !template[0]._bgDark) {
             if (item.siBorde || item.siBg) {
                 const fillBox = item.siBorde && item.siBg ? 'FD' : item.siBg ? 'F' : 'S';
                 addElementToJsonPDF('box', {
@@ -268,22 +270,39 @@ function printPDF(template, dataSet, page, absY, indexPage, tableStyle) {
                     wb: item.width,
                     hb: item.height,
                     fll: fillBox,
-                    cb: item.colorBg
+                    cb: item.colorBg,
+                    cd: '#000000'
                 }, indexPage);
             }
-        }else{
-            addElementToJsonPDF('box', {
-                x: rowX,
-                y: rowY,
-                wb: item.width,
-                hb: item.height,
-                fll: 'FD',
-                cb: template[0]._bgTitle
-            }, indexPage);
         }
+        endX = rowX - copyX + item.width;
+        endY = rowY - copyY + item.height;
         rowX += item.width;
         carry = item.height;
     })
+
+    if (template[0]._bgTitle) {         //es encabezado detalle
+        addElementToJsonPDF('box', {
+            x: copyX,
+            y: copyY,
+            wb: endX,
+            hb: endY,
+            fll: 'FD',
+            cb: template[0]._bgTitle,
+            cd: template[0]._bgTitle
+        }, indexPage);
+    }
+    if (template[0]._bgDark) {              //es detalle
+        addElementToJsonPDF('box', {
+            x: copyX,
+            y: copyY,
+            wb: endX,
+            hb: endY,
+            fll: 'FD',
+            cb: !dataSet._par ? template[0]._bgLight : template[0]._bgDark,
+            cd: tableStyle.bgTitle
+        }, indexPage);
+    }
 
     if (forcedNewPage) {       //desborde de pagina forzado
         console.warn('new page forced', 'absy:', absY, 'page', indexPage);
@@ -291,6 +310,7 @@ function printPDF(template, dataSet, page, absY, indexPage, tableStyle) {
         rowY = page.mt;
         carry = 0;
     }
+
     return { absY: rowY + carry, indexPage, result: 'next' }
 
 }
@@ -363,7 +383,6 @@ function maxHeightRow(items) {
 }
 
 function newPage() {
-    //console.log('codigo para una nueva pagina');
     doc.addPage();
 }
 
@@ -399,8 +418,6 @@ function r2d(num, decimals) {
 }
 
 function unwind(data) {
-
-    console.log(data)
     dataUnwind = [], keysAndTypes = [];
     data.forEach(documento => {
         const jsonData = exploreObject(documento);
@@ -413,10 +430,7 @@ function unwind(data) {
         res = consolidar(jsonData, padre, indexPadre);
         dataUnwind = [...dataUnwind, ...res];
     })
-
-    console.log(dataUnwind);
     keysAndTypes = getKeysAndTypes(dataUnwind);
-
 }
 
 function exploreObject(obj, idPadre, parentKey = '', accumulator = []) {
@@ -510,7 +524,7 @@ function groupByField(arr, field) {
 function addFields(arr, design) {
     const tableStyle = design.pagina.tableStyle ? JSON.parse(design.pagina.tableStyle) : '';
     let setFx = [];
-    if (design.headerDetail) {
+    /*if (design.headerDetail) {
         design.headerDetail[0]._bgTitle = tableStyle.bgTitle;
         design.headerDetail[0]._txtTitle = tableStyle.txtTitle;
     }
@@ -522,7 +536,24 @@ function addFields(arr, design) {
         design.detail[0]._bgDark = tableStyle.bgDark;
         design.detail[0]._bgLight = tableStyle.bgLight;
         design.detail[0]._txtCell = tableStyle.txtCell;
+    }*/
+
+    if (design?.headerDetail?.length > 0) {
+        design.headerDetail[0]._bgTitle = tableStyle.bgTitle;
+        design.headerDetail[0]._txtTitle = tableStyle.txtTitle;
     }
+
+    if (design?.footerDetail?.length > 0) {
+        design.footerDetail[0]._bgTitle = tableStyle.bgTitle;
+        design.footerDetail[0]._txtTitle = tableStyle.txtTitle;
+    }
+
+    if (design?.detail?.length > 0) {
+        design.detail[0]._bgDark = tableStyle.bgDark;
+        design.detail[0]._bgLight = tableStyle.bgLight;
+        design.detail[0]._txtCell = tableStyle.txtCell;
+    }
+
     design.footerDetail.forEach(campo => {
         if (campo.originControl) {
             if (campo.fxControl) {
@@ -530,7 +561,7 @@ function addFields(arr, design) {
             }
         }
     })
-    console.log(setFx);
+
     let arrayReport = [];
     let totalCount = 0;
     Object.keys(arr).forEach((group, index) => {
@@ -649,7 +680,8 @@ function addElementToJsonPDF(type, properties, pageIndex) {
             wb: properties.wb,
             hb: properties.hb,
             fll: properties.fll,
-            cb: properties.cb
+            cb: properties.cb,
+            cd: properties.cd
         });
     }
 }
@@ -663,7 +695,6 @@ function printPattern(marginL, wCol, marginT, spaceH) {
     for (var filas = 0; filas < 12; filas++) {
         x1 = marginL + (filas * wCol)
         x2 = x1;
-        console.log(x1, y1, x2, y2)
         doc.line(x1, y1, x2, y2);
     }
 }
