@@ -1,11 +1,19 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
-
+let templates = [];
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');
 
     if (e.target.classList.contains('btn-hide')) {
         document.getElementById('acc-item' + i).style.display = 'none';
+    }
+    if (e.target.classList.contains('print')) {
+        itemSelected.idDocument = localOrders[i]._id;
+        const dataPrint = [];
+        dataPrint.push(JSON.parse(JSON.stringify(localOrders[i])));
+        console.log('dataprint',dataPrint);
+        localDesign = localOrders[i].siOrder?templates[1]:templates[0];
+        generarPDF(dataPrint)
     }
     if (e.target.classList.contains('clip')) {
         itemSelected.idDocument = localOrders[i]._id;
@@ -621,8 +629,41 @@ async function init() {
         return;
     }
     currentKeys = data;
-    flags.accSndEdit = 'edit'
+    flags.accSndEdit = 'edit';
+    loadTemplates();
 }
+
+async function loadTemplates() {
+    const designs = [100, 200];
+    templates=[];
+    for (const model of designs) {
+        try {
+            const res = await fetch('/domain/templates-list', {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    "idTemplate": model, // Usar el modelo actual
+                    fx: 'content'
+                })
+            });
+
+            const data = await res.json();
+            console.log(data);
+            if (data.fail) {
+                toastr.error(data.message);
+                return; // Salir en caso de error
+            }
+
+            templates.push(data[0]); // Añadir el template en el orden correcto
+        } catch (error) {
+            toastr.error('Error al cargar el template');
+            console.error('Error fetching template:', error);
+        }
+    }
+}
+
 
 function paintCard(itemCard, indice) {
     const order = itemCard;
@@ -758,6 +799,7 @@ async function renderCards() {
                         <div class="card-body">
                             <span>Enviado el : ${created}, por: ${order.sellerName}</span>
                             <button id="fac${i}"class="btn btn-primary mx-2 clip position-relative" idcard=${i} href="#" >Facturar
+                            <button id="print${i}"class="btn btn-primary mx-2 print position-relative" idcard=${i} href="#" >Imprimir
                             <span id="end${i}" class="position-absolute top-0 start-200 translate-middle badge rounded-pill bg-danger" style = "display:none" >Finalizado!</span></button>
                             <button id="btnHide${i}"class="btn btn-primary mx-2 btn-hide position-relative" idcard=${i} href="#"  style = display:none>Ocultar</button>
                             <table class="table table-hover table-bordered">

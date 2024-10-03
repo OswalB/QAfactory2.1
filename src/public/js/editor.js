@@ -506,7 +506,7 @@ async function openDesign() {
 }
 
 document.getElementById("btnVerpdf").addEventListener('click', async e => {
-    generarPDF();
+    generarPDF(currentContent);
 
 })
 
@@ -875,7 +875,7 @@ async function renderTable() {
     })
 
     if (!workFilter.PDFmode) return;
-    unwind(currentContent)
+    //unwind(currentContent)
     renderListDesign();
 }
 

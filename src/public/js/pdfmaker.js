@@ -2,8 +2,9 @@ let _escape = false, dataUnwind = [], keysAndTypes = []; originData = [], jsonPD
 let localDesign = { pagina: {} }, doc;
 
 
-async function generarPDF() {
-    //const design =  Object.assign({}, localDesign);
+async function generarPDF(dataToPdf) {
+    unwind(dataToPdf)
+
     const design = JSON.parse(JSON.stringify(localDesign));
     doc = new jsPDF({
         orientation: design.pagina.orientation,
