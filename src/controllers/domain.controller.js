@@ -23,7 +23,9 @@ const { response } = require('express');
 
 apiCtrl.despachos = async (req, res, next) => {
     try {
+        
         const data = req.body, user = req.user;
+        console.log('fx:',data.fx)
         let response;
         data.modelo = 'Order';
         if (data.fx === 'l') {
@@ -126,7 +128,7 @@ apiCtrl.despachos = async (req, res, next) => {
                         }
                     }, {
                         '$project': {
-                            'orderItem.historyDisp': 0,
+                            
                             'orderItem.product': 0
                         }
                     }
@@ -475,7 +477,9 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                     fechaHistory: data.fechaHistory,
                     loteVenta: data.loteVenta,
                     qtyHistory: data.qtyHistory,
-                    dspHistory: user.alias
+                    dspHistory: user.alias,
+                    avResponse:data.avResponse || '-',
+                    package: data.package
                 }
             },
             $inc: { 'TotalDisp': data.qtyHistory, 'orderItem.$.dispatch': data.qtyHistory }
@@ -512,7 +516,7 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                 }
             },
             { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }
+            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}
         ]
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
         const resultado = await contenido(query);
@@ -574,7 +578,8 @@ apiCtrl.updateHistoryDisp = async (req, res, next) => {
                     $set: {
                         'orderItem.$[outer].historyDisp.$[inner].dspHistory': actDsp,
                         'orderItem.$[outer].historyDisp.$[inner].fechaHistory': fechaActual,
-                        'orderItem.$[outer].historyDisp.$[inner].loteVenta': obj[i].loteVenta
+                        'orderItem.$[outer].historyDisp.$[inner].loteVenta': obj[i].loteVenta,
+                        'orderItem.$[outer].historyDisp.$[inner].package': obj[i].package
                     }
                 },
                 {

@@ -777,16 +777,16 @@ async function debugg(activate = false) {
 
         console.warn('RECUERDA DESACTIVAR debugg()');
         await loadDocuments('Order', 'debugg orders')
-        document.getElementById('in-filterBy').value = 'state';
-        document.getElementById('in-min').value = '0';
-        document.getElementById('in-max').value = '0';
+        document.getElementById('in-filterBy').value = 'consecutivo';
+        document.getElementById('in-min').value = '1006';
+        document.getElementById('in-max').value = '10060';
 
         await refreshFilter('active');
 
         await refreshFilter('active');
         activeButtons({ btnSel: true, btnV: false, btnE: false, btnG: false, frmD: true });
         await openDesign();
-        document.getElementById("in-template").value ='500'
+        document.getElementById("in-template").value ='201'
         await updateTemplate();
 
 

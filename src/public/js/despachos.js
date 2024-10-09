@@ -1,8 +1,10 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
 let templates = [];
+const configPack = {};
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');
+    console.log(i)
 
     if (e.target.classList.contains('btn-hide')) {
         document.getElementById('acc-item' + i).style.display = 'none';
@@ -11,8 +13,8 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
         itemSelected.idDocument = localOrders[i]._id;
         const dataPrint = [];
         dataPrint.push(JSON.parse(JSON.stringify(localOrders[i])));
-        console.log('dataprint',dataPrint);
-        localDesign = localOrders[i].siOrder?templates[1]:templates[0];
+        console.log('dataprint', dataPrint);
+        localDesign = localOrders[i].siOrder ? templates[1] : templates[0];
         generarPDF(dataPrint)
     }
     if (e.target.classList.contains('clip')) {
@@ -154,6 +156,7 @@ document.getElementById('check_estado').addEventListener('click', async e => {
 });
 
 document.getElementById('cardsContainer').addEventListener('change', async e => {
+
     flags.siChangeH = true;
     itemSelected.idInput = e.target.getAttribute('id');
     if (itemSelected.idInput) {
@@ -173,7 +176,7 @@ document.getElementById('cardsContainer').addEventListener('change', async e => 
 document.getElementById('cardsContainer').addEventListener('click', async e => {
     let role = e.target.getAttribute('_role');
     if (role === 'hist') {
-        
+
         itemSelected.idDocument = e.target.getAttribute('_idDoc');
         itemSelected.idItem = e.target.getAttribute('_idItem');
         itemSelected.name = document.getElementById(`lbl${itemSelected.idItem}`).innerHTML;
@@ -185,6 +188,7 @@ document.getElementById('cardsContainer').addEventListener('focusin', async e =>
 
     const idDoc = e.target.getAttribute('_idOrder');
     const idItem = e.target.getAttribute('_idItem');
+    console.log(idDoc, idItem);
     if (idDoc && idItem && !flags.siChangeH) {
         workFilter.oneId = idDoc;
         await qerryInputs();
@@ -195,6 +199,11 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
     if (flags.siChangeH) {
         let match = false, orderItem = {};
         const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
+        const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
+        itemSelected.currPackage = '';
+        configPackage(index);
+        configBotonesPack();
+        //console.log(encaje, mayor)
         if (documentO) {
             orderItem = documentO.orderItem.find(item => item._id === itemSelected.idItem);
             match = orderItem ? true : false;
@@ -210,7 +219,9 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
         itemSelected.code = orderItem.code;
         lotesList = await getLotes(itemSelected.code);
         flags.siChangeH = false;
+        flags.historyModalHide = false;
         renderLotes();
+        //console.log(localOrders[])
     }
 });
 
@@ -288,7 +299,7 @@ document.getElementById('lotesFooter').addEventListener('click', async e => {
 
 document.getElementById('lotesHistoryModal').addEventListener('click', async e => {
     itemSelected.loteEditHistory = e.target.getAttribute('_lote');
-
+    console.log('clicklista reemplazar code', itemSelected.loteEditHistory)
     if (itemSelected.loteEditHistory) {
         const td = document.getElementById(`tdh${itemSelected.index}`);
         itemSelected.historyDisp[itemSelected.index].loteVenta = itemSelected.loteEditHistory;
@@ -303,10 +314,47 @@ document.getElementById('lotesHistoryModal').addEventListener('hide.bs.modal', a
 });
 
 document.getElementById('lotesListModal').addEventListener('hide.bs.modal', async e => {
+    if (flags.historyModalHide) {     //esta en modo editor
+        document.getElementById('historyModal').style.display = 'block';
+        const loteSelected = itemSelected.lotes ? itemSelected.lotes[0].lote : '';
+        console.log('pack:',itemSelected.package, 'lote:',loteSelected);
+        itemSelected.loteEditHistory = loteSelected;
+        console.log('clicklista reemplazar code', itemSelected.loteEditHistory)
+        if (itemSelected.loteEditHistory) {
+            document.getElementById(`tdp${itemSelected.index}`).innerHTML = itemSelected.package;
+            const td = document.getElementById(`tdh${itemSelected.index}`);
+            itemSelected.historyDisp[itemSelected.index].loteVenta = itemSelected.loteEditHistory;
+            itemSelected.historyDisp[itemSelected.index].package = itemSelected.package;
+            cambiosEmbalaje(itemSelected.index)
+            td.innerHTML = itemSelected.loteEditHistory;
+        }
+
+        return;
+    }
+    // 
+
+    /*const modal = document.getElementById('historyModal');
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        console.log('El elemento no existe en el DOM');
+    }
+
+        const modalElement = document.getElementById('historyModal');
+        if (modalElement) {
+            const myModal = new bootstrap.Modal(modalElement);
+            myModal.show();
+        } else {
+            console.log('El elemento no existe en el DOM');
+        }    */
+
+
     if (flags.actionModal === 'exit') {
         document.getElementById(`in_${itemSelected.idItem}`).placeholder = itemSelected.oldValue;
         return
     }
+
+
     itemToSend = {};
     const date = new Date();
     itemToSend.fechaHistory = date.toISOString();
@@ -314,6 +362,8 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
     itemToSend.qtyHistory = itemSelected.value;
     itemToSend.idDocument = itemSelected.idDocument;
     itemToSend.idItem = itemSelected.idItem;
+    itemToSend.package = itemSelected.package;
+    itemToSend.avResponse = itemSelected.avResponse;
     oneOrder = {};
     let localResponse = {};
     const url = '/domain/despachos/update';
@@ -347,8 +397,15 @@ document.getElementById('bodyHistory').addEventListener('click', async e => {
     const _role = e.target.getAttribute('_role');
     itemSelected.index = e.target.getAttribute('_index');
     if (flags.btnSndEdit === 'edit' && _role === 'lote') {
+        itemSelected.currPackage = parseInt(e.target.getAttribute('_pack'));
         document.getElementById('historyModal').style.display = 'none';
-        renderLotesHist();
+        flags.historyModalHide = true;
+        //renderLotesHist();
+        //const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
+        const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
+        configPackage(index);
+        configBotonesPack(true);
+        renderLotes();
     }
 })
 
@@ -489,7 +546,7 @@ async function getHistory() {
     const deshabilitar = currentDoc.state === 1;
     document.getElementById('btnAsignar').disabled = deshabilitar;
     const url = '/domain/despachos/history';
-    let response = await fetch( url , {
+    let response = await fetch(url, {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
         body: JSON.stringify({ "idDoc": itemSelected.idDocument, "idItem": itemSelected.idItem })
@@ -512,7 +569,7 @@ async function getHistory() {
             <thead>
                     <tr>
                     <th scope="col">Fecha</th>
-                    <th scope="col">Oper.</th>
+                    <th scope="col">Op. / Caja</th>
                     <th scope="col">Lote</th>
                     <th scope="col">Cant.</th>
                     <th scope="col">Ajuste</th>
@@ -545,8 +602,8 @@ async function getHistory() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
                     <td>${fechaTxt}</td>
-                    <td>${fila.dspHistory}</td>
-                    <td _role="lote" id=tdh${index} _index=${index}>${fila.loteVenta}</td>
+                    <td _pack = ${fila.package} _role="lote" id=tdp${index} _index=${index}>${fila.dspHistory} / ${fila.package}</td>
+                    <td _pack = ${fila.package} _role="lote" id=tdh${index} _index=${index}>${fila.loteVenta}</td>
                     <td  _index=${index}>${fila.qtyHistory}</td>
                     <td _role="adj" id=tda${index} _index=${index}>
                         <input _role="adj" _index=${index} id=inadj${index} class="form-control form-control-sm in-adj" disabled=true type="number" value=0>
@@ -635,7 +692,7 @@ async function init() {
 
 async function loadTemplates() {
     const designs = [100, 200];
-    templates=[];
+    templates = [];
     for (const model of designs) {
         try {
             const res = await fetch('/domain/templates-list', {
@@ -650,7 +707,6 @@ async function loadTemplates() {
             });
 
             const data = await res.json();
-            console.log(data);
             if (data.fail) {
                 toastr.error(data.message);
                 return; // Salir en caso de error
@@ -712,6 +768,8 @@ function paintCard(itemCard, indice) {
 function paintLotesButton() {
     let listChk = document.getElementsByClassName('checkArchivar');
     let countChecked = 0, values = [];
+    let msg = '', errors = 0;
+    const modoPack = configPack.mayor > 0;
     Array.from(listChk).forEach(item => {
         if (item.checked) {
             countChecked++;
@@ -721,7 +779,9 @@ function paintLotesButton() {
     const del = document.getElementById('btnDeleteLote');
     const sel = document.getElementById('btnSelectLote');
 
-    if (countChecked < 1) {
+    if (countChecked < 1 && !flags.historyModalHide) {
+        msg = 'No ha seleccionado un Lote; ';
+        errors++;
         del.disabled = true;
         sel.disabled = true;
     } else {
@@ -734,6 +794,23 @@ function paintLotesButton() {
             sel.disabled = false;
         }
     }
+    if (modoPack && itemSelected.package < 0) {
+        sel.disabled = true;
+        msg += 'No ha seleccionado una Caja';
+        errors++;
+    }
+    const alerta = document.getElementById('alertBotones');
+    alerta.classList.remove('alert-success', 'alert-danger');
+    if (errors > 0) {
+        alerta.innerHTML = msg;
+        alerta.classList.add('alert-danger');
+    } else {
+        alerta.innerHTML = 'O.K.';
+        alerta.classList.add('alert-success');
+    }
+
+
+
     return values;
 }
 
@@ -764,15 +841,15 @@ async function renderCards() {
     for (let order of localOrders) {
         const delivery = fechaFormated(new Date(order.delivery));
         let nota = ` Entrega: ${delivery}`;
-        nota +=  order.notes?` - ${order.notes}`:'';
-        nota +=  order.id_compras ? ` O.C.#  ${order.id_compras}` : '';
+        nota += order.notes ? ` - ${order.notes}` : '';
+        nota += order.id_compras ? ` O.C.#  ${order.id_compras}` : '';
         const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
         const txtavr = avr > 100 ? 'Alert! +100' : avr;
         const created = fechaFormated(new Date(order.createdAt));
-        const numeracion = order.siOrder?'Pedido # ':`AVERIAS #`;
+        const numeracion = order.siOrder ? 'Pedido # ' : `AVERIAS #`;
         const estado = order.notes ? 'bg-warning' : '';
         const horasentrega = hoursAgo(order.delivery);
-        const stateAveria = order.siOrder? '':'bg-dark text-light'
+        const stateAveria = order.siOrder ? '' : 'bg-dark text-light'
         const divCard = document.createElement('div');
         divCard.setAttribute('class', 'accordion-item ');
         divCard.setAttribute('id', 'acc-item' + i);
@@ -833,7 +910,7 @@ async function renderCards() {
 
 async function renderLotes() {
     if (lotesList.length === 0) return false;
-    if (lotesList.length === 1) {
+    if (lotesList.length === 1000) {      //borrar  eta seccion ya no debe enviar automaticamente =1
         itemSelected.lote = lotesList[0].loteOut;
         itemToSend = {};
         const date = new Date();
@@ -863,7 +940,9 @@ async function renderLotes() {
                 console.error('Error en endpoint1:', error);
             });
     } else {
+
         $('#lotesListModal').modal('show');
+        document.getElementById('modalLabelLotes').innerHTML = `Lotes para ${itemSelected.name}`;
         const container = document.getElementById('lotesAvList');
         container.innerHTML = '';
         lotesList.forEach(item => {
@@ -1072,7 +1151,141 @@ async function updateHistory() {
         toastr.error(data.message);
         return;
     }
-    
+
     oneOrder = data;
     sendItem();
+}
+
+// * * * * * * * * * * * * * *   funciones nueva encajado:
+
+document.getElementById("bodyArchivar").addEventListener('click', async e => {
+    const keyV = {};
+    keyV.value = e.target.getAttribute('value');
+    keyV.role = e.target.getAttribute('roleK');
+    keyV._id = e.target.getAttribute('_id');
+    keyBoardPack(keyV);
+})
+
+function keyBoardPack(keyV) {
+    if (keyV.role === 'number') {
+        console.log(keyV.value);
+        itemSelected.package = parseInt(keyV.value);
+        for (let i = 0; i <= 8; i++) {
+            const boton = document.getElementById(`btn${i}`);
+            boton.classList.remove('bg-success', 'bg-secondary');
+            if (parseInt(keyV._id) == i) {
+                boton.classList.add('bg-success');
+            }
+            paintLotesButton();
+        }
+    }
+    if (keyV.role === 'addPack') {
+        configPack.mayor++;
+        configBotonesPack()
+
+    } if (keyV.role === 'nextPack') {
+        configPack.cntPagina++;
+        configPack.curPagina = configPack.cntPagina % configPack.maxPagina;
+        configBotonesPack()
+    }
+
+}
+
+// Cerrar el modal cuando se hace clic fuera de él
+window.onclick = function (event) {
+    const modal = document.getElementById('modal');
+    if (event.target == modal) {
+        modal.classList.remove('show');
+    }
+};
+
+function configBotonesPack(editando = false) {
+    configPack.maxPagina = parseInt(configPack.mayor / 8) + 1;
+    const cero = document.getElementById('btn0');
+    cero.innerHTML = 0;
+    cero.classList.remove('bg-success', 'bg-secondary');
+    if (configPack.mayor < 1 && !editando) {
+        cero.classList.add('bg-success');
+    }
+    if (editando) {
+        //configPack.cntPagina = itemSelected.currPackage;
+        
+        //configPack.curPagina = configPack.cntPagina % configPack.maxPagina;
+    }
+    if (itemSelected.currPackage == 0) {
+        cero.classList.add('bg-success');
+
+    }
+    for (let i = 1; i <= 8; i++) {
+        const boton = document.getElementById(`btn${i}`);
+        boton.classList.remove('bg-success', 'bg-secondary');
+        const numR = i + (configPack.curPagina * 8);
+        
+        if (numR == itemSelected.currPackage) {
+            boton.classList.add('bg-success');
+
+        }
+
+        boton.innerHTML = numR;
+        boton.disabled = numR > configPack.mayor;
+        boton.value = numR;
+    }
+    if (configPack.maxPagina - configPack.curPagina > 1) {
+        //configPack.cntPagina++;
+        configPack.curPagina++;
+    }
+};
+
+function configPackage(index) {
+    configPack.index = index;
+    configPack.cntPagina = 0;
+
+    const documentO = localOrders[configPack.index];
+    const encaje = itemsPorCaja(documentO.orderItem);
+    configPack.mayor = packageMayor(encaje);
+    if(flags.historyModalHide){
+        itemSelected.package = itemSelected.currPackage;
+        configPack.curPagina = itemSelected.package == 0?0:parseInt((itemSelected.package-1)/8)
+    }else{
+        itemSelected.package = configPack.mayor > 0 ? -1 : 0;
+        configPack.curPagina = 0;
+    }
+    
+    
+}
+
+
+function itemsPorCaja(orderI) {
+    const packageCount = {};
+    orderI.forEach(item => {
+        item.historyDisp.forEach(history => {
+            const packageNum = history.package;
+            packageCount[packageNum] = (packageCount[packageNum] || 0) + 1;
+        });
+    });
+
+    const sortedPackageCountArray = Object.entries(packageCount)
+        .sort((a, b) => b[1] - a[1])   // Ordenar por cantidad (count) descendente
+        .map(([pkg, count]) => ({ [pkg]: count }));  // Convertir a objetos individuales
+
+    return sortedPackageCountArray;
+}
+
+function packageMayor(arr) {
+    let mayorPackage = null;
+    let mayorCount = -1;
+
+    arr.forEach(obj => {
+        const [pkg, count] = Object.entries(obj)[0]; // Extraer el par package, count
+        const packageNumber = Number(pkg);
+        const valPkg = parseInt(pkg);
+        if (!isNaN(packageNumber) && packageNumber >= 0) {
+            if (valPkg > mayorCount) {
+                mayorCount = valPkg;
+                //mayorPackage = packageNumber;
+            }
+        }
+    });
+
+    return mayorCount;
 }

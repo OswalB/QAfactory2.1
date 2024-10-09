@@ -324,8 +324,9 @@ function configSw({ HR = false, HP = false, HG = false, HD = false, DET = false,
 
 function layOut(template, dataSet, page, absY, indexPage) {
     let sumW = 0, filas = 0, startRow = true;
-
+    
     template.forEach(textControl => {
+        const originalText = textControl.texto;
         const paddingX = parseInt(textControl.paddingX);
         const paddingY = parseInt(textControl.paddingY);
         const fontSize = parseInt(textControl.sizeFont);
@@ -343,24 +344,26 @@ function layOut(template, dataSet, page, absY, indexPage) {
         textControl.sw = textControl.width - paddingX - paddingX;
         doc.setFontSize(fontSize);
 
-        //let testTexto ='';
         const fx = textControl.fxControl ? textControl.fxControl : false;
         const origin = textControl.originControl ? textControl.originControl : false;
+        let txtCalculated = '';
         if (fx && origin) {           //hay formulas
-            textControl.texto = dataSet[`__${fx}_${origin}`];
+            txtCalculated = dataSet[`__${fx}_${origin}`];
         } else if (origin) {
-            textControl.texto = dataSet[textControl.originControl] || '';
+            txtCalculated = dataSet[textControl.originControl] || '';
         } else {
             textControl.texto = textControl.texto || '';
         }
         if (textControl.formatControl) {
+            txtCalculated = formatearDato(txtCalculated, textControl.formatControl);
             textControl.texto = formatearDato(textControl.texto, textControl.formatControl);
         }
+        textControl.texto =`${textControl.texto}${txtCalculated}`
         textControl.lineas = doc.splitTextToSize(String(textControl.texto), textControl.sw);
         textControl.lineH = r2d(fontSize, 2);
         const newH = (textControl.lineas.length * textControl.lineH) + paddingY + r2d(fontSize * 0.25, 2);
         textControl.height = newH > height ? newH : height;
-
+        textControl.texto=originalText;
     });
 
 
@@ -500,6 +503,7 @@ function getKeysAndTypes(arr) {
 
     keysAndTypes = ordenarPorCampo(keysAndTypes, 'campo', true);
     keysAndTypes.push(
+        { campo: '_cg', type: 'number' },
         { campo: '_#', type: 'number' },
         { campo: '_##', type: 'string' },
     );
@@ -524,20 +528,9 @@ function groupByField(arr, field) {
 
 function addFields(arr, design) {
     const tableStyle = design.pagina.tableStyle ? JSON.parse(design.pagina.tableStyle) : '';
+    const cg = Object.keys(arr).length
     let setFx = [];
-    /*if (design.headerDetail) {
-        design.headerDetail[0]._bgTitle = tableStyle.bgTitle;
-        design.headerDetail[0]._txtTitle = tableStyle.txtTitle;
-    }
-    if (design.footerDetail) {
-        design.footerDetail[0]._bgTitle = tableStyle.bgTitle;
-        design.footerDetail[0]._txtTitle = tableStyle.txtTitle;
-    }
-    if (design.detail) {
-        design.detail[0]._bgDark = tableStyle.bgDark;
-        design.detail[0]._bgLight = tableStyle.bgLight;
-        design.detail[0]._txtCell = tableStyle.txtCell;
-    }*/
+    
 
     if (design?.headerDetail?.length > 0) {
         design.headerDetail[0]._bgTitle = tableStyle.bgTitle;
@@ -573,6 +566,7 @@ function addFields(arr, design) {
             item['_par'] = index % 2 === 0;;
             item['_#'] = totalCount;
             item['_##'] = subtc;
+            item['_cg'] = cg;
             item['_startGroup'] = index == 0 ? true : false;
             item['_endGroup'] = (index + 1) == registros ? true : false;
             if ((index + 1) == registros) {

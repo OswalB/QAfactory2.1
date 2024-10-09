@@ -207,3 +207,63 @@ footer {
     height:80vh ; /* Altura fija para permitir el scroll */
     overflow-y: auto; /* Desplazamiento vertical */
 }
+
+/*  nuevas funciones cajas*/
+
+/* Estilos para el modal 
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }*/
+  
+  /* Estilo de la matriz 3x3 */
+  .grid-3x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* Estilo de la matriz 2x2 */
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  /* Estilo para los botones */
+  .btnm {
+    padding: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #f2f2f2;
+  }
+  
+  .btnm:hover {
+    background-color: #ddd;
+  }
+  
+  /* Mostrar el modal cuando está activo 
+  .modal.show {
+    display: block;
+  }*/
+  

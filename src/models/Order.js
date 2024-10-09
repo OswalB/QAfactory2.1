@@ -102,6 +102,13 @@ const OrderSchema = new Schema({
             },
             loteVenta:{
                 type: 'string'
+            },
+            avResponse:{
+                type: 'string'
+            },
+            package:{
+                type: 'number',
+                default: 0
             }
         }]
     }]

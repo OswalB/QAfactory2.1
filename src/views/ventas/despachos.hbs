@@ -1,4 +1,3 @@
-
 <!-- Modal history -->
 <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable" id="headerVista">
@@ -18,10 +17,12 @@
 
 <div id="seccAlert" class="alert alert-danger" role="alert" style="display: none;">
   <h4 class="alert-heading">Atención!</h4>
-  Hay un problema con la conección, revise el item: <span id="itemToCheck" class="item-highlight"></span><br><a id="itemAlert" href="#" class="alert-link">De click aquí</a> para Continuar...
+  Hay un problema con la conección, revise el item: <span id="itemToCheck" class="item-highlight"></span><br><a
+    id="itemAlert" href="#" class="alert-link">De click aquí</a> para Continuar...
 </div>
-<!-- modal lotes history-->
-<div  class="modal fade" id="lotesHistoryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<!-- modal lotes history borrar *******************-->
+<div class="modal fade" id="lotesHistoryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -36,45 +37,79 @@
 </div>
 
 <!-- modal lotes list-->
-<div  class="modal fade" id="lotesListModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="lotesListModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalLabel">lotes disponibles:</h5>
+        <h5 class="modal-title" id="modalLabelLotes"></h5>
       </div>
       <div id="bodyArchivar" class="modal-body">
-        <p>* Seleccione los lotes que se hayan agotado y luego preione "aplicar"</p>
-        <p>* Click en el lote que desea asignar</p>
-        
         <ul id="lotesAvList" class="list-group">
-
         </ul>
+        <!-- Matriz 3x3 -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel">Empaque:</h5>
+        </div>
+
+        <div class="grid-3x3">
+          <button class="btnm" roleK="number" _id = "0" value=0 id="btn0"></button>
+          <button class="btnm" roleK="number" _id = "1" id="btn1"></button>
+          <button class="btnm" roleK="number" _id = "2" id="btn2"></button>
+          <button class="btnm" roleK="number" _id = "3" id="btn3"></button>
+          <button class="btnm" roleK="number" _id = "4" id="btn4"></button>
+          <button class="btnm" roleK="number" _id = "5" id="btn5"></button>
+          <button class="btnm" roleK="number" _id = "6" id="btn6"></button>
+          <button class="btnm" roleK="number" _id = "7" id="btn7"></button>
+          <button class="btnm" roleK="number" _id = "8" id="btn8"></button>
+
+        </div>
+
+        <!-- Matriz 2x2 debajo -->
+        <div class="grid-2x2">
+          <button class="btnm" roleK="addPack" id="addBtn">Add</button>
+
+
+          <button class="btnm" roleK="nextPack" id="nextBtn">Next</button>
+        </div>
+
+
+
+
       </div>
+      <div id="alertBotones" class="alert alert-success" role="alert">
+          
+        </div>
       <div id="lotesFooter" class="modal-footer">
-        <button _acc="delete" id="btnDeleteLote" type="button" class="btn btn-danger" disabled=""><i class="fa fa-ban fa-lg" aria-hidden="true"></i> Eliminar</button>
-        <button _acc="exit" id="btnExitL" type="button" class="btn btn-secondary"  ><i class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cancelar</button>
-        <button _acc="select" id="btnSelectLote" type="button" class="btn btn-primary"  disabled=""><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Asignar</button>
+        
+        <button _acc="delete" id="btnDeleteLote" type="button" class="btn btn-danger" disabled=""><i
+            class="fa fa-ban fa-lg" aria-hidden="true"></i> Eliminar</button>
+        <button _acc="exit" id="btnExitL" type="button" class="btn btn-secondary"><i class="fa fa-sign-out2 fa-lg"
+            aria-hidden="true"></i> Cancelar</button>
+        <button _acc="select" id="btnSelectLote" type="button" class="btn btn-primary" disabled=""><i
+            class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Asignar</button>
       </div>
     </div>
   </div>
 </div>
 <!-- modal embodegamiento-->
-<div  class="modal fade" id="embodegarModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="embodegarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalLabel">Embodegar:</h5>
       </div>
       <div id="bodyEmbodegar" class="modal-body">
-        
-        
+
+
         <ul id="embodegarList" class="list-group">
 
         </ul>
       </div>
       <div class="modal-footer">
-        <button id="btnSaveBodega" type="button" class="btn btn-primary"><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i><label id="lblEmbodegar"></label></button>
-        <button id="btnExitE" type="button" class="btn btn-secondary"  data-bs-dismiss="modal" ><i class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cerrar</button>
+        <button id="btnSaveBodega" type="button" class="btn btn-primary"><i class="fa fa-sign-out fa-lg"
+            aria-hidden="true"></i><label id="lblEmbodegar"></label></button>
+        <button id="btnExitE" type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+            class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cerrar</button>
       </div>
     </div>
   </div>
