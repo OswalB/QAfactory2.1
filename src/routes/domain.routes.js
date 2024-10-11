@@ -1,6 +1,7 @@
 const {Router} = require('express');
 const router = Router();
 const { 
+    actionsList,
     despachos,
     getHistory,
     getEmbodegar,
@@ -36,6 +37,7 @@ router.post('/domain/mis-clientes',isAuthenticated, misClientes);
 router.post('/domain/pedidos',isAuthenticated, pedidos);
 router.post('/domain/pedidos/suggested',isAuthenticated, sugeridos);
 router.post('/domain/templates-list',isAuthenticated, templatesList);
+router.post('/domain/actions-list',isAuthenticated, actionsList);
 router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
 router.put('/domain/despachos/update', isDispatcher, updateDespacho);

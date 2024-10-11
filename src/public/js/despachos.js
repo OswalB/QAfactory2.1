@@ -1,20 +1,35 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
-let templates = [];
+let templates = null, actions;
 const configPack = {};
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');
-    console.log(i)
-
+    const idDoc = e.target.getAttribute('_iddoc');
+    console.log(idDoc)
+    
     if (e.target.classList.contains('btn-hide')) {
         document.getElementById('acc-item' + i).style.display = 'none';
     }
+    if (e.target.classList.contains('opModel')) {
+        const documentO = localOrders[i];
+        const encaje = itemsPorCaja(documentO.orderItem);
+        configPack.menor = packageMenor(encaje);
+        const modelo = e.target.getAttribute('opModel');
+        const boton = document.getElementById(`print${i}`);
+        boton.setAttribute('_model', modelo);
+        boton.innerHTML = `<i class="fa fa-print" aria-hidden="true"></i> ${configLabel(modelo)}`;
+        const hayCero = modelo === 'printEmpaque' && configPack.menor > 0;
+        boton.disabled = hayCero;
+    }
     if (e.target.classList.contains('print')) {
+        await loadTemplates();
+        
+        const modelo = e.target.getAttribute('_model');
         itemSelected.idDocument = localOrders[i]._id;
         const dataPrint = [];
         dataPrint.push(JSON.parse(JSON.stringify(localOrders[i])));
         console.log('dataprint', dataPrint);
-        localDesign = localOrders[i].siOrder ? templates[1] : templates[0];
+        localDesign = templates[modelo];
         generarPDF(dataPrint)
     }
     if (e.target.classList.contains('clip')) {
@@ -188,6 +203,7 @@ document.getElementById('cardsContainer').addEventListener('focusin', async e =>
 
     const idDoc = e.target.getAttribute('_idOrder');
     const idItem = e.target.getAttribute('_idItem');
+    itemSelected.indexLocalOrder = localOrders.findIndex(doc => doc._id === idDoc);
     console.log(idDoc, idItem);
     if (idDoc && idItem && !flags.siChangeH) {
         workFilter.oneId = idDoc;
@@ -201,6 +217,7 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
         const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
         const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
         itemSelected.currPackage = '';
+        document.getElementById('txtActions').value ='';
         configPackage(index);
         configBotonesPack();
         //console.log(encaje, mayor)
@@ -263,6 +280,10 @@ document.getElementById('lotesAvList').addEventListener('change', async e => {
     itemSelected.lotes = paintLotesButton();
 });
 
+document.getElementById('txtActions').addEventListener('change', async e => {
+    paintLotesButton();
+});
+
 document.getElementById('lotesFooter').addEventListener('click', async e => {
     const accion = e.target.getAttribute('_acc');
     if (accion) {
@@ -317,7 +338,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
     if (flags.historyModalHide) {     //esta en modo editor
         document.getElementById('historyModal').style.display = 'block';
         const loteSelected = itemSelected.lotes ? itemSelected.lotes[0].lote : '';
-        console.log('pack:',itemSelected.package, 'lote:',loteSelected);
+        console.log('pack:', itemSelected.package, 'lote:', loteSelected);
         itemSelected.loteEditHistory = loteSelected;
         console.log('clicklista reemplazar code', itemSelected.loteEditHistory)
         if (itemSelected.loteEditHistory) {
@@ -325,6 +346,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
             const td = document.getElementById(`tdh${itemSelected.index}`);
             itemSelected.historyDisp[itemSelected.index].loteVenta = itemSelected.loteEditHistory;
             itemSelected.historyDisp[itemSelected.index].package = itemSelected.package;
+            itemSelected.historyDisp[itemSelected.index].avResponse = itemSelected.avResponse;
             cambiosEmbalaje(itemSelected.index)
             td.innerHTML = itemSelected.loteEditHistory;
         }
@@ -402,6 +424,7 @@ document.getElementById('bodyHistory').addEventListener('click', async e => {
         flags.historyModalHide = true;
         //renderLotesHist();
         //const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
+        document.getElementById('txtActions').value ='';
         const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
         configPackage(index);
         configBotonesPack(true);
@@ -687,12 +710,16 @@ async function init() {
     }
     currentKeys = data;
     flags.accSndEdit = 'edit';
-    loadTemplates();
 }
 
 async function loadTemplates() {
-    const designs = [100, 200];
-    templates = [];
+    if (templates) {
+        console.log('not load new templates');
+        return;
+    }
+    templates = {};
+    const designs = [100, 200, 201];
+    const localTemplates = [];
     for (const model of designs) {
         try {
             const res = await fetch('/domain/templates-list', {
@@ -712,12 +739,15 @@ async function loadTemplates() {
                 return; // Salir en caso de error
             }
 
-            templates.push(data[0]); // Añadir el template en el orden correcto
+            localTemplates.push(data[0]); // Añadir el template en el orden correcto
         } catch (error) {
             toastr.error('Error al cargar el template');
             console.error('Error fetching template:', error);
         }
     }
+    templates.printAveria = localTemplates[0];
+    templates.printRemision = localTemplates[1];
+    templates.printEmpaque = localTemplates[2];
 }
 
 
@@ -766,10 +796,12 @@ function paintCard(itemCard, indice) {
 }
 
 function paintLotesButton() {
+    itemSelected.indexLocalOrder = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
     let listChk = document.getElementsByClassName('checkArchivar');
     let countChecked = 0, values = [];
     let msg = '', errors = 0;
     const modoPack = configPack.mayor > 0;
+    const esOrden = localOrders[itemSelected.indexLocalOrder].siOrder;
     Array.from(listChk).forEach(item => {
         if (item.checked) {
             countChecked++;
@@ -778,7 +810,7 @@ function paintLotesButton() {
     });
     const del = document.getElementById('btnDeleteLote');
     const sel = document.getElementById('btnSelectLote');
-
+    const acc = document.getElementById('txtActions');
     if (countChecked < 1 && !flags.historyModalHide) {
         msg = 'No ha seleccionado un Lote; ';
         errors++;
@@ -796,13 +828,25 @@ function paintLotesButton() {
     }
     if (modoPack && itemSelected.package < 0) {
         sel.disabled = true;
-        msg += 'No ha seleccionado una Caja';
+        msg += 'No ha seleccionado una Caja; ';
         errors++;
     }
+    if (!esOrden && !acc.value && !flags.historyModalHide) {
+        sel.disabled = true;
+        msg += 'Falta la accion emprendida por la averia';
+        errors++;
+    }
+    if (!esOrden){document.getElementById('seccActions').style.display = '';
+        itemSelected.avResponse = acc.value;
+    }else{
+        document.getElementById('seccActions').style.display = 'none';
+    }
+
+
     const alerta = document.getElementById('alertBotones');
     alerta.classList.remove('alert-success', 'alert-danger');
     if (errors > 0) {
-        alerta.innerHTML = msg;
+        alerta.innerHTML = `Errores(${errors}): ${msg}`;
         alerta.classList.add('alert-danger');
     } else {
         alerta.innerHTML = 'O.K.';
@@ -846,7 +890,9 @@ async function renderCards() {
         const avr = Math.trunc((100 * order.TotalDisp) / order.totalReq);
         const txtavr = avr > 100 ? 'Alert! +100' : avr;
         const created = fechaFormated(new Date(order.createdAt));
-        const numeracion = order.siOrder ? 'Pedido # ' : `AVERIAS #`;
+        const numeracion = order.siOrder ? 'Pedido # ' : `AVERIAS # `;
+        const docPrint = order.siOrder ? 'printRemision' : 'printAveria';
+        const txtPrint = configLabel(docPrint);
         const estado = order.notes ? 'bg-warning' : '';
         const horasentrega = hoursAgo(order.delivery);
         const stateAveria = order.siOrder ? '' : 'bg-dark text-light'
@@ -876,9 +922,29 @@ async function renderCards() {
                         <div class="card-body">
                             <span>Enviado el : ${created}, por: ${order.sellerName}</span>
                             <button id="fac${i}"class="btn btn-primary mx-2 clip position-relative" idcard=${i} href="#" >Facturar
-                            <button id="print${i}"class="btn btn-primary mx-2 print position-relative" idcard=${i} href="#" >Imprimir
+                            
                             <span id="end${i}" class="position-absolute top-0 start-200 translate-middle badge rounded-pill bg-danger" style = "display:none" >Finalizado!</span></button>
                             <button id="btnHide${i}"class="btn btn-primary mx-2 btn-hide position-relative" idcard=${i} href="#"  style = display:none>Ocultar</button>
+                            
+                            
+                            <button type="button" id="print${i}" idcard=${i} _model ="${docPrint}" class="btn btn-outline-secondary print">
+                                <i class="fa fa-print" aria-hidden="true"></i> ${txtPrint}</button>
+                            <button type="button" id="opPrint${i}" idcard=${i} class="opPrint btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item opModel" idcard=${i} opModel ="printAveria" href="#">${configLabel("printAveria")}</a></li>
+                                <li><a class="dropdown-item opModel" idcard=${i} opModel ="printRemision" href="#">${configLabel("printRemision")}</a></li>
+                                <li><a class="dropdown-item opModel" idcard=${i} opModel ="printEmpaque" href="#">${configLabel("printEmpaque")}</a></li>
+                                
+                            </ul>
+ 
+                            
+
+
+                            
+                            
+                            
                             <table class="table table-hover table-bordered">
                                 <thead>
                                     <tr>
@@ -906,6 +972,19 @@ async function renderCards() {
         i++;
     }
     fadeInputs();
+}
+
+function configLabel(model) {
+    switch (model) {
+        case 'printAveria':
+            return 'Avería';
+        case 'printRemision':
+            return 'Remisión';
+        case 'printEmpaque':
+            return 'Empaque';
+        default:
+            return 'NN';
+    }
 }
 
 async function renderLotes() {
@@ -957,6 +1036,14 @@ async function renderLotes() {
         `;
             container.appendChild(li);
         })
+
+        const container2 = document.getElementById('actionsList');
+        container2.innerHTML = '';
+        actions.forEach((action, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a class="dropdown-item" href="#" roleK="Accion" value=${index}>${action.titulo}</a>`;
+            container2.appendChild(li);
+        })
         flags.actionModal = 'none';
         paintLotesButton();
     }
@@ -983,6 +1070,7 @@ function renderLotesHist() {
 }
 
 async function renderTable() {
+    loadActions();
     workFilter.fx = 'c'
     const res = await fetch("/domain/despachos", {
         headers: {
@@ -1163,6 +1251,7 @@ document.getElementById("bodyArchivar").addEventListener('click', async e => {
     keyV.value = e.target.getAttribute('value');
     keyV.role = e.target.getAttribute('roleK');
     keyV._id = e.target.getAttribute('_id');
+
     keyBoardPack(keyV);
 })
 
@@ -1189,6 +1278,11 @@ function keyBoardPack(keyV) {
         configBotonesPack()
     }
 
+    if (keyV.role === 'Accion') {
+        msg = actions[parseInt(keyV.value)].titulo || 'NN'
+        document.getElementById('txtActions').value = msg;
+        paintLotesButton();
+    }
 }
 
 // Cerrar el modal cuando se hace clic fuera de él
@@ -1209,7 +1303,7 @@ function configBotonesPack(editando = false) {
     }
     if (editando) {
         //configPack.cntPagina = itemSelected.currPackage;
-        
+
         //configPack.curPagina = configPack.cntPagina % configPack.maxPagina;
     }
     if (itemSelected.currPackage == 0) {
@@ -1220,7 +1314,7 @@ function configBotonesPack(editando = false) {
         const boton = document.getElementById(`btn${i}`);
         boton.classList.remove('bg-success', 'bg-secondary');
         const numR = i + (configPack.curPagina * 8);
-        
+
         if (numR == itemSelected.currPackage) {
             boton.classList.add('bg-success');
 
@@ -1243,15 +1337,15 @@ function configPackage(index) {
     const documentO = localOrders[configPack.index];
     const encaje = itemsPorCaja(documentO.orderItem);
     configPack.mayor = packageMayor(encaje);
-    if(flags.historyModalHide){
+    if (flags.historyModalHide) {
         itemSelected.package = itemSelected.currPackage;
-        configPack.curPagina = itemSelected.package == 0?0:parseInt((itemSelected.package-1)/8)
-    }else{
+        configPack.curPagina = itemSelected.package == 0 ? 0 : parseInt((itemSelected.package - 1) / 8)
+    } else {
         itemSelected.package = configPack.mayor > 0 ? -1 : 0;
         configPack.curPagina = 0;
     }
-    
-    
+
+
 }
 
 
@@ -1288,4 +1382,47 @@ function packageMayor(arr) {
     });
 
     return mayorCount;
+}
+
+function packageMenor(arr) {
+    let menores = 0;
+
+    arr.forEach(obj => {
+        const [pkg, count] = Object.entries(obj)[0]; // Extraer el par package, count
+        const packageNumber = Number(pkg);
+        const valPkg = parseInt(pkg);
+        if (!isNaN(packageNumber) ) {
+            if (valPkg < 1) {
+                menores++;
+                //mayorPackage = packageNumber;
+            }
+        }
+    });
+
+    return menores;
+}
+
+async function loadActions(){
+    if(actions){
+        
+        return;
+    }
+    actions = [];
+    const res = await fetch('/domain/actions-list', {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({
+        })
+    });
+
+    const data = await res.json();
+    if (data.fail) {
+        toastr.error(data.message);
+        return; // Salir en caso de error
+    }
+
+    actions = data;
+    console.log('load new Actions',actions);
 }

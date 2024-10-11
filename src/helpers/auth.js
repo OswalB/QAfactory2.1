@@ -7,7 +7,7 @@ helpers.authorization  = (req, res, next) => {
 
     const modelPermissions = {
         admin: ['Editable', 'Errorl', 'Order', 'User', 'Client', 'Product','Serial', 'Averia', 
-            'Planilla', 'Reason', 'Store', 'Template'],
+            'Planilla', 'Reason', 'Store', 'Template', 'Action'],
         dispatcher: ['Order', 'Client', 'Product','Serial', 'Averia', 'Planilla', 'Reason', 'Store', 'Template'],
         operator: ['', '', 'Client', 'Product','Serial', 'Planilla'],
         seller: ['Order', '', 'Client', 'Product','Serial', '', 'Reason'],

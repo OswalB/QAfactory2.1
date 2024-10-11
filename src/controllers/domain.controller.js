@@ -8,6 +8,7 @@ const apiCtrl = {};
 const ObjectId = require('mongodb').ObjectId;
 const config = require('../config/settings');
 const mongoose = require('mongoose');
+const Action = require('../models/Action');
 const Editable = require('../models/Editable');
 const Template = require('../models/Template');
 const Order = require('../models/Order');
@@ -20,6 +21,25 @@ const Planilla = require('../models/Planilla');
 
 const DvService = require('../services/serv.db');
 const { response } = require('express');
+
+apiCtrl.actionsList = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response = {message: 'Funcion no encontrada', fail: true};
+        const pipelineList = [
+            
+            { $sort: { titulo: 1 } },
+            { $project: { titulo: 1} }
+        ];
+        
+        response = await Action.aggregate(pipelineList);
+        
+
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
 
 apiCtrl.despachos = async (req, res, next) => {
     try {
@@ -121,6 +141,8 @@ apiCtrl.despachos = async (req, res, next) => {
                                 }
                             },
                             'delivery': 1,
+                            'siOrder':1,
+                            'consecutivo':1,
                             'state': 1,
                             'createdAt': 1,
                             'totalReq': 1,
@@ -354,7 +376,7 @@ apiCtrl.savePedido = async (req, res, next) => {
         data.modelo = 'Order';
         data.documentos[0].seller = user.salesGroup;
         data.documentos[0].sellerName = user.name;
-        data.documentos[0].consecutivo = counter;
+        data.documentos[0].consecutivo = siEsPedido?`R-${counter}`:`A-${counter}`;
         console.log('datos de pedido', data)
         response = await guardar(data);
         res.json(response);
@@ -516,7 +538,7 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                 }
             },
             { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}
+            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder:1}
         ]
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
         const resultado = await contenido(query);
@@ -579,7 +601,8 @@ apiCtrl.updateHistoryDisp = async (req, res, next) => {
                         'orderItem.$[outer].historyDisp.$[inner].dspHistory': actDsp,
                         'orderItem.$[outer].historyDisp.$[inner].fechaHistory': fechaActual,
                         'orderItem.$[outer].historyDisp.$[inner].loteVenta': obj[i].loteVenta,
-                        'orderItem.$[outer].historyDisp.$[inner].package': obj[i].package
+                        'orderItem.$[outer].historyDisp.$[inner].package': obj[i].package,
+                        'orderItem.$[outer].historyDisp.$[inner].avResponse': obj[i].avResponse
                     }
                 },
                 {

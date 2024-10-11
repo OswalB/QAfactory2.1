@@ -2,7 +2,7 @@ const {Schema, model}= require('mongoose');
 
 const OrderSchema = new Schema({
     consecutivo:{
-        type: 'number',
+        type: 'string',
         requiered: true,
         alias: 'Consecutivo'
     },
