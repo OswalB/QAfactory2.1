@@ -20,6 +20,12 @@
   Hay un problema con la conección, revise el item: <span id="itemToCheck" class="item-highlight"></span><br><a
     id="itemAlert" href="#" class="alert-link">De click aquí</a> para Continuar...
 </div>
+
+<div id="alertNotification" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;"> 
+  <strong>¡Atención!</strong> Se detectaron nuevos datos. Actualice la página.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<button type="button" class="btn btn-primary" id="actualizarBtn">Actualizar ahora</button>
+</div>
 <!-- modal lotes history borrar *******************-->
 <div class="modal fade" id="lotesHistoryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
   aria-hidden="true">
@@ -128,4 +134,5 @@
 </div>
 <script src="/js/despachos.js"></script>
 <script src="/js/pdfmaker.js"></script>
+<script src="/js/polling.js"></script>
 <script type="text/javascript" src="  https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>

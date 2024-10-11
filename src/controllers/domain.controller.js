@@ -308,6 +308,25 @@ apiCtrl.pedidos = async (req, res, next) => {
     }
 }
 
+apiCtrl.notice = async (req, res, next) => {
+    try {
+        const data = req.body;
+        const dynamicModel = mongoose.models[data.model];
+        let response;
+        const pipeline =[
+            { $sort: { [data.findField]: -1 } },
+            { $limit: 1 },
+            { $project: { [data.projectField]: 1 } }  
+        ];
+        response = await dynamicModel.aggregate(pipeline);
+
+
+            res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.renderDespachos = async (req, res, next) => {
     const panel = {
         "boton-xls": false,

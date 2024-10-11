@@ -1,6 +1,6 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
 let templates = null, actions;
-const configPack = {};
+const configPack = {}, interval = 10, idle = 30 ;
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');
@@ -710,6 +710,36 @@ async function init() {
     }
     currentKeys = data;
     flags.accSndEdit = 'edit';
+    flags.prevNotice = 'init';
+    startPolling();
+}
+
+async function pollServer() {
+    if (isUserActive) {
+        console.log('Consultando servidor...');
+        const res = await fetch('/domain/notice', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: JSON.stringify({
+                model: 'Order',
+                findField: 'createdAt',
+                projectField: 'consecutivo'
+            })
+        });
+
+        const data = await res.json();
+        if (data.fail) {
+            toastr.error(data.message);
+            return; // Salir en caso de error
+        }
+        if(flags.prevNotice != 'init' && flags.prevNotice != data[0]._id ) {
+            console.log('nnneeewwsss');
+            mostrarAlerta();
+        }
+        flags.prevNotice = data[0]._id;
+    }
 }
 
 async function loadTemplates() {
@@ -1426,3 +1456,14 @@ async function loadActions(){
     actions = data;
     console.log('load new Actions',actions);
 }
+
+function mostrarAlerta() {
+    const alertElement = document.getElementById('alertNotification');
+    alertElement.style.display = 'block';  // Muestra la alerta de forma "sticky"
+}
+
+document.getElementById('actualizarBtn').addEventListener('click', () => {
+    refreshFilter('off');
+    const alertElement = document.getElementById('alertNotification');
+    alertElement.style.display = 'none';
+});
