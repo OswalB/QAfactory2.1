@@ -1,0 +1,137 @@
+
+<!-- ALERT -->
+<div id="alertNotification" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+  <strong>¡Atención! </strong><label  id="labelNotification"for=""></label>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  
+</div>
+<!-- modal archivar-->
+<div class="modal fade" id="archivarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Pendientes por archivar:</h5>
+      </div>
+      <div id="bodyArchivar" class="modal-body">
+        <ul id="archivarList" class="list-group">
+
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button id="btnFacturar" type="button" class="btn btn-primary" data-bs-dismiss="modal"><i
+            class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal user-->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Ingrese PIN de identificacióbn</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input id="inUser" inputmode="numeric" class="fs-3" type="number" autocomplete="off">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal proveedores -->
+<div class="modal fade" id="proveedoresModal" tabindex="-1" aria-labelledby="modalEditorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Seleccione el proveedor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Buscar</span>
+          <input id="inSearch" class="form-control-a me-2" type="search" placeholder="Proveedor" aria-label="Search">
+        </div>
+        <div id="listProv" class="list-group">
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!--- Input group -->
+<div id="step01" class="input-group mb-3">
+  <span class="input-group-text" id="basic-addon1">1. Proveedor:</span>
+  <input id="nproveedor" type="text" class="form-control-a " placeholder="Proveedor" readonly>
+</div>
+
+<div id="step02" class="input-group mb-3">
+  <div id="step01" class="input-group mb-3">
+    <span class="input-group-text" id="basic-addon1">2a. Fecha de trabajo:</span>
+    <input type="datetime-local" name="" id="inFechaw">
+  </div>
+
+  <span class="input-group-text" id="basic-addon1">2b. Insumo:</span>
+  <select id="inInsumo" class="form-select-a">
+    <option value="-1" selected>Seleccione</option>
+  </select>
+</div>
+<div id="step03" class="input-group mb-3">
+  <span class="input-group-text" id="basic-addon1">3. Cantidad:</span>
+  <input id="inCantidad" type="number" class="form-control-a" placeholder="">
+</div>
+<div id="step04" class="input-group mb-3">
+  <span class="input-group-text" id="basic-addon1">4. Vence:</span>
+  <input id="inVence" type="date" class="form-control-a" placeholder="">
+</div>
+<div id="step05" class="input-group mb-3">
+  <span class="input-group-text" id="basic-addon1">5. Lote:</span>
+  <a id="btn-getLote" class="btn btn-info" href="#">
+    <i class="fa fa-external-link fa-lg"></i><label id="lblLote"> Validar lote</label></a>
+  <input id="inLote" type="text" class="form-control-a" placeholder="">
+</div>
+
+<div id="step06" class="">
+  <span class="input-group-text" id="basic-addon1">6. Control Calidad:</span>
+  <br>
+  <!----------- cardsContainer ------>
+  <div class="row" id="cardsContainer">
+  </div>
+</div>
+
+
+<!-- contenido -->
+<div id="step00" class="input-group mb-3">
+
+  <table class="table table-bordered table-hover">
+    <thead class="table-secondary">
+      <tr>
+        <th scope="col">Fecha</th>
+        <th scope="col">Proveedor</th>
+        <th scope="col">Insumo</th>
+        <th scope="col">Cantidad</th>
+        <th scope="col">Lote</th>
+        <th scope="col">Vence</th>
+        <th scope="col">Acepta</th>
+        <th scope="col">Rechaza</th>
+        <th scope="col">Oper</th>
+        <th scope="col">Agotado</th>
+        <th scope="col">Facturado</th>
+      </tr>
+    </thead>
+    <tbody id="main_table">
+
+    </tbody>
+
+  </table>
+</div>
+
+
+
+<script src="/js/almacen.js"></script>

@@ -1,6 +1,6 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
 let templates = null, actions;
-const configPack = {}, interval = 10, idle = 30 ;
+const configPack = {}, interval = 150, idle = 300 ;
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');

@@ -559,165 +559,100 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
 //-------------------------- pdf geneator  --------------------------------------
 
 
+function formatearDato(dato, formato) {
+    if (dato == undefined) return '-';
+    // Verificar si el dato es un número
+    const esNumero = !isNaN(dato) && !isNaN(parseFloat(dato));
 
+    // Si es un número, llamamos a formatearNumero
+    if (esNumero) {
+        let opciones = { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true };
 
-
-
-
-
-
-
-
-
-function renglonBORRAR(design, data, page, pty, indexPage) {
-    //console.log(design[0].originControl , design[0].texto);
-    //console.log(design, data)
-    let sumW = 0, filas = 0, startRow = true;
-    let printStatus = priorityPrint('nextItem', -2);
-    design.forEach(item => {    //add info ancho de control, fila-multilinea, y espacio interno
-        const paddingX = parseInt(item.paddingX);
-        const paddingY = parseInt(item.paddingY);
-        const fontSize = parseInt(item.sizeFont);
-        const height = parseInt(item.height);
-        item.width = r2d(item.col * page.colpt, 2);
-        sumW += item.width;
-        item.startRow = startRow;
-
-        if (sumW > (page.sw * 1.01)) {          //establece nueva linea
-            sumW = item.width;
-            filas += 1;
-            item.startRow = true;
+        switch (formato) {
+            case '123':
+                opciones.maximumFractionDigits = 0; // Sin decimales
+                break;
+            case '123.0':
+                opciones.minimumFractionDigits = 1;
+                opciones.maximumFractionDigits = 1;
+                break;
+            case '123.00':
+                opciones.minimumFractionDigits = 2;
+                opciones.maximumFractionDigits = 2;
+                break;
+            case '123.000':
+                opciones.minimumFractionDigits = 3;
+                opciones.maximumFractionDigits = 3;
+                break;
+            case '123.0000':
+                opciones.minimumFractionDigits = 4;
+                opciones.maximumFractionDigits = 4;
+                break;
+            default:
+                return dato; // Devolver el número original si el formato no coincide
         }
-        startRow = false;
-        item.fila = filas;
-        item.sw = item.width - paddingX - paddingX;
-        doc.setFontSize(fontSize);
 
-        /*if (item.formatControl != '0' || item.formatControl) {        //formato en texto origen
-            //item.texto = formatearDato(item.texto,item.formatControl);
-        }*/
-        //log('data para formatear:', data);
-        //console.log('design para formatear:', item);
-        //console.log('texto antes de proceso:', item.texto)
-        const hayFormulas = data.formulas && typeof data.formulas === 'object' && Object.keys(data.formulas).length > 0;
-        //console.warn('hayFormulas:', hayFormulas);
-        //console.log(data.formulas, typeof data.formulas === 'object')
-        if (hayFormulas && item.originControl && !data._endGroup) {
-            console.log(hayFormulas, item.originControl, !data._endGroup)
-            console.warn('hay formulas y es ultimo renglon, texto antes fx:', item.texto)
-            const formula = `${item.fxControl}_${item.originControl}`;
-            const valorFx = data.formulas[formula];
-            item.texto = valorFx
-            //console.log('hay formulas y es ultimo renglon, texto despues fx:', item.texto)
-        } else if (item.originControl && !hayFormulas) {
-            //console.log('solo es origin control, texto antes :', item.texto)
-
-            item.texto = data[item.originControl] || '';
-            //console.log('solo es origin control, texto despues :', item.texto)
-
-        }
-        //console.log('en todos los casos, texto antes de format :', item.texto)
-        if (item.formatControl) {
-            item.texto = formatearDato(item.texto, item.formatControl);
-        }
-        if (!item.texto) console.warn('UNDEF...')
-        //console.log('en todos los casos, texto despues de format :', item.texto)
-        //console.log('FIN de formateo datos')
-        /*if (!item.hasOwnProperty('originControl')) {
-            item.originControl = '0';
-        }*/
-
-        //item.originControl = item.originControl ? item.originControl : '0';
-        //console.log(data._endGroup, data.formulas);
-        //let cadena;
-        /*if (data.formulas && !data._endGroup) {
-            const formula = `${item.fxControl}_${item.originControl}`;
-            const valorFx = data.formulas[formula];
-            console.log(formula, valorFx)
-            cadena = item.originControl === '0' ? item.texto : valorFx || '';
-
-        } else {
-            cadena = item.originControl === '0' ? item.texto : data[item.originControl] || item.texto;
-        }*/
-
-        item.lineas = doc.splitTextToSize(String(item.texto), item.sw);
-        item.lineH = r2d(fontSize, 2);
-        const newH = (item.lineas.length * item.lineH) + paddingY + r2d(fontSize * 0.25, 2);
-        item.height = newH > height ? newH : height;
-    })
-
-
-    maxHeightRow(design);
-
-    let rowX = page.ml, rowY = pty        //copia (x,y) iniciales
-    let carry = 0;
-    let totalHeight = 0;
-    design.forEach((item, index) => {
-        if (item.startRow) {
-            totalHeight += item.height;
-        }
-    })
-    if (rowY + totalHeight > (page.maxY * 1.02)) {       //desborde de pagina
-        //console.log(rowY + totalHeight, page.maxY, (page.maxY * 1.01))
-        //console.log('**** Rechazado: ', design, data);
-        return {
-            absY: page.mt,
-            indexPage: indexPage + 1,
-            printStatus: priorityPrint('newPage', printStatus)
-        };
+        return parseFloat(dato).toLocaleString('es-ES', opciones);
     }
-    design.forEach((item, index) => {    //push campo texto y caja
-        const paddingY = parseInt(item.paddingY);
-        const paddingX = parseInt(item.paddingX);
-        const align = parseInt(item.align);
-        const fontSize = parseInt(item.sizeFont);
-        if (item.startRow || item.forceNewRow) {            //nuevo renglon
-            rowY += carry;
-            rowX = page.ml;
+
+    // Si no es un número, asumimos que es una fecha (en formato ISO)
+    const esFecha = !isNaN(Date.parse(dato));
+
+    if (esFecha) {
+        const fecha = new Date(dato);
+        switch (formato) {
+            case 'dd/mm/aa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            case 'dd/mmm/aa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' });
+            case 'dd/mmm/aaa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            case 'dd/mmmm/aaa':
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            case 'dd/mmm/aaa-00:00':
+                return `${fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })} ${fecha.toLocaleTimeString('es-ES')}`;
+            case 'hh:mm:ss':
+                return fecha.toLocaleTimeString('es-ES');
+            case 'hh:mm':
+                return fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            case 'hhh:mm':
+                return fecha.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true });
+            case 'hhh:mm:ss':
+                return fecha.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+            default:
+                return dato; // Devolver el dato original si el formato no coincide
         }
-        let lineY = rowY + item.lineH + paddingY;
-        doc.setFontSize(fontSize);
-        item.lineas.forEach(linea => {
-            const textWidth = r2d(doc.getTextWidth(linea), 2);
-            const lineX = alinear(rowX, paddingX, item.width, align, textWidth);
-
-            addElementToJsonPDF('text', {
-                x: lineX,
-                y: lineY,
-                sf: parseInt(item.sizeFont),
-                cf: item.colorFont,
-                tx: linea
-            }, indexPage);
-
-            lineY += item.lineH;
-        });
-
-        if (item.siBorde || item.siBg) {
-            const fillBox = item.siBorde && item.siBg ? 'FD' : item.siBg ? 'F' : 'S';
-            addElementToJsonPDF('box', {
-                x: rowX,
-                y: rowY,
-                wb: item.width,
-                hb: item.height,
-                fll: fillBox,
-                cb: item.colorBg
-            }, indexPage);
-        }
-        rowX += item.width;
-        carry = item.height;
-    })
-    //console.log(data._endGroup)
-    if (data._endGroup) {
-        console.warn('EndGroup fin de function renglon')
-        data._endGroup = false;
-        printStatus = priorityPrint('endGroup', printStatus)
     }
-    return { absY: rowY + carry, indexPage: indexPage, printStatus: printStatus };
 
+    // Si no es ni número ni fecha, devolver el dato original
+    return dato;
 }
 
+function obtenerCamposNull(obj, excluir = {}) {
+    let camposNulos = [];
+    function recorrerObjeto(obj, prefijo = '') {
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const valor = obj[key];
+                const nombreCampo = prefijo ? `${prefijo}.${key}` : key;
+                if (excluir[nombreCampo]) {
+                    continue; // Saltar este campo
+                }
+                if (typeof valor === 'object' && valor !== null && !Array.isArray(valor)) {
+                    recorrerObjeto(valor, nombreCampo);
+                } else if (valor === null || valor === undefined || valor === '') {
+                    camposNulos.push(nombreCampo);
+                }
+            }
+        }
+    }
+    recorrerObjeto(obj);
+    return camposNulos;
+}
 
-
-
-
-
+function mostrarAlert(acc, msg) {
+    const alertElement = document.getElementById('alertNotification');
+    const labelElement = document.getElementById('labelNotification');
+    alertElement.style.display = acc;  // Muestra la alerta de forma "sticky"
+    labelElement.innerHTML = msg;
+}

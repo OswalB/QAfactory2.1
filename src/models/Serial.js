@@ -18,7 +18,12 @@ const SerialSchema = new Schema({
     serialPdf:{
         type: 'Number',
         required: true,
-        alias:'Consecutivo averias'
+        alias:'Consecutivo pdf'
+    },
+    consecutivo:{
+        type: 'Number',
+        required: true,
+        alias:'Consecutivo lotes'
     }
 
 },{

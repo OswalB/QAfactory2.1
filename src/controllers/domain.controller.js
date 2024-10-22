@@ -9,6 +9,7 @@ const ObjectId = require('mongodb').ObjectId;
 const config = require('../config/settings');
 const mongoose = require('mongoose');
 const Action = require('../models/Action');
+const Inalmacen = require('../models/Inalmacen');
 const Editable = require('../models/Editable');
 const Template = require('../models/Template');
 const Order = require('../models/Order');
@@ -25,15 +26,15 @@ const { response } = require('express');
 apiCtrl.actionsList = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
-        let response = {message: 'Funcion no encontrada', fail: true};
+        let response = { message: 'Funcion no encontrada', fail: true };
         const pipelineList = [
-            
+
             { $sort: { titulo: 1 } },
-            { $project: { titulo: 1} }
+            { $project: { titulo: 1 } }
         ];
-        
+
         response = await Action.aggregate(pipelineList);
-        
+
 
         res.json(response);
     } catch (error) {
@@ -41,13 +42,45 @@ apiCtrl.actionsList = async (req, res, next) => {
     }
 };
 
-apiCtrl.despachos = async (req, res, next) => {
+apiCtrl.almacenContent = async (req, res, next) => {
+    try {
+        console.log('contenido')
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Inalmacen';
+        data.proyectar = [
+
+        ]
+        response = await contenido(data);
+
+        res.json(response);
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+apiCtrl.almacenKeys = async (req, res, next) => {
+    try {
+        console.log('keys')
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Inalmacen';
+        response = await keys(data);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+/*apiCtrl.almacen = async (req, res, next) => {
     try {
         
         const data = req.body, user = req.user;
         console.log('fx:',data.fx)
         let response;
-        data.modelo = 'Order';
+        data.modelo = 'Almacen';
         if (data.fx === 'l') {
             data.modelo = 'Planilla';
             data.otrosMatch.push({ agotado: false });
@@ -57,11 +90,7 @@ apiCtrl.despachos = async (req, res, next) => {
             response = await contenido(data);
             res.json(response);
         }
-        if (data.fx === 'k') {
-            response = await keys(data);
-            res.json(response);
-            return;
-        }
+        
         if (data.fx === 'c') {
             if (data.sw) {
                 data.otrosMatch.push({ state: 0 })
@@ -71,35 +100,7 @@ apiCtrl.despachos = async (req, res, next) => {
                 data.otrosMatch.push({ _id: new ObjectId(data.oneId) });
                 console.log('un solo id')
             }
-            data.proyectar = [
-                {
-                    'orderItem': {
-                        $map: {
-                            input: '$orderItem',
-                            as: 'item',
-                            in: {
-                                $mergeObjects: [
-                                    '$$item',
-                                    {
-                                        'lotesOk': {
-                                            $reduce: {
-                                                input: '$$item.historyDisp',
-                                                initialValue: true,
-                                                in: { $and: ['$$value', { $ne: ['$$this.loteVenta', ''] }] } // Verifica si todos los elementos de historyDisp.loteVenta están presentes
-                                            }
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                },
-                { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder: 1},
-                { id_compras:1}
-            ]
-            response = await contenido(data);
-
+            
             res.json(response);
             return;
         }
@@ -156,6 +157,133 @@ apiCtrl.despachos = async (req, res, next) => {
                     }
                 ]
                 
+                response = await Order.aggregate(pipeline);
+                response.unshift({ count: 0 })
+                res.json(response);
+                return;
+            }
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+*/
+
+apiCtrl.despachos = async (req, res, next) => {
+    try {
+
+        const data = req.body, user = req.user;
+        console.log('fx:', data.fx)
+        let response;
+        data.modelo = 'Order';
+        if (data.fx === 'l') {
+            data.modelo = 'Planilla';
+            data.otrosMatch.push({ agotado: false });
+            data.otrosMatch.push({ codigoProducto: data.code });
+            data.sortObject = { loteOut: 1 };
+            data.proyectar = [{ loteOut: 1 }, { fecha1: 1 }]
+            response = await contenido(data);
+            res.json(response);
+        }
+        if (data.fx === 'k') {
+            response = await keys(data);
+            res.json(response);
+            return;
+        }
+        if (data.fx === 'c') {
+            if (data.sw) {
+                data.otrosMatch.push({ state: 0 })
+            }
+            if (data.oneId) {
+                data.otrosMatch = [];
+                data.otrosMatch.push({ _id: new ObjectId(data.oneId) });
+                console.log('un solo id')
+            }
+            data.proyectar = [
+                {
+                    'orderItem': {
+                        $map: {
+                            input: '$orderItem',
+                            as: 'item',
+                            in: {
+                                $mergeObjects: [
+                                    '$$item',
+                                    {
+                                        'lotesOk': {
+                                            $reduce: {
+                                                input: '$$item.historyDisp',
+                                                initialValue: true,
+                                                in: { $and: ['$$value', { $ne: ['$$this.loteVenta', ''] }] } // Verifica si todos los elementos de historyDisp.loteVenta están presentes
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
+                { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, { consecutivo: 1 }, { siOrder: 1 },
+                { id_compras: 1 }
+            ]
+            response = await contenido(data);
+
+            res.json(response);
+            return;
+        }
+
+        if (data.fx === 'q') {
+            if (data.oneId) {
+                const pipeline = [
+                    {
+                        '$match': {
+                            '_id': new ObjectId(data.oneId)
+                        }
+                    }, {
+                        '$project': {
+                            'orderItem': {
+                                '$map': {
+                                    'input': '$orderItem',
+                                    'as': 'item',
+                                    'in': {
+                                        '$mergeObjects': [
+                                            '$$item', {
+                                                'lotesOk': {
+                                                    '$reduce': {
+                                                        'input': '$$item.historyDisp',
+                                                        'initialValue': true,
+                                                        'in': {
+                                                            '$and': [
+                                                                '$$value', {
+                                                                    '$ne': [
+                                                                        '$$this.loteVenta', ''
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            'delivery': 1,
+                            'siOrder': 1,
+                            'consecutivo': 1,
+                            'state': 1,
+                            'createdAt': 1,
+                            'totalReq': 1,
+                            'TotalDisp': 1
+                        }
+                    }, {
+                        '$project': {
+
+                            'orderItem.product': 0
+                        }
+                    }
+                ]
+
                 response = await Order.aggregate(pipeline);
                 response.unshift({ count: 0 })
                 res.json(response);
@@ -270,7 +398,7 @@ apiCtrl.pedidos = async (req, res, next) => {
         const data = req.body, user = req.user;
         let response;
         data.modelo = 'Order';
-        
+
         if (data.fx === 'k') {
             response = await keys(data);
             res.json(response);
@@ -290,11 +418,11 @@ apiCtrl.pedidos = async (req, res, next) => {
                 data.saltar = 0;
                 data.otrosMatch.push({ _id: new ObjectId(data._id) });
                 data.proyectar.push({ client: 1 }, { id_compras: 1 }, { totalReq: 1 }, { TotalDisp: 1 },
-                    { delivery: 1 }, { createdAt: 1 }, { state: 1 }, { notes: 1 }, { sellerName: 1 }, { vendedor: 1 }, {consecutivo:1}, {siOrder:1},
+                    { delivery: 1 }, { createdAt: 1 }, { state: 1 }, { notes: 1 }, { sellerName: 1 }, { vendedor: 1 }, { consecutivo: 1 }, { siOrder: 1 },
                     { 'orderItem.product': 1 }, { 'orderItem.qty': 1 }, { 'orderItem.dispatch': 1 }, { 'orderItem.code': 1 }
                 );
             } else {
-                data.proyectar.push({ TotalDisp: 1 }, { client: 1 }, { delivery: 1 }, { state: 1 }, { totalReq: 1 }, {consecutivo:1}, {siOrder:1});
+                data.proyectar.push({ TotalDisp: 1 }, { client: 1 }, { delivery: 1 }, { state: 1 }, { totalReq: 1 }, { consecutivo: 1 }, { siOrder: 1 });
             }
 
             response = await contenido(data);
@@ -313,19 +441,35 @@ apiCtrl.notice = async (req, res, next) => {
         const data = req.body;
         const dynamicModel = mongoose.models[data.model];
         let response;
-        const pipeline =[
+        const pipeline = [
             { $sort: { [data.findField]: -1 } },
             { $limit: 1 },
-            { $project: { [data.projectField]: 1 } }  
+            { $project: { [data.projectField]: 1 } }
         ];
         response = await dynamicModel.aggregate(pipeline);
 
 
-            res.json(response);
+        res.json(response);
     } catch (error) {
         next(error);
     }
 }
+
+apiCtrl.renderAlmacen = async (req, res, next) => {
+    const panel = {
+        "boton-opciones": true,
+        "boton-xls": true,
+        "boton-pagination": true,
+        "boton-guardar": true,
+        "titulo": "Ingreso a Almacén"
+    };
+
+    try {
+        res.render('produccion/almacen', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
 
 apiCtrl.renderDespachos = async (req, res, next) => {
     const panel = {
@@ -376,6 +520,19 @@ apiCtrl.salesProducts = async (req, res, next) => {
     }
 };
 
+apiCtrl.saveAlmacen = async (req, res, next) => {
+    try {
+        data = req.body;
+        dataSave = new Inalmacen(data);
+
+        await dataSave.save(dataSave);
+        res.json({ "message": "Ingresado a almacen" });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.savePedido = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
@@ -383,19 +540,19 @@ apiCtrl.savePedido = async (req, res, next) => {
         let response;
         lastId = await Serial.findOne();
         if (!lastId) {
-            let newSerial =  new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 0,serialPdf:0 });
+            let newSerial = new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 0, serialPdf: 0 });
             await newSerial.save();
             lastId = await Serial.findOne();
         }
-        
-        let counter = siEsPedido?lastId.serialOrders: lastId.serialAverias;
+
+        let counter = siEsPedido ? lastId.serialOrders : lastId.serialAverias;
         counter += 1;
         const fieldToUpdate = siEsPedido ? 'serialOrders' : 'serialAverias';
         await Serial.updateOne({ "_id": lastId._id }, { $set: { [fieldToUpdate]: counter } });
         data.modelo = 'Order';
         data.documentos[0].seller = user.salesGroup;
         data.documentos[0].sellerName = user.name;
-        data.documentos[0].consecutivo = siEsPedido?`R-${counter}`:`A-${counter}`;
+        data.documentos[0].consecutivo = siEsPedido ? `R-${counter}` : `A-${counter}`;
         console.log('datos de pedido', data)
         response = await guardar(data);
         res.json(response);
@@ -407,9 +564,9 @@ apiCtrl.savePedido = async (req, res, next) => {
 apiCtrl.saveTemplate = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
-        let response = {fail: true, message: 'error al grabar'};
+        let response = { fail: true, message: 'error al grabar' };
         console.log(data);
-        response = await Template.updateOne({ "idTemplate": data.idTemplate }, { $set:  data  });
+        response = await Template.updateOne({ "idTemplate": data.idTemplate }, { $set: data });
         console.log(response)
         res.json(response);
     } catch (error) {
@@ -482,7 +639,7 @@ apiCtrl.setState = async (req, res, next) => {
 apiCtrl.templatesList = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
-        let response = {message: 'Funcion no encontrada', fail: true};
+        let response = { message: 'Funcion no encontrada', fail: true };
         const pipelineList = [
             {
                 $match: {
@@ -490,7 +647,7 @@ apiCtrl.templatesList = async (req, res, next) => {
                 }
             },
             { $sort: { idTemplate: 1 } },
-            { $project: { idTemplate: 1, descripcion: 1} }
+            { $project: { idTemplate: 1, descripcion: 1 } }
         ];
         const pipelineContent = [
             {
@@ -498,10 +655,10 @@ apiCtrl.templatesList = async (req, res, next) => {
                     idTemplate: data.idTemplate
                 }
             },
-            { $project: { updatedAt: 0, createdAt: 0} }
+            { $project: { updatedAt: 0, createdAt: 0 } }
         ];
-        if(data.fx === 'list') response = await Template.aggregate(pipelineList);
-        if(data.fx === 'content') response = await Template.aggregate(pipelineContent);
+        if (data.fx === 'list') response = await Template.aggregate(pipelineList);
+        if (data.fx === 'content') response = await Template.aggregate(pipelineContent);
 
         res.json(response);
     } catch (error) {
@@ -519,7 +676,7 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                     loteVenta: data.loteVenta,
                     qtyHistory: data.qtyHistory,
                     dspHistory: user.alias,
-                    avResponse:data.avResponse || '-',
+                    avResponse: data.avResponse || '-',
                     package: data.package
                 }
             },
@@ -557,7 +714,7 @@ apiCtrl.updateDespacho = async (req, res, next) => {
                 }
             },
             { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
-            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, {consecutivo: 1}, {siOrder:1}
+            { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, { consecutivo: 1 }, { siOrder: 1 }
         ]
         query.otrosMatch = [{ _id: new ObjectId(data.idDocument) }, { 'orderItem._id': new ObjectId(data.idItem) }];
         const resultado = await contenido(query);
