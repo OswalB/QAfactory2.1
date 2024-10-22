@@ -506,7 +506,7 @@ document.getElementById('btnSave').addEventListener('click', async e => {
     docIngreso.rechaza = varRechaza;
     docIngreso.fechaw = document.getElementById('inFechaw').value;
     console.log(docIngreso)
-    const errors = obtenerCamposNull(docIngreso,{acepta:true})
+    const errors = obtenerCamposNull(docIngreso,{acepta:true, rechaza:true})
     console.log(errors);
     if(errors.length > 0) {
         let list = '';
@@ -514,10 +514,14 @@ document.getElementById('btnSave').addEventListener('click', async e => {
             list += ` ${err},` 
         })
         list = list.slice(0, -1);
-        const msg = `Se han detectado ${errors.length} errores. Debe corregir: ${list}`
+        const msg = `Se han detectado ${errors.length} errores. Debe corregir: ${list}`;
+        toastr.error(msg);
         mostrarAlert('block',msg);
+        return;
+    }else{
+        mostrarAlert('none');
     }
-    return
+    
     await sendIngreso();
     setPaso(0);
     await renderTable();
@@ -539,5 +543,35 @@ async function sendIngreso() {
     //obj = await res.json();
     toastr.info(data.message);
 
+}
+
+document.getElementById('btnArchivar').addEventListener('click', async e => {
+
+    await renderArchivar();
+    $('#archivarModal').modal('show');
+    console.log('Archivar')
+});
+
+async function renderArchivar() {
+    let res = await fetch('/control/almacen-sinfacturar', {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({})
+    });
+    pendientes = await res.json();
+    const container = document.getElementById('archivarList');
+    container.innerHTML = '';
+    pendientes.forEach(item => {
+        let fecha = new Date(item.createdAt);
+        let fechaTxt = `${fecha.toLocaleDateString('es-us', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+        const li = document.createElement('li');
+        li.setAttribute("class", "list-group-item");
+        li.innerHTML = `
+            <input class="form-check-input me-1 checkArchivar" type="checkbox" value="" ><strong>${item.insumo.nombre}</strong>  (${fechaTxt}) ${item.nombreProveedor}, op: ${item.operario}              
+        `;
+        container.appendChild(li);
+    })
 }
 
