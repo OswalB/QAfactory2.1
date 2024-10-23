@@ -3,6 +3,7 @@ const router = Router();
 const { 
     actionsList,
     almacenContent,
+    almacenSinfacturar,
     almacenKeys,
     despachos,
     getHistory,
@@ -38,6 +39,7 @@ router.get('/domain/intercambiador', intercambiador);
 router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 
 router.post('/domain/almacen/content',isAdmin, almacenContent);
+router.post('/domain/almacen/sinfacturar',isAuthenticated, almacenSinfacturar);
 router.post('/domain/almacen/keys',isAdmin, almacenKeys);
 router.post('/domain/despachos',isDispatcher, despachos);
 router.post('/domain/despachos/history',isDispatcher, getHistory);

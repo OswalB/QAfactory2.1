@@ -555,6 +555,31 @@ async function checkAnswerServer(url, _metod, _body, timeout = 5000) {
         });
 }
 
+function toClipBoard(pyme) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(pyme)
+            .then(() => toastr.success('Texto copiado con éxito.'))
+            .catch((error) => toastr.error('No se pudo copiar el texto al portapapeles:', error));
+    } else {
+        var textArea = document.createElement("textarea");
+        textArea.value = pyme;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'éxito' : 'fallo';
+            toastr.info(`Copia al portapapeles ${msg}`);
+        } catch (err) {
+            toastr.warning('No se pudo copiar el texto:', err);
+        }
+
+        document.body.removeChild(textArea);
+    }
+}
+
 
 //-------------------------- pdf geneator  --------------------------------------
 

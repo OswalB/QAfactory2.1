@@ -72,69 +72,9 @@ document.getElementById("accordionDesign").addEventListener('click', async e => 
     processRole(role, section); // Agrega un input a la sección 'headerReport'
 
 
-    /*if (role === 'addHeaderReport') {
-        const inputs = document.getElementById('acc-headerReport').querySelectorAll('input');
-        const index = inputs.length;
-        console.log('click en boton ', role, index);
-        renderInputs('acc-headerReport', index, section);
-        defaultValues();
-    }
-    if (role === 'delHeaderReport') {
-        const section = document.getElementById('acc-headerReport');
-        const inputs = section.querySelectorAll('input');
-        if (inputs.length > 0) {
-            const lastInput = inputs[inputs.length - 1];
-            section.removeChild(lastInput);
-            localDesign.headerReport.pop();
-        } else {
-            console.log('No hay inputs para eliminar.');
-        }
-
-    }*/
-
 })
 
 
-/*
-function processRole(role, section) {
-    // Definir el ID del contenedor basado en la sección
-    const containerId = `acc-${section}`;
-    const sectionElement = document.getElementById(containerId);
-
-    if (!sectionElement) {
-        console.log(`No se encontró el contenedor para la sección: ${section}`);
-        return;
-    }
-
-    if (role === 'addSection') {
-        const inputs = sectionElement.querySelectorAll('input');
-        const index = inputs.length;
-        console.log(`Agregando input en sección: ${section}, índice: ${index}`);
-        renderInputs(containerId, index, section);
-        if (!localDesign[section]) {
-            localDesign[section] = [];
-        }
-        if (!localDesign[section][index]) {
-            localDesign[section][index] = { ...defaults };
-        }
-
-    } else if (role === 'delSection') {
-        const inputs = sectionElement.querySelectorAll('input');
-        if (inputs.length > 0) {
-            const lastInput = inputs[inputs.length - 1];
-            sectionElement.removeChild(lastInput);
-            if (localDesign[section]) {
-                localDesign[section].pop(); // Eliminar el último elemento del array correspondiente
-            }
-        } else {
-            console.log(`No hay inputs para eliminar en la sección: ${section}`);
-        }
-    } else {
-        console.log(`Acción no válida: ${role}`);
-    }
-}
-
-*/
 
 function processRole(role, section) {
     // Definir el ID del contenedor basado en la sección
@@ -799,6 +739,7 @@ async function afterLoad() {
     activeButtons({ btnSel: false, btnV: false, btnE: false, btnG: false, frmD: false });
     selectedTemplate = 0;
     workFilter.PDFmode = false;
+    document.getElementById('btnArchivar').style.display='none';
     await debugg(true);
 };
 

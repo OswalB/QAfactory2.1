@@ -1,5 +1,5 @@
 let flags = {}, localInalmacen = [], timeoutId, currentUser = null;
-let docIngreso = {}, opers, proveedores, insumos, criterios;
+let docIngreso = {}, opers, proveedores, insumos, criterios, pendientes = [];
 const timeClear = 120000;
 
 //* * * * * * * * * *    FUNCIONES  inicio * * * * *
@@ -490,7 +490,7 @@ document.getElementById('btnSave').addEventListener('click', async e => {
     docIngreso.vence = document.getElementById('inVence').value;
     docIngreso.cantidad = document.getElementById('inCantidad').value;
     docIngreso.lote = document.getElementById('inLote').value;
-    
+
 
     for (let item = 0; item < acepta.length; item++) {
         const titulo = acepta[item].innerText;
@@ -506,22 +506,22 @@ document.getElementById('btnSave').addEventListener('click', async e => {
     docIngreso.rechaza = varRechaza;
     docIngreso.fechaw = document.getElementById('inFechaw').value;
     console.log(docIngreso)
-    const errors = obtenerCamposNull(docIngreso,{acepta:true, rechaza:true})
+    const errors = obtenerCamposNull(docIngreso, { acepta: true, rechaza: true })
     console.log(errors);
-    if(errors.length > 0) {
+    if (errors.length > 0) {
         let list = '';
         errors.forEach(err => {
-            list += ` ${err},` 
+            list += ` ${err},`
         })
         list = list.slice(0, -1);
         const msg = `Se han detectado ${errors.length} errores. Debe corregir: ${list}`;
         toastr.error(msg);
-        mostrarAlert('block',msg);
+        mostrarAlert('block', msg);
         return;
-    }else{
+    } else {
         mostrarAlert('none');
     }
-    
+
     await sendIngreso();
     setPaso(0);
     await renderTable();
@@ -546,14 +546,12 @@ async function sendIngreso() {
 }
 
 document.getElementById('btnArchivar').addEventListener('click', async e => {
-
     await renderArchivar();
     $('#archivarModal').modal('show');
-    console.log('Archivar')
 });
 
 async function renderArchivar() {
-    let res = await fetch('/control/almacen-sinfacturar', {
+    let res = await fetch('/domain/almacen/sinfacturar', {
         headers: {
             'Content-Type': 'application/json'
         },
@@ -569,9 +567,48 @@ async function renderArchivar() {
         const li = document.createElement('li');
         li.setAttribute("class", "list-group-item");
         li.innerHTML = `
-            <input class="form-check-input me-1 checkArchivar" type="checkbox" value="" ><strong>${item.insumo.nombre}</strong>  (${fechaTxt}) ${item.nombreProveedor}, op: ${item.operario}              
+            <input class="form-check-input me-1 checkArchivar" type="checkbox" value="" ><strong>${item.insumo.nombre || ''}</strong>  (${fechaTxt}) ${item.nombreProveedor}, op: ${item.operario}              
         `;
         container.appendChild(li);
     })
+    const listItems = document.querySelectorAll('.list-group-item');
+    listItems.forEach(item => {
+        item.addEventListener('click', function (event) {
+            const checkbox = this.querySelector('.checkArchivar');
+            if (event.target.tagName !== 'INPUT') {
+                checkbox.checked = !checkbox.checked;
+            }
+        });
+    });
 }
 
+document.getElementById('btnFacturar').addEventListener('click', async e => {
+    let listChk = document.getElementsByClassName('checkArchivar');
+    let pyme = '', bodega = 1;
+    facturar = [];
+    for (let item = 0; item < listChk.length; item++) {
+        if (listChk[item].checked) {
+            pyme += `${bodega}\t${pendientes[item].insumo.codigo}\t\t${pendientes[item].cantidad}\n`;
+            facturar.push({ "_id": pendientes[item]._id, "facturada": true });
+        }
+    }
+    toClipBoard(pyme);
+    console.log(pyme);
+    console.log(facturar);
+    const res = await fetch('/core/save', {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "PUT",
+        body: JSON.stringify({documentos:facturar, modelo:'Inalmacen'})
+    });
+    const dats = await res.json();
+    console.log(dats)
+    if (dats.fail) {
+        toastr.error(dats.message);
+        return;
+    }
+    toastr.info(dats.message);
+    renderTable();
+
+})

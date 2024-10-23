@@ -74,100 +74,33 @@ apiCtrl.almacenKeys = async (req, res, next) => {
     }
 }
 
-/*apiCtrl.almacen = async (req, res, next) => {
+apiCtrl.almacenSinfacturar = async (req, res, next) => {
     try {
-        
-        const data = req.body, user = req.user;
-        console.log('fx:',data.fx)
-        let response;
-        data.modelo = 'Almacen';
-        if (data.fx === 'l') {
-            data.modelo = 'Planilla';
-            data.otrosMatch.push({ agotado: false });
-            data.otrosMatch.push({ codigoProducto: data.code });
-            data.sortObject = { loteOut: 1 };
-            data.proyectar = [{ loteOut: 1 }, { fecha1: 1 }]
-            response = await contenido(data);
-            res.json(response);
-        }
-        
-        if (data.fx === 'c') {
-            if (data.sw) {
-                data.otrosMatch.push({ state: 0 })
+        const pipeline = [
+            {
+                '$match': {
+                    'facturada': false
+                }
+            }, {
+                '$sort': {
+                    'createdAt': -1
+                }
+            }, {
+                '$project': {
+                    'createdAt': 1,
+                    'insumo': 1,
+                    'nombreProveedor': 1,
+                    'operario': 1,
+                    'cantidad': 1
+                }
             }
-            if (data.oneId) {
-                data.otrosMatch = [];
-                data.otrosMatch.push({ _id: new ObjectId(data.oneId) });
-                console.log('un solo id')
-            }
-            
-            res.json(response);
-            return;
-        }
-      
-        if (data.fx === 'q') {
-            if (data.oneId) {
-                const pipeline = [
-                    {
-                        '$match': {
-                            '_id': new ObjectId(data.oneId)
-                        }
-                    }, {
-                        '$project': {
-                            'orderItem': {
-                                '$map': {
-                                    'input': '$orderItem',
-                                    'as': 'item',
-                                    'in': {
-                                        '$mergeObjects': [
-                                            '$$item', {
-                                                'lotesOk': {
-                                                    '$reduce': {
-                                                        'input': '$$item.historyDisp',
-                                                        'initialValue': true,
-                                                        'in': {
-                                                            '$and': [
-                                                                '$$value', {
-                                                                    '$ne': [
-                                                                        '$$this.loteVenta', ''
-                                                                    ]
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            },
-                            'delivery': 1,
-                            'siOrder':1,
-                            'consecutivo':1,
-                            'state': 1,
-                            'createdAt': 1,
-                            'totalReq': 1,
-                            'TotalDisp': 1
-                        }
-                    }, {
-                        '$project': {
-                            
-                            'orderItem.product': 0
-                        }
-                    }
-                ]
-                
-                response = await Order.aggregate(pipeline);
-                response.unshift({ count: 0 })
-                res.json(response);
-                return;
-            }
-        }
+        ];
+        let aggRes = await Inalmacen.aggregate(pipeline);
+        res.json(aggRes);
     } catch (error) {
         next(error);
     }
 }
-*/
 
 apiCtrl.despachos = async (req, res, next) => {
     try {
