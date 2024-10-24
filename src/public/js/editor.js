@@ -127,27 +127,6 @@ function processRole(role, section) {
     }
 }
 
-
-
-/*
-function renderInputs(container, index, section, value = '') {
-    const containerElement = document.getElementById(container);
-    if (index === 0) {
-        containerElement.innerHTML = '';
-    }
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'form-control';
-    input.placeholder = '';
-    input.name = 'texto';
-    input.setAttribute('data-index', index);
-    input.setAttribute('data-section', section);
-    input.style.width = '100%';
-    input.value = value;
-    containerElement.appendChild(input);
-}
-*/
-
 function renderInputs(container, index, section, value = '') {
     const containerElement = document.getElementById(container);
     
@@ -186,9 +165,6 @@ function actualizarIndices(containerElement) {
     });
 }
 
-
-
-
 const formSection = document.getElementById('accordionDesign');
 
 formSection.addEventListener('focus', function (event) {
@@ -226,10 +202,6 @@ formSection.addEventListener('focus', function (event) {
     const titulo = updateTitle();
     document.getElementById('title-properties').innerHTML = titulo;
 }, true);
-
-
-
-
 
 
 let currentInput2 = null; // Variable para almacenar el input donde ocurrió el dblclick
@@ -277,14 +249,6 @@ function mostrarListaOpciones(input) {
     });
 }
 
-
-
-
-
-
-
-
-
 function updateTitle() {
     const translations = {
         'headerReport': 'Encabezado de informe'
@@ -325,39 +289,6 @@ function toggleInputs({ bloquear }) {
     });
 }
 
-/*
-function toggleInputs({ bloquear }) {
-    const formSection = document.getElementById('formDesign');
-    const inputsAndSelects = formSection.querySelectorAll('input, select');
-    inputsAndSelects.forEach(element => {
-
-        if (element.role === 'property') {
-            element.disabled = bloquear;
-            if (bloquear) {
-                if (element.type !== 'color') {
-                    if (bloquear) element.value = '';
-                }
-            } else {
-                const sectionArray = localDesign[currentInput.section];  // Verifica si la sección existe
-                if (Array.isArray(sectionArray) && sectionArray[currentInput.index] && sectionArray[currentInput.index].hasOwnProperty(element.name)) {
-                    const valor = sectionArray[currentInput.index][element.name];
-                    if (element.type === 'checkbox') {
-                        element.checked = valor;
-                    } else {
-                        element.value = valor ? valor : defaults[element.name];
-                    }
-                } else {
-                    console.log(`No se encontró el valor para la sección: ${currentInput.section}, índice: ${currentInput.index}, nombre: ${element.name}`);
-                }
-
-            }
-
-        }
-
-
-    });
-}
-*/
 
 function defaultValues() {
     const formSection = document.getElementById('formDesign');
@@ -568,11 +499,10 @@ document.getElementById("btn_guardar").addEventListener('click', async e => {
 });
 
 document.getElementById('btnNuevo').addEventListener('click', async e => {
-    role = 'nuevo';
+    //role = 'nuevo';
     currentDocumentId = null;
-    let titulo = document.getElementById('modal-title');
-    titulo.innerHTML = `Nuevo ${currentCollection.titulo}`;
-    renderModalEditor(currentKeys);
+
+    renderModalEditor(currentKeys,'nuevo',`Nuevo ${currentCollection.titulo}`);
 
 })
 
@@ -608,11 +538,11 @@ async function loadDocuments(m, t) {
 document.getElementById('bodyContainer').addEventListener('dblclick', async e => {
     let idt = e.target.getAttribute('_id');
     userId = idt;
-    role = 'edit';
+    //role = 'edit';
     currentDocumentId = idt;
-    let titulo = document.getElementById('modal-title');
-    titulo.innerHTML = `Editar ${currentCollection.titulo}`;
-    renderModalEditor(currentKeys);
+    //const ind = currentContent.findIndex(content => content._id === currentDocumentId) : 0;
+    const docEdit = currentContent.find(doc => doc._id === idt);
+    renderModalEditor(currentKeys, 'edit', `Editar ${currentCollection.titulo}`, docEdit  );
 
 });
 

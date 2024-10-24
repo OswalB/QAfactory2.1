@@ -427,22 +427,20 @@ function fadeInputs() {
 
 }
 
-async function renderModalEditor(currentk) {
+async function renderModalEditor(currentk, localRole, title='undefined', docToEdit={}) {
+    const elementTitulo = document.getElementById('modal-titleEdit');
+    elementTitulo.innerHTML = title;
     const cambio = document.getElementById('btn_reset');
     cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
-
-    const ind = role === 'edit' ? currentContent.findIndex(content => content._id === currentDocumentId) : 0;
-    document.getElementById('btn_borrar').style.display = role === 'edit' ? '' : 'none';
-
+    document.getElementById('btn_borrar').style.display = localRole === 'edit' ? '' : 'none';
     const bodyTable = document.getElementById('bodyTable');
     bodyTable.innerHTML = '';
 
     currentk.forEach(item => {
-        const contenido = role === 'edit' ? currentContent[ind][item.campo] : (item.default !== undefined ? item.default : '');
+        const contenido = docToEdit ? docToEdit[item.campo] : (item.default !== undefined ? item.default : '');
 
         const inputType = getInputType(item.tipo);
         const inputClass = getInputClass(item.tipo);
-
         const tr = document.createElement('tr');
         const tdLabel = document.createElement('td');
         tdLabel.innerHTML = `<span class="input-group-text" id="addon-wrapping">${item.alias}:</span>`;

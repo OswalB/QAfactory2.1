@@ -12,6 +12,7 @@ const Action = require('../models/Action');
 const Inalmacen = require('../models/Inalmacen');
 const Editable = require('../models/Editable');
 const Template = require('../models/Template');
+const Formula = require('../models/Formula');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Errorl = require('../models/Errorl');
@@ -69,6 +70,34 @@ apiCtrl.almacenKeys = async (req, res, next) => {
         data.modelo = 'Inalmacen';
         response = await keys(data);
         res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.formulasKeys = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Formula';
+        response = await keys(data);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.formulasContent = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Formula';
+        data.proyectar = [
+
+        ]
+        response = await contenido(data);
+        res.json(response);
+
     } catch (error) {
         next(error);
     }
@@ -420,6 +449,23 @@ apiCtrl.renderDespachos = async (req, res, next) => {
     }
 };
 
+apiCtrl.renderFormulas = async (req, res, next) => {
+    const panel = {
+        "boton-editar": false,
+        "boton-pagination": true,
+        "boton-nuevo": true,
+        "boton-borrar": true,
+       
+        "titulo": "Formulas"
+    };
+
+    try {
+        res.render('produccion/formula', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {
         "boton-xls": false,
@@ -428,7 +474,7 @@ apiCtrl.renderPedidos = async (req, res, next) => {
         "boton-vista": true,
         "boton-averias": true,
         "boton-cancelar": true,
-        "titulo": ""
+        "titulo": "Pedidos"
     };
 
     try {

@@ -2,52 +2,65 @@ const {Schema, model} = require('mongoose');
 const FormulaSchema = new Schema({
     nombre:{
         type: 'String',
-        required: true,
-        alias:'Formula para'
+        require: true,
+        alias:'Formula para',
+        
+        failMsg:'Describa a que producto se aplica'
     },
     codigoProd:{
         type: 'String',
-        required: true, 
+        require: true, 
         unique: true,
         alias:'Codigo de producto'
     },
     categoria: {
         type: 'String', 
-        required: true,
+        require: true,
         alias:'Categoria'
     }, 
     diasVence:{
         type: 'Number',
         default: 0,
-        required: true,
+        require: true,
         alias:'Días vto.'
     },  
     siFormulaOk:{
         type: 'Boolean', 
-        requiered: true,
+        requiere: true,
         default: false,
         alias:'Completa'
     }, 
-    detalle:[{
+    prodMin:{
+        type: 'Number',
+        default: 1,
+        require: true,
+        alias:'Produccion min.'
+    }, 
+    prodMax:{
+        type: 'Number',
+        default: 1,
+        require: true,
+        alias:'Produccion max.'
+    },    detalle:[{
         cantidad:{
             type: 'Number',
             default: 0,
-            required: true
+            require: true
         },codigoInsumo:{
             type: 'String',
-            required: true
+            require: true
         },
         nombreInsumo:{
             type: 'String',
-            required: true
+            require: true
         },
         unidad:{
             type: 'String',
-            required: true
+            require: true
         },
         siBase: {
             type: 'Boolean',
-            required: true
+            require: true
         }
     }]
 },{

@@ -6,6 +6,8 @@ const {
     almacenSinfacturar,
     almacenKeys,
     despachos,
+    formulasKeys,
+    formulasContent,
     getHistory,
     getEmbodegar,
     intercambiador,
@@ -14,6 +16,7 @@ const {
     pedidos,
     renderAlmacen,
     renderDespachos,
+    renderFormulas,
     renderPedidos,
     salesProducts,
     sugeridos,
@@ -35,12 +38,15 @@ const errorHandler = require('../middlewares/errorHandler');
 router.get('/domain/almacen',isAdmin, renderAlmacen);
 router.get('/domain/despachos',isDispatcher, renderDespachos);
 router.get('/domain/embodegar',isAuthenticated, getEmbodegar);
+router.get('/domain/formulas',isAuthenticated, renderFormulas);
 router.get('/domain/intercambiador', intercambiador);
 router.get('/domain/pedidos',isAuthenticated, renderPedidos);
 
 router.post('/domain/almacen/content',isAdmin, almacenContent);
 router.post('/domain/almacen/sinfacturar',isAuthenticated, almacenSinfacturar);
-router.post('/domain/almacen/keys',isAdmin, almacenKeys);
+router.post('/domain/almacen/keys',isAuthenticated, formulasKeys);
+router.post('/domain/formulas/keys',isAdmin, formulasKeys);
+router.post('/domain/formulas/content',isAuthenticated, formulasContent);
 router.post('/domain/despachos',isDispatcher, despachos);
 router.post('/domain/despachos/history',isDispatcher, getHistory);
 router.post('/domain/mis-clientes',isAuthenticated, misClientes);
