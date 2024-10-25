@@ -15,10 +15,12 @@ const {
     misClientes,
     notice,
     pedidos,
+    pendientesResum,
     renderAlmacen,
     renderDespachos,
     renderFormulas,
     renderPedidos,
+    renderPendientes,
     salesProducts,
     sugeridos,
     saveAlmacen,
@@ -45,6 +47,8 @@ router.get('/domain/embodegar',isAuthenticated, getEmbodegar);
 router.get('/domain/formulas',isAuthenticated, renderFormulas);
 router.get('/domain/intercambiador', intercambiador);
 router.get('/domain/pedidos',isAuthenticated, renderPedidos);
+router.get('/domain/pendientes',isAuthenticated, renderPendientes);
+router.get('/domain/pendientes/resum',isAuthenticated, pendientesResum);
 
 router.post('/domain/almacen/content',isAdmin, almacenContent);
 router.post('/domain/almacen/sinfacturar',isAuthenticated, almacenSinfacturar);

@@ -418,6 +418,79 @@ apiCtrl.pedidos = async (req, res, next) => {
     }
 }
 
+apiCtrl.pendientesResum = async (req, res, next) => {
+    try {
+        let pipeline = [
+            {
+                '$match': {
+                    'state': 0
+                }
+            }, {
+                '$unwind': {
+                    'path': '$orderItem'
+                }
+            }, {
+                '$group': {
+                    '_id': '$orderItem.code',
+                    'code': {
+                        '$first': '$orderItem.code'
+                    },
+                    'name': {
+                        '$first': '$orderItem.product'
+                    },
+                    'saldo': {
+                        '$sum': {
+                            '$subtract': [
+                                '$orderItem.qty', '$orderItem.dispatch'
+                            ]
+                        }
+                    },
+                    'detalle': {
+                        '$push': {
+                            'cliente': '$client',
+                            'saldo': {
+                                '$subtract': [
+                                    '$orderItem.qty', '$orderItem.dispatch'
+                                ]
+                            }
+                        }
+                    }
+                }
+            }, {
+                '$sort': {
+                    '_id': 1
+                }
+            }
+        ];
+        let result = await Order.aggregate(pipeline);
+        pipeline =[
+            {
+              '$sort': {
+                'nombre': 1
+              }
+            }, {
+              '$project': {
+                '_id': 0, 
+                'codigo': 1, 
+                'categoria': 1
+              }
+            }
+          ]
+        const cats = await Product.aggregate(pipeline);
+        result.forEach((item) => {
+            const respuesta = cats.find(({ codigo }) => codigo === item.code);
+            if (respuesta) {
+                item.cat = respuesta.categoria;
+            }
+
+        })
+        res.json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.notice = async (req, res, next) => {
     try {
         const data = req.body;
@@ -498,6 +571,19 @@ apiCtrl.renderPedidos = async (req, res, next) => {
 
     try {
         res.render('ventas/pedidos', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.renderPendientes = async (req, res, next) => {
+    const panel = {
+        "boton-pagination": true,
+        "titulo": "Pendienes"
+    };
+
+    try {
+        res.render('produccion/pendientes', { panel });
     } catch (error) {
         next(error);
     }
