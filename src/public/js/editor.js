@@ -14,6 +14,40 @@ const defaults = {
     formatControl: ''
 }
 
+document.getElementById("btn_borrar").addEventListener('click', async e => {
+    const result = window.confirm('Seguro que desea BORRAR el documento?');
+
+    if (!result) {
+        return;
+    }
+
+    try {
+        const objeto = {
+            _id: currentDocumentId,
+            modelo: currentCollection.modelo
+        };
+
+        const res = await fetch('/core/document', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: "DELETE",
+            body: JSON.stringify(objeto)
+        });
+
+        const data = await res.json();
+
+        if (data.fail) {
+            return;
+        }
+        toastr.info(data.message);
+        $('#modalEditor').modal('hide');
+        renderTable();
+    } catch (error) {
+        // Manejar el error de manera adecuada
+    }
+});
+
 const inputFieldO = document.getElementById('in-fieldOrder');
 const listOrderData = document.getElementById('listOrderData');
 

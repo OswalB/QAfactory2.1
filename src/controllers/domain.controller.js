@@ -61,6 +61,26 @@ apiCtrl.almacenContent = async (req, res, next) => {
     }
 }
 
+apiCtrl.deleteItemFormula = async (req, res, next) => {
+    try {
+        const { _id, idItem } = req.body;
+
+        await Formula.updateOne({ "_id": _id },
+            {
+                $pull: {
+                    detalle: { _id: idItem }
+                }
+            });
+        let baseF = await apiCtrl.baseFormula(_id);
+        let response = await Formula.findOne({ _id: _id });
+        res.json(response);
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+
 
 apiCtrl.almacenKeys = async (req, res, next) => {
     try {
@@ -451,11 +471,10 @@ apiCtrl.renderDespachos = async (req, res, next) => {
 
 apiCtrl.renderFormulas = async (req, res, next) => {
     const panel = {
-        "boton-editar": false,
+        "boton-editar": true,
         "boton-pagination": true,
         "boton-nuevo": true,
-        "boton-borrar": true,
-       
+
         "titulo": "Formulas"
     };
 
@@ -599,16 +618,84 @@ apiCtrl.stateLotes = async (req, res, next) => {
     }
 };
 
+apiCtrl.setItemFormula = async (req, res, next) => {
+    try {
+        const { nombre, codigo, cantidad, unidad, siBase, _id } = req.body;
+        const { ObjectId } = require('mongodb');
+        let valCant = parseFloat(cantidad);
+
+        await Formula.updateMany({ _id: _id }, {
+            $push: {
+                'detalle': {
+                    nombreInsumo: nombre,
+                    codigoInsumo: codigo,
+                    cantidad: valCant,
+                    siBase: siBase,
+                    unidad: unidad
+                }
+            }
+        });
+        let baseF = await apiCtrl.baseFormula(_id);
+
+        let response = await Formula.findOne({ _id: _id });
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.baseFormula = async (_id, req, res, next) => {
+    try {
+        //const { ObjectId } = require('mongodb');
+        let pipeBase = [
+            {
+                '$match': {
+                    '_id': new ObjectId(_id)
+                }
+            }, {
+                '$unwind': {
+                    'path': '$detalle'
+                }
+            }, {
+                '$match': {
+                    'detalle.siBase': true
+                }
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'detalle.cantidad': 1,
+                    'siFormulaOk': 1
+                }
+            }
+        ]
+
+        const aggres = await Formula.aggregate(pipeBase);
+        console.log(_id, 'resul', aggres, aggres.length);
+        resultado = 0;
+        if (aggres.length == 1) {
+            console.log('si')
+
+            const re = await Formula.updateOne({ "_id": new ObjectId(_id) }, { $set: { "siFormulaOk": true } });
+            console.log('resultado', re)
+        } else {
+            console.log('no')
+            await Formula.updateOne({ "_id": new ObjectId(_id) }, { $set: { "siFormulaOk": false } });
+        }
+
+        return resultado;
+
+    } catch (error) {
+        console.error('Error:', error);
+        //next(error);
+    }
+}
+
 apiCtrl.setState = async (req, res, next) => {
     try {
         const data = req.body;
         let response;
         console.log(data);
         await Order.findByIdAndUpdate(data._id, { state: data.newValue }, { new: true })
-
-
-
-
         res.json({ msg: 'facturado:ok' });
     } catch (error) {
         next(error);

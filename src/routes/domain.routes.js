@@ -5,6 +5,7 @@ const {
     almacenContent,
     almacenSinfacturar,
     almacenKeys,
+    deleteItemFormula,
     despachos,
     formulasKeys,
     formulasContent,
@@ -23,6 +24,7 @@ const {
     saveAlmacen,
     savePedido,
     saveTemplate,
+    setItemFormula,
     setState,
     stateLotes,
     templatesList,
@@ -34,6 +36,8 @@ const {
 
 const {isAuthenticated, isAdmin,  authorization, isDispatcher} = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
+
+router.delete('/domain/formula/item', isAuthenticated, deleteItemFormula);
 
 router.get('/domain/almacen',isAdmin, renderAlmacen);
 router.get('/domain/despachos',isDispatcher, renderDespachos);
@@ -58,6 +62,7 @@ router.post('/domain/actions-list',isAuthenticated, actionsList);
 router.post('/domain/ventas/productos',isAuthenticated, salesProducts);
 
 router.put('/domain/almacen', isAuthenticated, saveAlmacen);
+router.put('/domain/formula/item', isAuthenticated, setItemFormula);
 router.put('/domain/despachos/update', isDispatcher, updateDespacho);
 router.put('/domain/despachos-hist/update', isDispatcher, updateHistoryDisp);
 router.put('/domain/lotes/state', isAuthenticated, stateLotes);

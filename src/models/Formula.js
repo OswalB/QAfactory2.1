@@ -60,7 +60,8 @@ const FormulaSchema = new Schema({
         },
         siBase: {
             type: 'Boolean',
-            require: true
+            require: true,
+            default: false
         }
     }]
 },{

@@ -280,7 +280,7 @@ coreCtrl.getNewLote = async (req, res, next) => {
         loteAlmacen = await Inalmacen.findOne({ "lote": strSerie }, { "_id": 1 });
         lotePlanilla = await Planilla.findOne({ "loteOut": strSerie }, { "_id": 1 });
         duplicados = loteAlmacen || lotePlanilla || strSerie.length < 2;
-        if(strSerie.length<1) sufijo ='';
+        if (strSerie.length < 1) sufijo = '';
         if (duplicados) {
             strSerie = `${lastId.consecutivo}${sufijo}${strSerie}`;
             const newSerial = (lastId.consecutivo || 0) + incremento;
@@ -460,6 +460,7 @@ coreCtrl.resetPass = async (req, res, next) => {
 
 coreCtrl.saveDocument = async (req, res, next) => {
     try {
+        console.log(req.body)
         const { modelo, documentos } = req.body;
         if (!modelo || !documentos || !Array.isArray(documentos)) {
             return res.json({ fail: true, message: 'Se requiere el modelo y un array de documentos.' });

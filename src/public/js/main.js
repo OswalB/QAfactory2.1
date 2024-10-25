@@ -229,39 +229,7 @@ function applyValidation() {
 
 
 
-document.getElementById("btn_borrar").addEventListener('click', async e => {
-    const result = window.confirm('Seguro que desea BORRAR el documento?');
 
-    if (!result) {
-        return;
-    }
-
-    try {
-        const objeto = {
-            _id: currentDocumentId,
-            modelo: currentCollection.modelo
-        };
-
-        const res = await fetch('/core/document', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: "DELETE",
-            body: JSON.stringify(objeto)
-        });
-
-        const data = await res.json();
-
-        if (data.fail) {
-            return;
-        }
-        toastr.info(data.message);
-        $('#modalEditor').modal('hide');
-        renderTable();
-    } catch (error) {
-        // Manejar el error de manera adecuada
-    }
-});
 
 
 function showAlertFilter() {
@@ -427,17 +395,17 @@ function fadeInputs() {
 
 }
 
-async function renderModalEditor(currentk, localRole, title='undefined', docToEdit={}) {
+async function renderModalEditor(currentk, localRole, title='undefined', docToEdit) {
     const elementTitulo = document.getElementById('modal-titleEdit');
     elementTitulo.innerHTML = title;
     const cambio = document.getElementById('btn_reset');
-    cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
+    if(currentCollection) cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
     document.getElementById('btn_borrar').style.display = localRole === 'edit' ? '' : 'none';
     const bodyTable = document.getElementById('bodyTable');
     bodyTable.innerHTML = '';
 
     currentk.forEach(item => {
-        const contenido = docToEdit ? docToEdit[item.campo] : (item.default !== undefined ? item.default : '');
+        const contenido = docToEdit ? docToEdit[item.campo] : item.default || ''    ;
 
         const inputType = getInputType(item.tipo);
         const inputClass = getInputClass(item.tipo);
