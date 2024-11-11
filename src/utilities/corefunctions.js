@@ -149,6 +149,77 @@ async function guardar(data){
 
 }
 
+async function borrarSubdocumento(data) {
+    const { modelo, documentoId, subdocumentoId, subdocumentoPath } = data;
+
+    if (!modelo || !documentoId || !subdocumentoId || !subdocumentoPath) {
+        return { fail: true, message: 'Se requiere el modelo, _id del documento, _id del subdocumento y la ruta del subdocumento.' };
+    }
+
+    const dynamicModel = mongoose.model(modelo);
+
+    try {
+        const updatedDocument = await dynamicModel.findByIdAndUpdate(
+            documentoId,
+            { $pull: { [subdocumentoPath]: { _id: subdocumentoId } } },
+            { new: true }
+        );
+
+        if (!updatedDocument) {
+            return { fail: true, message: 'Documento no encontrado o subdocumento no eliminado.' };
+        }
+        return { success: true, message: 'Subdocumento eliminado.', data: updatedDocument };
+    } catch (error) {
+        throw error; // Pasar al manejador de errores
+    }
+}
+
+
+async function guardarSubdocumento(data) {
+    const { modelo, documentoId, subdocumentoId, subdocumento, subdocumentoPath } = data;
+
+    if (!modelo || !documentoId || !subdocumento || !subdocumentoPath) {
+        return { fail: true, message: 'Se requiere el modelo, _id del documento, subdocumento y la ruta del subdocumento.' };
+    }
+
+    const dynamicModel = mongoose.model(modelo);
+
+    try {
+        if (subdocumentoId) {
+            // Prepara el objeto con los campos específicos para evitar eliminar otros
+            const updateFields = {};
+            for (const key in subdocumento) {
+                updateFields[`${subdocumentoPath}.$.${key}`] = subdocumento[key];
+            }
+
+            const updatedDocument = await dynamicModel.findOneAndUpdate(
+                { _id: documentoId, [`${subdocumentoPath}._id`]: subdocumentoId },
+                { $set: updateFields },
+                { new: true }
+            );
+
+            if (!updatedDocument) {
+                return { fail: true, message: 'Subdocumento no encontrado para actualizar.' };
+            }
+            return { success: true, message: 'Subdocumento actualizado.', data: updatedDocument };
+        } else {
+            // Si no hay subdocumentoId, se crea un nuevo subdocumento
+            const updatedDocument = await dynamicModel.findByIdAndUpdate(
+                documentoId,
+                { $push: { [subdocumentoPath]: subdocumento } },
+                { new: true }
+            );
+            return { success: true, message: 'Subdocumento agregado.', data: updatedDocument };
+        }
+    } catch (error) {
+        if (error.code === 11000) {
+            return { fail: true, message: 'Error de clave duplicada en subdocumento.' };
+        } else {
+            throw error; // Pasar al manejador de errores
+        }
+    }
+}
+
 async function keys(data) {
     const eschema = require(`../models/${data.modelo}`);
     const listk = eschema.schema.obj;
@@ -196,4 +267,7 @@ esNumero = (valor) => {
     return typeof valor === 'number';
 }
 
-module.exports = { contenido, keys, guardar, setNewPass };
+module.exports = { 
+    contenido, keys, guardar, setNewPass, guardarSubdocumento,
+    borrarSubdocumento
+ };

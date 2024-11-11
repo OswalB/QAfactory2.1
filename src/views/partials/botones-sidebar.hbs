@@ -34,10 +34,12 @@
 
 <h6 class="header-item">Fabrica</h6>
 <ul class="list-unstyled px-2 ">
+    <li class=""><a href="/domain/lotes" id="btnLotesManager" class="text-decoration-none item-menu"><i class="fa fa-bookmark-o"
+                aria-hidden="true"></i> Lotes</a></li>
     <li class=""><a href="/domain/almacen" class="text-decoration-none item-menu"><i class="fa fa-sitemap"
                 aria-hidden="true"></i> Almacen</a></li>
 
-    <li class=""><a href="/produccion/planillas" class="text-decoration-none item-menu"><i class="fa fa-calculator"
+    <li class=""><a href="/domain/planillas" class="text-decoration-none item-menu"><i class="fa fa-calculator"
                 aria-hidden="true"></i> Producción</a></li>
 
     <li class=""><a href="/domain/formulas" class="text-decoration-none item-menu"><i class="fa fa-flask"
@@ -82,16 +84,16 @@
         <option value='false'>Falso</option>
     </select>
     <hr class="dropdown-divider">
-    
+
 </ul>
 <h6 class="header-item">Agrupar en:</h6>
-<select id="in-group" class="form-select">
-  <option value="itemspp">Items por pág.</option>
-  <option value="diapp">Dia</option>
-  <option value="semanapp">Semana</option>
-  <option value="mespp">Mes</option>
+<select id="in-group" class="form-select" _fx="runDate">
+    <option value="itemspp">Items por pág.</option>
+    <option value="diapp">Dia</option>
+    <option value="semanapp">Semana</option>
+    <option value="mespp">Mes</option>
 </select>
-<input type="date" id="in-datepp" placeholder="Fecha " class="form-control me-1" style="display:none">
+<input type="date" id="in-datepp"  _fx="runDate" placeholder="Fecha " class="form-control me-1" style="display:none">
 <input id="in-limitar" type="text" class="form-control me-1" aria-label="Username" aria-describedby="basic-addon1">
 
 </div>

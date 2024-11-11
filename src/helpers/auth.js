@@ -31,6 +31,7 @@ helpers.authorization  = (req, res, next) => {
         models.push(...modelPermissions.seller);
     }
     const uniqueModels = [...new Set(models)];
+    //console.log(uniqueModels);
     if (uniqueModels.includes(modelName)) {
         return next();
     } else {

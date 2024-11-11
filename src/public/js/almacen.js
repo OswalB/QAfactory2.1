@@ -8,7 +8,7 @@ async function afterLoad() {
 };
 
 async function init() {
-    document.getElementById('title-main').innerHTML = 'Despachos';
+    document.getElementById('title-main').innerHTML = 'Almacen';
 
     backFilter.filterBy = '0';
     backFilter.filterTxt = '';
@@ -39,6 +39,9 @@ async function init() {
         return;
     }
     currentKeys = data;
+    currentKeys.push({
+        alias: 'F. creación', campo: 'createdAt', default: '', type: 'date'
+    })
     setPaso(0);
     //startPolling();
     document.getElementById('btnChose').style.display = 'none';

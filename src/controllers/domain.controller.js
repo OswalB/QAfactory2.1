@@ -418,6 +418,18 @@ apiCtrl.pedidos = async (req, res, next) => {
     }
 }
 
+apiCtrl.planillas = async (req, res, next) => {
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        data.modelo = 'Planilla';
+        response = await contenido(data);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
 apiCtrl.pendientesResum = async (req, res, next) => {
     try {
         let pipeline = [
@@ -463,19 +475,19 @@ apiCtrl.pendientesResum = async (req, res, next) => {
             }
         ];
         let result = await Order.aggregate(pipeline);
-        pipeline =[
+        pipeline = [
             {
-              '$sort': {
-                'nombre': 1
-              }
+                '$sort': {
+                    'nombre': 1
+                }
             }, {
-              '$project': {
-                '_id': 0, 
-                'codigo': 1, 
-                'categoria': 1
-              }
+                '$project': {
+                    '_id': 0,
+                    'codigo': 1,
+                    'categoria': 1
+                }
             }
-          ]
+        ]
         const cats = await Product.aggregate(pipeline);
         result.forEach((item) => {
             const respuesta = cats.find(({ codigo }) => codigo === item.code);
@@ -558,6 +570,20 @@ apiCtrl.renderFormulas = async (req, res, next) => {
     }
 };
 
+apiCtrl.renderLotes = async (req, res, next) => {
+    const panel = {
+        "boton-editar": true,
+        "boton-pagination": true,
+        "titulo": "Lotes"
+    };
+
+    try {
+        res.render('produccion/lotes', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.renderPedidos = async (req, res, next) => {
     const panel = {
         "boton-xls": false,
@@ -571,6 +597,23 @@ apiCtrl.renderPedidos = async (req, res, next) => {
 
     try {
         res.render('ventas/pedidos', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.renderPlanillas = async (req, res, next) => {
+    const panel = {
+        "boton-xls": false,
+        "boton-pagination": true,
+        "boton-nuevo": true,
+        "boton-date": false,
+        "boton-users": true,
+        "titulo": "Planilla de produccion"
+    };
+
+    try {
+        res.render('produccion/planilla', { panel });
     } catch (error) {
         next(error);
     }
@@ -638,6 +681,30 @@ apiCtrl.savePedido = async (req, res, next) => {
         data.documentos[0].sellerName = user.name;
         data.documentos[0].consecutivo = siEsPedido ? `R-${counter}` : `A-${counter}`;
         console.log('datos de pedido', data)
+        response = await guardar(data);
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+apiCtrl.savePlanilla = async (req, res, next) => {
+    console.warn('borrar savePlanilla??')
+    try {
+        const data = req.body, user = req.user;
+        let response;
+        lastId = await Serial.findOne();
+        if (!lastId) {
+            let newSerial = new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 2001, serialPdf: 0 });
+            await newSerial.save();
+            lastId = await Serial.findOne();
+        }
+
+        let counter = lastId.serialPlanillas;
+        counter += 3;
+        await Serial.updateOne({ "_id": lastId._id }, { $set: { serialPlanillas: counter } });
+        data.modelo = 'Planilla';
+        data.documentos[0].loteOut = counter;
         response = await guardar(data);
         res.json(response);
     } catch (error) {
@@ -875,6 +942,168 @@ apiCtrl.updateDespacho = async (req, res, next) => {
         next(error);
     }
 }
+
+apiCtrl.unaFormula = async (req, res, next) => {
+    const {
+        codigoProducto, porcentaje, operario,
+        producto
+    } = req.body;
+    const data = {};
+
+    try {
+        //lista de ingredientes y cantidad de la formula:
+        let pipeline = [
+            {
+                '$match': {
+                    'codigoProd': codigoProducto
+                }
+            }, {
+                '$unwind': {
+                    'path': '$detalle'
+                }
+            }, {
+                '$addFields': {
+                    'newCantidad': {
+                        '$round': [
+                            {
+                                '$multiply': [
+                                    '$detalle.cantidad', porcentaje
+                                ]
+                            }, 2
+                        ]
+                    }
+                }
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'newCantidad': 1,
+                    'detalle.unidad': 1,
+                    'siFormulaOk': 1,
+                    'diasVence': 1,
+                    'detalle.siBase': 1,
+                    'detalle.codigoInsumo': 1,
+                    'detalle.nombreInsumo': 1,
+                    'categoria': 1
+                }
+            }
+        ];
+        const formulacion = await Formula.aggregate(pipeline);
+        
+        const categoria = formulacion[0].categoria;
+        const vto = new Date;
+        const vence = vto.setDate(vto.getDate() + formulacion[0].diasVence);
+        //agregar lotes y pool
+        pipeline = [
+            {
+                '$match': {
+                }
+            }, {
+                '$limit': 2
+            }, {
+                '$project': {
+                    'lote': 1,
+                    'vence': 1,
+                    'lotesPool': 1,
+                    'loteOut': 1,
+                    detalle:1
+                }
+                
+            },
+            {
+                '$addFields': {
+                
+                    'copyPool': {
+                        '$concatArrays': [
+                            '$lotesPool',
+                            {
+                                '$map': {
+                                    'input': '$detalle',
+                                    'as': 'detalleItem',
+                                    'in': '$$detalleItem.loteIn'
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ];
+        let lotesP = [];
+        const detal = [];           //construccion de: planilla.detalle = detal
+        for (const i in formulacion) {
+            detal.push({
+                'cantidad': formulacion[i].newCantidad,
+                'codigoInsumo': formulacion[i].detalle.codigoInsumo,
+                'nombreInsumo': formulacion[i].detalle.nombreInsumo,
+                'unidad': formulacion[i].detalle.unidad,
+            })
+            const codep = formulacion[i].detalle.codigoInsumo;
+            pipeline[0].$match = { agotado: false, 'insumo.codigo': codep };
+            const insumosList = await Inalmacen.aggregate(pipeline);
+
+            if (insumosList.length === 1) {
+                detal[i].loteIn = insumosList[0].lote;
+                detal[i].vence = insumosList[0].vence;
+                detal[i].compuesto = false;
+                //if (aggres[i].lotesPool) lotesPool = [...lotesPool, ...aggres[i].lotesPool]
+                //aggres[i].copyPool = [];
+            } else if (insumosList.length === 0) {
+                pipeline[0].$match = { formulaOk: true, agotado: false, 'codigoProducto': codep };
+                const aggPlanillas = await Planilla.aggregate(pipeline);
+                if (aggPlanillas.length === 1) {
+                    detal[i].loteIn = aggPlanillas[0].loteOut;
+                    detal[i].vence = aggPlanillas[0].vence;
+                    detal[i].compuesto = true;
+                    
+                    lotesP = [
+                        ...(lotesP || []), 
+                        ...(aggPlanillas[0].lotesPool || []),  
+                        ...(aggPlanillas[0].copyPool || [])  
+                    ]  
+                    //***aggres[i].copyPool = aggPlanillas[0].lotesPool;
+                }
+            }
+        }
+
+        // crear la planilla* * * * * * * * * * * * * * *
+        const fecha1 = new Date;
+
+        data.documentos = [{
+            categoria,
+            vence,
+            fecha1,
+            timeRun: 0,
+            timeStart: new Date,
+            loteOut: '',
+            operario,
+            producto,
+            codigoProducto,
+            detalle: detal,
+            lotesPool: lotesP
+        }];
+        console.log('currentFormula', data.documentos);
+
+        let lastId = await Serial.findOne();
+        if (!lastId) {
+            let newSerial = new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 2001, serialPdf: 0 });
+            await newSerial.save();
+            lastId = await Serial.findOne();
+        }
+
+        let counter = lastId.serialPlanillas;
+        counter += 3;
+        await Serial.updateOne({ "_id": lastId._id }, { $set: { serialPlanillas: counter } });
+        data.modelo = 'Planilla';
+        data.documentos[0].loteOut = counter;
+        const response = await guardar(data);
+
+        res.json(response);
+
+        return;
+
+    } catch (error) {
+        next(error);
+    }
+};
 
 apiCtrl.updateHistoryDisp = async (req, res, next) => {
     try {

@@ -1,6 +1,7 @@
 const {
     contenido,
-    keys, setNewPass
+    keys, setNewPass,
+    guardarSubdocumento, borrarSubdocumento
 } = require('../utilities/corefunctions');
 const coreCtrl = {};
 const mongoose = require('mongoose');
@@ -12,6 +13,7 @@ const Errorl = require('../models/Errorl');
 const Formula = require('../models/Formula');
 const Inalmacen = require('../models/Inalmacen');
 const Insumo = require('../models/Insumo');
+const ObjectId = require('mongodb').ObjectId;
 const Order = require('../models/Order');
 const passport = require('passport');
 const Planilla = require('../models/Planilla');
@@ -28,6 +30,16 @@ const maxUsuarios = config.maxUsuarios;
 
 /*console.log('Cantidad máxima de productos:', maxProductos);
 console.log('Cantidad máxima de usuarios:', maxUsuarios);*/
+
+coreCtrl.x = async (req, res, next) => {
+    try {
+        const data = req.body;
+
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+}
 
 coreCtrl.changepass = async (req, res, next) => {
     try {
@@ -66,6 +78,8 @@ coreCtrl.editContent = async (req, res, next) => {
         next(error);
     }
 }
+
+
 
 coreCtrl.embodegar = async (req, res, next) => {
     try {
@@ -110,6 +124,20 @@ coreCtrl.deleteDocument = async (req, res, next) => {
         } else {
             res.json({ fail: true, message: 'No se encontraron documentos para eliminar.' });
         }
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.deleteSubPlanilla = async (req, res, next) => {
+    try {
+        const data = req.body;
+        data.modelo = 'Planilla';
+        data.subdocumentoPath = 'detalle';
+        let response;
+        response = await borrarSubdocumento(data);
+        console.log(response);
+        res.json(response);
     } catch (error) {
         next(error);
     }
@@ -187,7 +215,7 @@ coreCtrl.getKeys = async (req, res, next) => {
         const eschema = require(`../models/${modelo}`);
         const listk = eschema.schema.obj;
         const listaCampos = Object.keys(listk).filter(key => {
-            return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && key !== 'createdAt' && listk[key].type;
+            return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && listk[key].type;
         }).map(key => {
             const alias = listk[key].alias || '';
             const tipo = listk[key].type.toLowerCase();
@@ -210,6 +238,160 @@ coreCtrl.getKeys = async (req, res, next) => {
 
         res.json(listaCampos);
 
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.getPool = async (req, res, next) => {
+    try {
+        const lote = req.params.id;
+        //const lote = req.body.lote
+        //console.log(req.body  )
+        let pipeline = [
+            {
+                '$match': { lote: lote }
+            }, {
+                '$project': {
+                    'lote': 1,
+                }
+            }, {
+                '$addFields': {
+                    'copyPool': []
+                }
+            }
+        ];
+
+        let aggRes = await Inalmacen.aggregate(pipeline);
+        console.log(aggRes)
+        if (aggRes.length > 0) {
+            res.json(aggRes);
+        } else {
+
+            pipeline = [
+                {
+                    '$match': { loteOut: lote }
+                },
+                {
+                    '$project': {
+                        lote:'$loteOut',
+                        'lotesPool': 1,
+                        detalle:1
+                    }
+                },
+                {
+                    '$addFields': {
+                        'copyPool': {
+                            '$concatArrays': [
+                                '$lotesPool',
+                                {
+                                    '$map': {
+                                        'input': '$detalle',
+                                        'as': 'detalleItem',
+                                        'in': '$$detalleItem.loteIn'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ];
+
+
+            let aggRes2 = await Planilla.aggregate(pipeline);
+
+            res.json(aggRes2);
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.getLotesparaProduccion = async (req, res, next) => {
+    try {
+        const codigo = req.body.codigo
+        //console.log(req.body  )
+        let pipeline = [
+            {
+                '$match': {
+                    '$and': [
+                        {
+                            'insumo.codigo': codigo
+                        }, {
+                            'agotado': false
+                        }
+                    ]
+                }
+            }, {
+                '$sort': {
+                    'vence': 1
+                }
+            }, {
+                '$project': {
+                    'lote': 1,
+                    'vence': 1,
+                    'nombreProveedor': 1,
+                    'fechaw': 1
+                }
+            }, {
+                '$addFields': {
+                    'compuesto': false,
+                    'copyPool': []
+                }
+            }
+        ];
+
+        let aggRes = await Inalmacen.aggregate(pipeline);
+
+        pipeline = [
+            {
+                '$match': {
+                    'formulaOk': true,
+                    'codigoProducto': codigo,
+                    'agotado': false
+                }
+            },
+            {
+                '$project': {
+                    'lote': '$loteOut',
+                    'vence': 1,
+                    'nombreProveedor': { '$ifNull': ['$nombreProveedor', 'Prod. propio'] },
+                    'fechaw': '$fecha1',
+                    'lotesPool': 1,  // Incluye lotesPool para usar en copyPool
+                    'detalle': 1      // Incluye detalle para extraer loteIn
+                }
+            },
+            {
+                '$sort': {
+                    'vence': 1
+                }
+            },
+            {
+                '$addFields': {
+                    'compuesto': true,
+                    'copyPool': {
+                        '$concatArrays': [
+                            '$lotesPool',
+                            {
+                                '$map': {
+                                    'input': '$detalle',
+                                    'as': 'detalleItem',
+                                    'in': '$$detalleItem.loteIn'
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ];
+
+        aggRes = aggRes.map(obj => ({ ...obj, org: 'Inalmacen' }));
+        let aggRes2 = await Planilla.aggregate(pipeline);
+        aggRes2 = aggRes2.map(obj => ({ ...obj, org: 'Planilla' }));
+        let resMerge = [...aggRes, ...aggRes2];
+
+        res.json(resMerge);
 
     } catch (error) {
         next(error);
@@ -286,10 +468,6 @@ coreCtrl.getNewLote = async (req, res, next) => {
             const newSerial = (lastId.consecutivo || 0) + incremento;
             await Serial.updateOne({ "_id": lastId._id }, { $set: { 'consecutivo': newSerial } });
         }
-
-
-
-        // Devolvemos el serial generado
         res.json({ 'fail': false, 'serial': strSerie });
 
     } catch (error) {
@@ -368,6 +546,56 @@ coreCtrl.listCollections = async (req, res, next) => {
     }
 }
 
+coreCtrl.lotesManager = async (req, res, next) => {
+    try {
+        const data = req.body;
+        if (!data.codigo) {
+            res.json([{ countTotal: 0 }]);
+            return
+        }
+        data.modelo = 'Inalmacen';
+        data.otrosMatch.push({ 'insumo.codigo': data.codigo });
+        data.proyectar.push(
+            {
+                agotado: 1, lote: 1, loteOut: 1,
+                fechaw: 1, fecha1: 1,
+                cantidad: 1, cantProd: 1,
+                operario: 1, nombreProveedor: 1
+            }
+        )
+        response = await contenido(data);
+        response = response.map(obj => ({ ...obj, org: data.modelo }));
+        response = response.map(obj => {
+            const { nombreProveedor, ...rest } = obj;
+            return {
+                tercero: nombreProveedor,
+                ...rest
+            };
+        });
+        if (response[0].countTotal < 1) {
+            data.modelo = 'Planilla';
+            data.otrosMatch = [{ codigoProducto: data.codigo }];
+            response = await contenido(data);
+            response = response.map(obj => ({ ...obj, org: data.modelo }));
+            response = response.map(obj => {
+                const { loteOut, fecha1, cantProd, operario, ...rest } = obj;
+                return {
+                    lote: loteOut,
+                    fechaw: fecha1,
+                    cantidad: cantProd,
+                    tercero: operario,
+                    ...rest
+                };
+            });
+        }
+        res.json(response);
+
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 coreCtrl.logout = async (req, res, next) => {
     try {
         req.logout(function (err) {
@@ -381,6 +609,73 @@ coreCtrl.logout = async (req, res, next) => {
         next(error);
     }
 };
+
+coreCtrl.operarios = async (req, res, next) => {
+    try {
+        const pipeline = [
+            {
+                '$match': {
+                    'operario': true
+                }
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'name': 1,
+                    'pin': 1
+                }
+            }
+        ];
+
+        const result = await User.aggregate(pipeline);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.procesosList = async (req, res, next) => {
+    try {
+        let pipeline = [
+            {
+                '$match': {
+                    'siFormulaOk': true
+                }
+            }, {
+                '$sort': {
+                    'categoria': 1,
+                    'nombre': 1
+                }
+            }, {
+                '$unwind': {
+                    'path': '$detalle'
+                }
+            }, {
+                '$match': {
+                    'detalle.siBase': true
+                }
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'proceso': '$nombre',
+                    'codigoProceso': '$codigoProd',
+                    'insumo': '$detalle.nombreInsumo',
+                    'codigoInsumo': '$detalle.codigoInsumo',
+                    'cantidad': '$detalle.cantidad',
+                    'unidad': '$detalle.unidad',
+                    'categoria': 1,
+                    'diasVence': 1,
+                    prodMax: 1,
+                    prodMin: 1
+                }
+            }
+        ];
+
+        let lista = await Formula.aggregate(pipeline);
+        res.json(lista);
+    } catch (error) {
+        next(error);
+    }
+}
 
 coreCtrl.proveedoresList = async (req, res, next) => {
     try {
@@ -497,6 +792,46 @@ coreCtrl.saveDocument = async (req, res, next) => {
 
         res.json({ success: true, message: 'Documentos guardados.', data: savedDocuments });
 
+    } catch (error) {
+        next(error);
+    }
+};
+
+coreCtrl.updateDoc = async (req, res, next) => {
+    try {
+        //data = {modelo:, _id:, params:{}, docResponse:true}
+        const data = req.body;
+        const dynamicModel = mongoose.models[data.modelo];
+        let response;
+        //console.log(data);
+        const updateFields = Object.fromEntries(
+            Object.entries(data.params).filter(([_, v]) => v !== undefined)
+        );
+        if (data.docResponse) {
+            response = await dynamicModel.findByIdAndUpdate(data._id, updateFields, { new: true })
+        } else {
+            response = await dynamicModel.updateOne(
+                { "_id": new ObjectId(data._id) },
+                { $set: updateFields }
+            );
+        }
+
+
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
+coreCtrl.updateSubPlanilla = async (req, res, next) => {
+    try {
+        //data = {modelo:, _id:, params:{}, docResponse:true}
+        const data = req.body;
+        data.modelo = 'Planilla';
+        data.subdocumentoPath = 'detalle';
+        let response;
+        response = await guardarSubdocumento(data);
+        res.json(response);
     } catch (error) {
         next(error);
     }

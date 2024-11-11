@@ -34,13 +34,14 @@ const PlanillaSchema = new Schema({
         required: true,
         alias:'Fecha proceso'
     },
-    t1:{type:'String',
-        alias:'Hora inicio'},
-    t2:{type:'String',
-        alias:'Hora final'},
-    time:{
+    timeRun:{
         type: 'Number',
-        alias:'Tiempo'
+        alias:'Tiempo actividad'
+        
+    },
+    timeStart:{
+        type: 'Date',
+        alias:'Tiempo inicial'
         
     },
     loteOut:{

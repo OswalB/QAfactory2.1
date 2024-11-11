@@ -68,10 +68,22 @@ async function refreshFilter(strFilterStatus) {
 }
 
 document.getElementById('form-filtro').addEventListener('change', async e => {
-    workFilter.filterStatus = 'change';
-    showAlertFilter();
-    paintFilter();
+    const fx = e.target.getAttribute('_fx');
+    let updateQuery = false;
+    console.log(fx);
+    switch (fx) {
+        case 'runDate':
+            updateQuery = true;
+            break;
+    }
 
+    if (updateQuery) {
+        refreshFilter('active');
+    } else {
+        workFilter.filterStatus = 'change';
+        showAlertFilter();
+        paintFilter();
+    }
 });
 
 function paintFilter() {
@@ -227,11 +239,6 @@ function applyValidation() {
 
 }
 
-
-
-
-
-
 function showAlertFilter() {
     const alerta = document.getElementById('alertFilter');
     let message = '', tipo = '';
@@ -258,10 +265,6 @@ document.getElementById('btn-refrescar').addEventListener('click', async e => {
     refreshFilter('active');
 
 })
-
-
-
-
 
 //-------------------------- MENU LATERAL  --------------------------------------
 
@@ -395,17 +398,19 @@ function fadeInputs() {
 
 }
 
-async function renderModalEditor(currentk, localRole, title='undefined', docToEdit) {
+
+
+async function renderModalEditor(currentk, localRole, title = 'undefined', docToEdit) {
     const elementTitulo = document.getElementById('modal-titleEdit');
     elementTitulo.innerHTML = title;
     const cambio = document.getElementById('btn_reset');
-    if(currentCollection) cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
+    if (currentCollection) cambio.style.display = currentCollection.modelo === 'User' ? '' : 'none';
     document.getElementById('btn_borrar').style.display = localRole === 'edit' ? '' : 'none';
     const bodyTable = document.getElementById('bodyTable');
     bodyTable.innerHTML = '';
 
     currentk.forEach(item => {
-        const contenido = docToEdit ? docToEdit[item.campo] : item.default || ''    ;
+        const contenido = docToEdit ? docToEdit[item.campo] : item.default || '';
 
         const inputType = getInputType(item.tipo);
         const inputClass = getInputClass(item.tipo);
@@ -418,9 +423,11 @@ async function renderModalEditor(currentk, localRole, title='undefined', docToEd
         const input = document.createElement(inputType === 'select' ? 'select' : 'input');
         input.id = item.campo;
         input.type = inputType;
-        input.classList.add(inputClass, 'form-snd');
+        input.classList.add(inputClass, 'form-snd', 'fade-input');
         input.value = contenido;
         input.required = item.require;
+        input.disabled = item.disabled;
+        if (item.step) input.step = item.step;
         if (item.minlength !== undefined) {
             input.minLength = item.minlength;
         }

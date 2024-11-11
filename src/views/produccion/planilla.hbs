@@ -1,0 +1,165 @@
+<!-- sin revisar -->
+
+
+
+
+
+
+
+
+
+
+
+<!-- Modal editor -->
+<div class="modal fade" id="modalEditor" tabindex="-1" aria-labelledby="modalEditorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title-edit"></h5>
+
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-success table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Campo</th>
+              <th scope="col">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="bodyTable">
+
+          </tbody>
+
+        </table>
+      </div>
+      <div class="modal-footer">
+
+        <a id="btn_borrar" class="btn btn-danger" href="#"><i class="fa fa-times-circle fa-lg" aria-hidden="true"></i>
+          Delete</a>
+        <a id="btn_guardar" class="btn btn-success" href="#"><i class="fa fa-floppy-o fa-lg" aria-hidden="true"></i>
+          Guardar</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-sign-out fa-lg"
+            aria-hidden="true"></i> Salir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scrollable modal insumos list-->
+
+<div id="insumosModal" class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Adicionar insumo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div id="bodyList" class="modal-body">
+        <table class="table table-success table-striped table-hover">
+
+          <tbody id="bodyTableList">
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- modal lotes-->
+<div class="modal fade" id="lotesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Elija el lote del producto:</h5>
+      </div>
+      <div id="bodyLotes" class="modal-body">
+        <ul id="lotesList" class="list-group">
+
+        </ul>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button id="btnDeleteLote" type="button" class="btn btn-danger" disabled=""><i class="fa fa-ban fa-lg"
+            aria-hidden="true"></i> Eliminar</button>
+        <button id="btnExitL" type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled=""><i
+            class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cancelar</button>
+
+        <button id="btnSelectLote" type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled=""><i
+            class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Asignar</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal user-->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Ingrese PIN de identificación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input id="inUser" inputmode="numeric" class="fs-3" type="number" autocomplete="off">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cantidad-->
+<div class="modal fade" id="cantidadModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="lblCantidad"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input id="inCantidad" inputmode="numeric" class="fs-3" type="number" autocomplete="off">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button id="btnSavePlanilla" type="button" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal productos -->
+<div class="modal fade" id="productosModal" tabindex="-1" aria-labelledby="modalEditorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Seleccione el producto a fabricar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text">Buscar</span>
+          <input id="inSearch" class="form-control me-2" type="search" placeholder="Producto" aria-label="Search "
+            autocomplete="off">
+        </div>
+        <div id="listProducts" class="list-group">
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- cards container -->
+<div class="accordion" id="accordionMain">
+
+</div>
+
+
+<script src="/js/planilla.js"></script>

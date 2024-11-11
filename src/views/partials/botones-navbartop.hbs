@@ -22,7 +22,7 @@
                         </a>
                   </li>
                   <li class="nav-item"></li>
-                        <a id="btnArchivar" class="dropdown-item" href="#">
+                  <a id="btnArchivar" class="dropdown-item" href="#">
                         <i class="fa fa-folder"></i> Archivar</a>
                   </li>
                   <li class="nav-item">
@@ -34,7 +34,8 @@
             </ul>
       </div>
       <div class="dropdown">
-            <a id="btnChose" type="button" class="btn btn-dark dropdown-toggle py-0 " data-bs-toggle="dropdown" >Documento</a>
+            <a id="btnChose" type="button" class="btn btn-dark dropdown-toggle py-0 "
+                  data-bs-toggle="dropdown">Documento</a>
             <ul id="listDocuments" class="dropdown-menu">
             </ul>
       </div>
@@ -48,7 +49,7 @@
             <ul id="listOpciones" class="dropdown-menu">
                   <li class="nav-item">
                         <a id="btnArchivar" class="dropdown-item" href="#">
-                        <i class="fa fa-folder"></i> Archivar</a>
+                              <i class="fa fa-folder"></i> Archivar</a>
                   </li>
                   <li class="nav-item">
                         <a id="btn-upload" class="dropdown-item" href="#">
@@ -63,7 +64,7 @@
 
             </ul>
       </div>
-      
+
       {{/if}}
 
 
@@ -77,6 +78,19 @@
             <i class="fa fa-plus-square "></i> Nuevo
       </a>
       {{/if}}
+      {{#if panel.boton-users}}
+            <div class="dropdown">
+                  <a id="btnUsers" type="button" class="btn btn-dark dropdown-toggle py-0 "
+                        data-bs-toggle="dropdown">Usuarios</a>
+                  <ul id="navUsers" class="dropdown-menu">
+                  </ul>
+            </div>
+      {{/if}}
+
+      {{#if panel.boton-date}}
+      <input type="date" name="" id="boton-date">
+      {{/if}}
+
       {{#if panel.boton-averias}}
       <a id="btnAverias" class="nav-link py-1 text-light px-2 " href="#">
             <i class="fa fa-life-ring "></i> Averias
@@ -98,10 +112,10 @@
       </a>
       {{/if}}
       {{#if panel.boton-guardar}}
-      <div id="step07" >
-      <a id="btnSave" class="nav-link py-1 text-light px-2" href="#" >
-            <i class="fa fa-cloud-upload"></i> Guardar
-      </a>
+      <div id="step07">
+            <a id="btnSave" class="nav-link py-1 text-light px-2" href="#">
+                  <i class="fa fa-cloud-upload"></i> Guardar
+            </a>
       </div>
       {{/if}}
       {{#if panel.boton-borrar}}
@@ -109,7 +123,7 @@
             <i class="fa fa-minus-square"></i> Borrar
       </a>
       {{/if}}
-      
+
       {{#if panel.boton-facturados}}
       <div class="form-check form-switch mt-1">
             <input id="check_estado" class="form-check-input" type="checkbox" role="switch" checked>
