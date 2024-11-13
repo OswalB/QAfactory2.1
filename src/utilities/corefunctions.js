@@ -20,9 +20,11 @@ async function contenido(data) {
     if (data.keyGroup) {
         'si tiene un rango de fecha para arupar en pagina'
         const rangeQuery = {};
-        const rminDate = new Date(data.datemin);
+        //const rminDate = new Date(data.datemin);
+        const rminDate = new Date(`${data.datemin}T00:00:00-05:00`);
         rangeQuery['$gte'] = rminDate;
-        const rmaxDate = new Date(data.datemax);
+        //const rmaxDate = new Date(data.datemax);
+        const rmaxDate = new Date(`${data.datemax}T00:00:00-05:00`);
         rmaxDate.setDate(rmaxDate.getDate() + 1);
         rangeQuery['$lt'] = rmaxDate;
         pipeline.push({ $match: { [data.keyGroup]: rangeQuery } });

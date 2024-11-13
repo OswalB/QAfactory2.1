@@ -309,7 +309,7 @@ async function paint(itemAcc) {
     let iconColor = 'btn-success';
     let iconElement = '<i class="fa fa-check-circle fa-lg"></i>';
     let iconMsg = '';
-    if (flags.error.length > 0) {
+    if (flags.error.length > 0 && !itemAcc.formulaOk) {
         iconColor = 'btn-warning';
         iconElement = '<i class="fa fa-exclamation-triangle fa-lg" ></i>';
         iconMsg = `, [${flags.error.length}]Errores: ${errMsg}`
@@ -324,14 +324,19 @@ async function paint(itemAcc) {
     const planillaOk = flags.error.length === 0;
     const change = esOk !== planillaOk;
 
-    if (flags.error.length > 0) {
+    /*if (flags.error.length > 0) {
         icon = `<a class="btn btn-warning" href="#"  _role="toedit" _idDoc="${itemAcc._id}"><i class="fa fa-exclamation-triangle fa-lg" ></i></a>`;
         estado = "Incompleta!!"
-    }
+    }*/
 
     if (change && !itemAcc.embodegado) {
-        await updateDocument('Planilla', itemAcc._id, { formulaOk: planillaOk });
-
+        if (!itemAcc.formulaOk) {
+            await updateDocument('Planilla', itemAcc._id, { formulaOk: planillaOk });
+            localTable[flags.index].formulaOk =true;
+        } else {
+            //toastr.warning(`Lote ${itemAcc.loteOut} No se puede modificar`)
+            console.warn(`Lote ${itemAcc.loteOut} No se puede modificar`);
+        }
     }
     itemAcc.formulaOk = planillaOk;
     return change;
@@ -393,7 +398,7 @@ document.getElementById('navUsers').addEventListener('click', async e => {
     let pin = e.target.getAttribute('_pin');
     document.getElementById('btnUsers').innerHTML = nombre;
     flags.user = pin;
-    workFilter.filterBy = !pin  ? '' : 'operario';
+    workFilter.filterBy = !pin ? '' : 'operario';
     workFilter.filterTxt = !pin ? '' : nombre;
     await renderTable();
     await footer(1)
@@ -556,7 +561,7 @@ document.getElementById('cantidadModal').addEventListener('keypress', e => {
 document.getElementById('accordionMain').addEventListener('change', async e => {
     flags.siChangeH = true;
     flags.updateRole = e.target.getAttribute('_role');
-   
+
 })
 
 document.getElementById('accordionMain').addEventListener('focusout', async e => {
@@ -564,8 +569,15 @@ document.getElementById('accordionMain').addEventListener('focusout', async e =>
     const role = e.target.getAttribute('_role');
     const value = e.target.value;
     if (flags.siChangeH) {
+        
         const indice = localTable.findIndex(({ _id }) => _id == flags.idDoc);
-        switch (role) {
+        const isFunction = ['inCantProd', 'inBrix', 'inFecha'].includes(role);
+        const enabledEdit = !localTable[flags.index].embodegado;
+        const op_role = (isFunction && !enabledEdit) ? 'noEdit' : role;
+        switch (op_role) {
+            case 'noEdit':
+                toastr.warning(`El Lote ${localTable[flags.index].loteOut} No se puede modificar, no se gurdaron los cambios`)
+                break;
             case 'inCantProd':
                 localTable[indice].cantProd = value;
                 await updateDocument('Planilla', flags.idDoc, { cantProd: value });
@@ -604,7 +616,7 @@ async function renderModalLotes(codigo) {
         body: JSON.stringify({ 'codigo': codigo })
     })
     const data = await res.json();
-    
+
     if (data.fail) {
         toastr.error('Reintente!', 'No se ha podido recibir.', 'lotes');
         return false;
@@ -659,7 +671,7 @@ document.getElementById('btn_borrar').addEventListener('click', async e => {
 
 
     const currentLote = localTable[flags.index].detalle[flags.subIndex].loteIn;
-    const copyPool = await getPool(currentLote);
+    const copyPool = currentLote?await getPool(currentLote):[];
     if (copyPool.length > 0) {
 
         const newPool = setLotes(localTable[flags.index].lotesPool, copyPool, 'sub', true);
@@ -1028,6 +1040,8 @@ function calcInterval(fecha) {
 
 //* * * * * * * * * *    FUNCIONES  Varios * * * * *
 
+
+
 document.getElementById('accordionMain').addEventListener('click', async e => {
     const idDoc = e.target.getAttribute('_idDoc');
     const _role = e.target.getAttribute('_role');
@@ -1036,8 +1050,15 @@ document.getElementById('accordionMain').addEventListener('click', async e => {
     flags.index = localTable.findIndex(({ _id }) => _id == flags.idDoc);
     flags.idItem = idItem;
     if (idItem) flags.subIndex = localTable[flags.index].detalle.findIndex(({ _id }) => _id == flags.idItem);
-    console.log('click en ', idDoc, _role, idItem);
-    switch (_role) {
+    const isFunction = ['crono', 'edit', 'openList', 'sending', 'reload',
+        'inlote', 'cantidad'].includes(_role);
+    const enabledEdit = !localTable[flags.index].embodegado && !localTable[flags.index].formulaOk;
+    const op_role = (isFunction && !enabledEdit) ? 'noEdit' : _role;
+    console.log('click en ', _role, op_role, isFunction, idDoc, idItem);
+    switch (op_role) {
+        case 'noEdit':
+            toastr.warning(`El Lote ${localTable[flags.index].loteOut} No se puede modificar`)
+            break;
         case 'crono':
             toggleCronometro(idDoc, true);
             paint(localTable[flags.index]);

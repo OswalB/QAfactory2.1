@@ -69,22 +69,25 @@ async function refreshFilter(strFilterStatus) {
 
 document.getElementById('form-filtro').addEventListener('change', async e => {
     const fx = e.target.getAttribute('_fx');
-    let updateQuery = false;
-    console.log(fx);
-    switch (fx) {
-        case 'runDate':
-            updateQuery = true;
-            break;
-    }
+    runQuery(fx)
+    
+});
 
-    if (updateQuery) {
+function runQuery(fx){
+    
+    runFx = [
+        'runDate','runInput'
+    ];
+    const exeFilter = runFx.includes(fx);
+    console.log('fx:',fx,exeFilter);
+    if (exeFilter) {
         refreshFilter('active');
     } else {
         workFilter.filterStatus = 'change';
         showAlertFilter();
         paintFilter();
     }
-});
+}
 
 function paintFilter() {
     const filtroPor = currentKeys.find(actuales => actuales.campo === k_filterBy.value);

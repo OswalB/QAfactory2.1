@@ -34,7 +34,7 @@ async function init() {
     }
     currentKeys = data;
     //startPolling();
-    //document.getElementById('btnChose').style.display = 'none';
+    document.getElementById('btn_reset').style.display = 'none';
 }
 
 async function afterLoad() {

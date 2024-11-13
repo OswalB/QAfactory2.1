@@ -169,14 +169,13 @@ document.getElementById('lotesAvListManager').addEventListener('click', async e 
     
     const oneLote = lotesList[index];
     const estado = !oneLote.agotado;
-    console.log(index, oneLote);
     await updateDocument(oneLote.org, oneLote._id, { agotado: estado });
     lotesList[index].agotado = estado;
+    actualiceSw(lotesList[index]._id,estado)
 })    
 
 async function updateDocument(modelo, _id, params, docResponse = false) {
     dataSend = { modelo, _id, params, docResponse };
-    console.log(dataSend);
     let response = await fetch("/core/update", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -184,6 +183,5 @@ async function updateDocument(modelo, _id, params, docResponse = false) {
     })
 
     const data = await response.json();
-    console.log(data)
 }
 
