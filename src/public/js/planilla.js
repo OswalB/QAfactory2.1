@@ -134,21 +134,22 @@ async function renderOneCard(itemAcc, i) {
     container = document.getElementById(`bodyAccordion${itemAcc._id}`);
     container.innerHTML = '';
     renderHeadTable(container, itemAcc);
-    const hayCrono = itemAcc.timeStart || itemAcc.timeRun;
-    if (hayCrono) {
-        if (itemAcc.timeRun === 0) {      //crono corriendo
-            const timeStart = calcInterval(itemAcc.timeStart);
-            toggleCronometro(itemAcc._id);
-            cronometros[`crono${itemAcc._id}`].tiempo = timeStart;
-        } else {                          //crono stop
-            toggleCronometro(itemAcc._id);
+    //const hayCrono = itemAcc.timeStart || itemAcc.timeRun;
+    //const hayCrono = itemAcc.timeRun;
+    //if (hayCrono) {
+    if (itemAcc.timeRun === 0) {      //crono corriendo
+        const timeStart = calcInterval(itemAcc.timeStart) ;
+        toggleCronometro(itemAcc._id, timeStart, 'on');
+        //cronometros[`crono${itemAcc._id}`].tiempo = timeStart;
+    } else {                          //crono stop
+        toggleCronometro(itemAcc._id, itemAcc.timeRun,'off');
 
-            toggleCronometro(itemAcc._id);
-            cronometros[`crono${itemAcc._id}`].tiempo = itemAcc.timeRun;
-            const boton = document.getElementById(`crono${itemAcc._id}`);
-            boton.innerHTML = formatearTiempo(cronometros[`crono${itemAcc._id}`].tiempo);
-        }
+        //toggleCronometro(itemAcc._id);
+        //cronometros[`crono${itemAcc._id}`].tiempo = itemAcc.timeRun;
+        const boton = document.getElementById(`crono${itemAcc._id}`);
+        boton.innerHTML = formatearTiempo(cronometros[`crono${itemAcc._id}`].tiempo);
     }
+    //}
 
     renderFooterTable(container, itemAcc._id);
     container = document.getElementById(`bt${itemAcc._id}`);
@@ -179,7 +180,7 @@ function renderHeadTable(container, itemAcc) {
     const fStart = formatearDato(new Date(itemAcc.timeStart), 'hhh:mm:ss')
     const hayCrono = itemAcc.timeStart || itemAcc.timeRun;
     const inputCronometer = hayCrono ? `
-        <button id="crono${itemAcc._id}" _iddoc=${itemAcc._id} _role= "crono" class="btn bg-success text-white" ${itemAcc.formulaOk ? 'disabled' : ''}>00:00:00</button>
+        <button id="crono${itemAcc._id}" _iddoc=${itemAcc._id} _role= "crono" class="btn bg-success text-white" }>00:00:00</button>
     `: '';
     let f1 = toLocal(itemAcc.fecha1);
     let fv = fechaFormated(itemAcc.vence);
@@ -332,7 +333,7 @@ async function paint(itemAcc) {
     if (change && !itemAcc.embodegado) {
         if (!itemAcc.formulaOk) {
             await updateDocument('Planilla', itemAcc._id, { formulaOk: planillaOk });
-            localTable[flags.index].formulaOk =true;
+            localTable[flags.index].formulaOk = true;
         } else {
             //toastr.warning(`Lote ${itemAcc.loteOut} No se puede modificar`)
             console.warn(`Lote ${itemAcc.loteOut} No se puede modificar`);
@@ -539,7 +540,7 @@ async function procesarPlanilla() {
     });
     currentFormula = await res.json();
     if (currentFormula.fail) {
-        toastr.error('No se encontró la formula.', 'Error');
+        toastr.error(currentFormula.message || 'No se encontró la formula.', 'Error');
         return false;
 
     }
@@ -569,7 +570,7 @@ document.getElementById('accordionMain').addEventListener('focusout', async e =>
     const role = e.target.getAttribute('_role');
     const value = e.target.value;
     if (flags.siChangeH) {
-        
+
         const indice = localTable.findIndex(({ _id }) => _id == flags.idDoc);
         const isFunction = ['inCantProd', 'inBrix', 'inFecha'].includes(role);
         const enabledEdit = !localTable[flags.index].embodegado;
@@ -671,7 +672,7 @@ document.getElementById('btn_borrar').addEventListener('click', async e => {
 
 
     const currentLote = localTable[flags.index].detalle[flags.subIndex].loteIn;
-    const copyPool = currentLote?await getPool(currentLote):[];
+    const copyPool = currentLote ? await getPool(currentLote) : [];
     if (copyPool.length > 0) {
 
         const newPool = setLotes(localTable[flags.index].lotesPool, copyPool, 'sub', true);
@@ -976,15 +977,34 @@ function setLotes(originArr, newArr, oper, conDuplicados = true) {
 
 const cronometros = {}; // Objeto para almacenar los intervalos de cada cronómetro
 
-async function toggleCronometro(idDoc, click = false) {
-    const botonId = `crono${idDoc}`
-    const boton = document.getElementById(botonId);
 
+async function toggleCronometro(idDoc, acumulado, action) {
+    const botonId = `crono${idDoc}`;
+    const boton = document.getElementById(botonId);
     if (!cronometros[botonId]) {
-        cronometros[botonId] = { tiempo: 0, intervalo: null, corriendo: false };
+        cronometros[botonId] = { tiempo: acumulado, intervalo: null, };
+    }
+    const cronometro = cronometros[botonId];
+    switch (action) {
+        case 'on':
+            cronometro.corriendo = false;
+            break;
+        case 'off':
+            cronometro.corriendo = true;
+            boton.innerHTML = formatearTiempo(cronometro.tiempo);
+            break;
+        case 'click':
+            break;
+        default: console.warn(action, '??');
     }
 
-    const cronometro = cronometros[botonId];
+    //******* */
+
+    //if (!cronometros[botonId]) {
+    //    cronometros[botonId] = { tiempo: acumulado, intervalo: null, corriendo: false };
+    //}
+
+    //const cronometro = cronometros[botonId];
 
     if (cronometro.corriendo) {
         // Pausar cronómetro
@@ -992,7 +1012,6 @@ async function toggleCronometro(idDoc, click = false) {
         cronometro.corriendo = false;
         boton.classList.remove("bg-danger");
         boton.classList.add("bg-success");
-        //boton.setAttribute('_status','stop');
         boton._status = 'stop';
     } else {
         // Iniciar cronómetro
@@ -1004,12 +1023,10 @@ async function toggleCronometro(idDoc, click = false) {
         cronometro.corriendo = true;
         boton.classList.remove("bg-success");
         boton.classList.add("bg-danger");
-        //boton.setAttribute('_status','run');
         boton._status = 'run';
     }
 
-    if (click) {
-        //let dataSend = {};
+    if (action === 'click') {
         const params = {};
         const nuevaFecha = new Date();
         nuevaFecha.setSeconds(nuevaFecha.getSeconds() - cronometro.tiempo);
@@ -1060,7 +1077,7 @@ document.getElementById('accordionMain').addEventListener('click', async e => {
             toastr.warning(`El Lote ${localTable[flags.index].loteOut} No se puede modificar`)
             break;
         case 'crono':
-            toggleCronometro(idDoc, true);
+            toggleCronometro(idDoc, 0,'click');
             paint(localTable[flags.index]);
             break;
         case 'edit':

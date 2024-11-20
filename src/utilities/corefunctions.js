@@ -6,13 +6,15 @@ const Client = require('../models/Client');
 const Reason = require('../models/Reason');
 const Averia = require('../models/Averia');
 const Serial = require('../models/Serial');
+const Inalmacen = require('../models/Inalmacen');
+const Planilla = require('../models/Planilla');
 
 async function contenido(data) {
     if (!data.modelo) {
         return ([{ 'countTotal': 0 }]);
 
     }
-    
+
     const dynamicModel = mongoose.models[data.modelo];
     const pipeline = [];
     const proyeccion = {};
@@ -69,16 +71,16 @@ async function contenido(data) {
 
     const pipecount = pipeline.slice();
     pipecount.push({ $count: 'countTotal' });
-    
+
     let counter = await dynamicModel.aggregate(pipecount);
     if (counter.length < 1) counter = [{ countTotal: 0 }];
     counter = counter[0];
 
-    if(Object.keys(data.sortObject).length > 0){
+    if (Object.keys(data.sortObject).length > 0) {
 
-        pipeline.push({ $sort: data.sortObject});
+        pipeline.push({ $sort: data.sortObject });
     }
-    
+
 
     if (data.saltar) {
         const skipValue = esNumero(data.saltar) ? data.saltar : 1;
@@ -100,20 +102,20 @@ async function contenido(data) {
     if (Object.keys(proyeccion).length > 0) {
         pipeline.push({ $project: proyeccion });
     }
-   
+
 
     for (const cnt in pipeline) {
         console.log(pipeline[cnt]);
     }
 
     let result = await dynamicModel.aggregate(pipeline);
-    
+
     result.unshift(counter);
-   
+
     return result
 }
 
-async function guardar(data){
+async function guardar(data) {
     const { modelo, documentos } = data;
     if (!modelo || !documentos || !Array.isArray(documentos)) {
         return { fail: true, message: 'Se requiere el modelo y un array de documentos.' };
@@ -139,7 +141,7 @@ async function guardar(data){
         } catch (error) {
             if (error.code === 11000) {
                 // Error de clave duplicada
-                return res.json({ fail: true, message: 'Error de clave duplicada.' });
+                return ({ fail: true, message: 'Error de clave duplicada.' });
             } else {
                 // Otro tipo de error
                 throw error; // Pasar al manejador de errores
@@ -226,7 +228,7 @@ async function keys(data) {
     const eschema = require(`../models/${data.modelo}`);
     const listk = eschema.schema.obj;
     const listaCampos = Object.keys(listk).filter(key => {
-        return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt'  && listk[key].type;
+        return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && listk[key].type;
     }).map(key => {
         const alias = listk[key].alias || '';
         const tipo = listk[key].type.toLowerCase();
@@ -250,15 +252,160 @@ async function keys(data) {
 
 }
 
-async function setNewPass(iduser, newPass){
-    const {ObjectId} = require('mongodb');
-    if(iduser){
-          iduser= new ObjectId(iduser);
-          usuario = await User.findOne({_id : iduser});
-      const password = await usuario.encryptPassword(newPass);
-      await User.updateOne({_id : iduser},{password : password});
-      }
+async function setNewPass(iduser, newPass) {
+    const { ObjectId } = require('mongodb');
+    if (iduser) {
+        iduser = new ObjectId(iduser);
+        usuario = await User.findOne({ _id: iduser });
+        const password = await usuario.encryptPassword(newPass);
+        await User.updateOne({ _id: iduser }, { password: password });
+    }
 }
+
+async function trazaLotesAlmacen(lotew) {
+    const pipeline = [
+        {
+            '$match': {
+                lote: { '$in': lotew }
+            }
+        }, {
+            '$addFields': {
+                enStock: { $not: ['$agotado'] },
+                ninsumo: '$insumo.nombre'
+            }
+        }, {
+            '$project': {
+                _id: 0,
+                ninsumo: 1, fechaw: 1, lote: 1, nombreProveedor: 1,
+                operario: 1, acepta: 1, rechaza: 1, enStock: 1
+            }
+        }
+
+    ]
+    const result = await Inalmacen.aggregate(pipeline);
+    return result
+}
+
+async function trazaLotesProduccion(lotew) {
+    const pipeline = [
+        {
+            '$match': {
+                loteOut: { '$in': lotew }
+            }
+        }, {
+            '$addFields': {
+                enStock: { $not: ['$agotado'] }
+            }
+        }, {
+            '$project': {
+                _id: 0,
+                producto: 1, fecha1: 1, loteOut: 1, codigoProducto: 1,
+                cantProd: 1, operario: 1, enStock: 1
+            }
+        }
+
+    ];
+    const result = await Planilla.aggregate(pipeline);
+    return result
+}
+
+async function trazaLotesInsumosenPlanilla(lotew) {
+    const pipeline = [
+        {
+            '$match': {
+                '$or': [
+                    { 'lotesPool': { '$in': lotew } },
+                    { 'detalle.loteIn': { '$in': lotew } }
+                ]
+            }
+        }, {
+            '$addFields': {
+                enStock: { $not: ['$agotado'] }
+            }
+        }, {
+            '$project': {
+                _id: 0,
+                producto: 1, fecha1: 1, loteOut: 1, codigoProducto: 1,
+                cantProd: 1, operario: 1, enStock: 1
+            }
+        }
+
+    ];
+    const result = await Planilla.aggregate(pipeline);
+    
+    return result
+}
+
+async function poolyDetalles(lotew){
+    const pipeline = [
+        {
+            '$match': {
+                'loteOut': { '$in': lotew } // Coincide con cualquiera de los lotes en el array lotew
+            }
+        },
+        {
+            '$project': {
+                lotesPool: 1, // Incluye el campo lotesPool
+                detalle: '$detalle.loteIn' // Extrae únicamente los lotes de detalle.loteIn
+            }
+        },
+        {
+            '$addFields': {
+                mergedLotes: {
+                    '$setUnion': ['$lotesPool', '$detalle'] // Combina lotesPool y detalle.loteIn en un array único
+                }
+            }
+        },
+        {
+            '$project': {
+                mergedLotes: 1 // Solo necesitamos el array combinado
+            }
+        }
+    ];
+
+    const aggres = await Planilla.aggregate(pipeline);
+    const result = aggres[0].mergedLotes;
+    return result
+}
+
+async function trazaLotesVenta(lotew) {
+    const pipeline = [
+        {
+            '$match': {
+                'orderItem.historyDisp': {
+                    '$elemMatch': { 'loteVenta': { '$in': lotew } }
+                }
+            }
+        },{
+            '$unwind': '$orderItem'
+        },{
+            '$unwind': '$orderItem.historyDisp'
+        },{
+            '$match': {
+                'orderItem.historyDisp.loteVenta': { '$in': lotew }
+            }
+        
+        },{
+            '$addFields': {
+                fecha: '$delivery',
+                lote:'$orderItem.historyDisp.loteVenta',
+                cantidad:'$orderItem.dispatch',
+                producto:'$orderItem.product'
+            }
+        }, {
+            '$project': {
+                _id: 0,
+                client: 1, nit: 1, lote:1,
+                producto: 1, fecha: 1, consecutivo: 1,
+                cantidad: 1,
+            }
+        }
+
+    ];
+    const result = await Order.aggregate(pipeline);
+    return result
+}
+
 
 esFecha = (valor) => {
     const dateObject = new Date(valor);
@@ -269,7 +416,9 @@ esNumero = (valor) => {
     return typeof valor === 'number';
 }
 
-module.exports = { 
+module.exports = {
     contenido, keys, guardar, setNewPass, guardarSubdocumento,
-    borrarSubdocumento
- };
+    borrarSubdocumento,
+    trazaLotesAlmacen, trazaLotesProduccion, trazaLotesVenta,
+    trazaLotesInsumosenPlanilla, poolyDetalles
+};

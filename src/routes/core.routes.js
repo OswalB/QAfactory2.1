@@ -13,7 +13,7 @@ const {
     getLotesparaProduccion, getLotesVigentes,
     getNewLote,
     getOpers,
-    getPool,
+    getPool, getTraza,
     intercambiador,
     listCollections,
     logout,lotesManager,
@@ -52,6 +52,7 @@ router.get('/core/operarios', isAuthenticated, operarios);
 router.get('/core/procesos', isAuthenticated, procesosList);
 
 router.get('/core/proveedores', isAdmin, proveedoresList);
+router.get('/core/pool/:id', isAuthenticated, getPool);
 router.get('/intercambiador', intercambiador);
 router.get('/logout', logout);
 router.get('/signin', renderSignin);
@@ -64,9 +65,10 @@ router.post('/core/keys', authorization, getKeys);
 router.post('/core/lotes/test', isAuthenticated, getNewLote);
 router.post('/core/lotes/manager', isAuthenticated, lotesManager);
 router.post('/core/lotes/vigentes', isAuthenticated, getLotesVigentes);
-router.get('/core/pool/:id', isAuthenticated, getPool);
+
 router.post('/core/produccion/lotes', isAuthenticated, getLotesparaProduccion);
 router.post('/core/reset-pass', isAdmin, resetPass);
+router.post('/core/traza', isAuthenticated, getTraza);
 router.post('/core/update', authorization, updateDoc);
 router.post('/signin', userAuth);
 

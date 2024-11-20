@@ -1,12 +1,12 @@
 let localOrders, flags = {}, itemCollection = {}, itemSelected = {}, itemToSend = {}, oneOrder = {}, bodega = {}, toEmbodegar;
 let templates = null, actions;
-const configPack = {}, interval = 150, idle = 300 ;
+const configPack = {}, interval = 150, idle = 300;
 document.getElementById('accordionPanel').addEventListener('click', async e => {
 
     let i = e.target.getAttribute('idcard');
     const idDoc = e.target.getAttribute('_iddoc');
     console.log(idDoc)
-    
+
     if (e.target.classList.contains('btn-hide')) {
         document.getElementById('acc-item' + i).style.display = 'none';
     }
@@ -23,7 +23,7 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
     }
     if (e.target.classList.contains('print')) {
         await loadTemplates();
-        
+
         const modelo = e.target.getAttribute('_model');
         itemSelected.idDocument = localOrders[i]._id;
         const dataPrint = [];
@@ -217,7 +217,7 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
         const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
         const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
         itemSelected.currPackage = '';
-        document.getElementById('txtActions').value ='';
+        document.getElementById('txtActions').value = '';
         configPackage(index);
         configBotonesPack();
         //console.log(encaje, mayor)
@@ -235,10 +235,15 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
 
         itemSelected.code = orderItem.code;
         lotesList = await getLotes(itemSelected.code);
-        flags.siChangeH = false;
-        flags.historyModalHide = false;
-        renderLotes();
-        //console.log(localOrders[])
+        if (lotesList.length < 1) {
+            currentInput.placeholder = 'No hay disponibles';
+            toastr.error('No se hiceron cambios, reintente!')
+        } else {
+            flags.siChangeH = false;
+            flags.historyModalHide = false;
+            renderLotes();
+            //console.log(localOrders[])
+        }
     }
 });
 
@@ -424,7 +429,7 @@ document.getElementById('bodyHistory').addEventListener('click', async e => {
         flags.historyModalHide = true;
         //renderLotesHist();
         //const documentO = localOrders.find(doc => doc._id === itemSelected.idDocument);
-        document.getElementById('txtActions').value ='';
+        document.getElementById('txtActions').value = '';
         const index = localOrders.findIndex(doc => doc._id === itemSelected.idDocument);
         configPackage(index);
         configBotonesPack(true);
@@ -734,7 +739,7 @@ async function pollServer() {
             toastr.error(data.message);
             return; // Salir en caso de error
         }
-        if(flags.prevNotice != 'init' && flags.prevNotice != data[0]._id ) {
+        if (flags.prevNotice != 'init' && flags.prevNotice != data[0]._id) {
             console.log('nnneeewwsss');
             mostrarAlerta();
         }
@@ -866,9 +871,10 @@ function paintLotesButton() {
         msg += 'Falta la accion emprendida por la averia';
         errors++;
     }
-    if (!esOrden){document.getElementById('seccActions').style.display = '';
+    if (!esOrden) {
+        document.getElementById('seccActions').style.display = '';
         itemSelected.avResponse = acc.value;
-    }else{
+    } else {
         document.getElementById('seccActions').style.display = 'none';
     }
 
@@ -1398,7 +1404,7 @@ function packageMenor(arr) {
         const [pkg, count] = Object.entries(obj)[0]; // Extraer el par package, count
         const packageNumber = Number(pkg);
         const valPkg = parseInt(pkg);
-        if (!isNaN(packageNumber) ) {
+        if (!isNaN(packageNumber)) {
             if (valPkg < 1) {
                 menores++;
                 //mayorPackage = packageNumber;
@@ -1409,9 +1415,9 @@ function packageMenor(arr) {
     return menores;
 }
 
-async function loadActions(){
-    if(actions){
-        
+async function loadActions() {
+    if (actions) {
+
         return;
     }
     actions = [];
@@ -1431,7 +1437,7 @@ async function loadActions(){
     }
 
     actions = data;
-    console.log('load new Actions',actions);
+    console.log('load new Actions', actions);
 }
 
 function mostrarAlerta() {

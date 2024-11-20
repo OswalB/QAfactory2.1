@@ -1,7 +1,9 @@
 const {
     contenido,
     keys, setNewPass,
-    guardarSubdocumento, borrarSubdocumento
+    guardarSubdocumento, borrarSubdocumento,
+    trazaLotesAlmacen, trazaLotesProduccion, trazaLotesVenta,
+    trazaLotesInsumosenPlanilla,poolyDetalles
 } = require('../utilities/corefunctions');
 const coreCtrl = {};
 const mongoose = require('mongoose');
@@ -275,9 +277,9 @@ coreCtrl.getPool = async (req, res, next) => {
                 },
                 {
                     '$project': {
-                        lote:'$loteOut',
+                        lote: '$loteOut',
                         'lotesPool': 1,
-                        detalle:1
+                        detalle: 1
                     }
                 },
                 {
@@ -464,7 +466,7 @@ coreCtrl.getNewLote = async (req, res, next) => {
         duplicados = loteAlmacen || lotePlanilla || strSerie.length < 2;
         if (strSerie.length < 1) sufijo = '';
         if (duplicados) {
-            strSerie = `${lastId.consecutivo}${sufijo}${strSerie}`;
+            strSerie = `${lastId.consecutivo + incremento}${sufijo}${strSerie}`;
             const newSerial = (lastId.consecutivo || 0) + incremento;
             await Serial.updateOne({ "_id": lastId._id }, { $set: { 'consecutivo': newSerial } });
         }
@@ -492,6 +494,53 @@ coreCtrl.getOpers = async (req, res, next) => {
         ];
 
         const result = await User.aggregate(pipeline);
+        res.json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+coreCtrl.getTraza = async (req, res, next) => {
+    try {
+        const result = [{
+            etapa: 0
+        }];
+        const { lotew } = req.body
+        let etapaA = [], etapaB = [], etapaC = [];
+        etapaA = await trazaLotesAlmacen([lotew]);
+
+        if (etapaA.length > 0) {
+            result[0].etapa = 1;
+            etapaB= await trazaLotesInsumosenPlanilla([lotew]);
+            const arrLotes = etapaB.map(item => item.loteOut).filter(lote => lote !== undefined);
+            
+            etapaC = await trazaLotesVenta(arrLotes);
+        } else {
+            etapaB = await trazaLotesProduccion([lotew]);
+            if (etapaB.length > 0) {
+                result[0].etapa = 2;
+                
+                //lotesProduccion.push(lotew);
+                const planillasCompuestas=await trazaLotesInsumosenPlanilla([lotew]);
+                const lotesCompuestos = planillasCompuestas.map(item => item.loteOut).filter(lote => lote !== undefined);
+                lotesCompuestos.push(lotew);
+                etapaC = await trazaLotesVenta(lotesCompuestos);
+                const arrLotes = await poolyDetalles([lotew]);
+                etapaA = await trazaLotesAlmacen(arrLotes);
+                
+            } 
+        }
+
+
+
+
+        
+        result.push(etapaA);
+        result.push(etapaB);
+        result.push(etapaC);
+    
+
         res.json(result);
 
     } catch (error) {

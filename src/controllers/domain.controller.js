@@ -632,6 +632,19 @@ apiCtrl.renderPendientes = async (req, res, next) => {
     }
 };
 
+apiCtrl.renderTraza = async (req, res, next) => {
+    const panel = {
+        "boton-pagination": true,
+        "titulo": "Trazabilidad"
+    };
+
+    try {
+        res.render('produccion/traza', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
 apiCtrl.salesProducts = async (req, res, next) => {
     try {
         const data = req.body;
@@ -667,7 +680,7 @@ apiCtrl.savePedido = async (req, res, next) => {
         let response;
         lastId = await Serial.findOne();
         if (!lastId) {
-            let newSerial = new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 0, serialPdf: 0 });
+            let newSerial = new Serial({ serialOrders: 1000, serialAverias: 0, serialPlanillas: 1000, serialPdf: 0 });
             await newSerial.save();
             lastId = await Serial.findOne();
         }
@@ -700,9 +713,9 @@ apiCtrl.savePlanilla = async (req, res, next) => {
             lastId = await Serial.findOne();
         }
 
-        let counter = lastId.serialPlanillas;
+        let counter = lastId.consecutivo;
         counter += 3;
-        await Serial.updateOne({ "_id": lastId._id }, { $set: { serialPlanillas: counter } });
+        await Serial.updateOne({ "_id": lastId._id }, { $set: { consecutivo: counter } });
         data.modelo = 'Planilla';
         data.documentos[0].loteOut = counter;
         response = await guardar(data);
@@ -1089,9 +1102,9 @@ apiCtrl.unaFormula = async (req, res, next) => {
             lastId = await Serial.findOne();
         }
 
-        let counter = lastId.serialPlanillas;
+        let counter = lastId.consecutivo;
         counter += 3;
-        await Serial.updateOne({ "_id": lastId._id }, { $set: { serialPlanillas: counter } });
+        await Serial.updateOne({ "_id": lastId._id }, { $set: { consecutivo: counter } });
         data.modelo = 'Planilla';
         data.documentos[0].loteOut = counter;
         const response = await guardar(data);
