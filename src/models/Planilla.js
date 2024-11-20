@@ -66,6 +66,11 @@ const PlanillaSchema = new Schema({
         required: true,
         alias:'Codigo'
     },   
+    ccostos: {
+        type: 'String', 
+        required: true,
+        alias:'Centro de costos'
+    }, 
     brix:{
         type: 'Number', 
         default: 0,

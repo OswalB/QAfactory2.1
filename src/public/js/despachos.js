@@ -148,7 +148,7 @@ document.getElementById('btnSaveBodega').addEventListener('click', async e => {
     if (flags.funcionEmbodegar === 'paso2') {
         pyme = '';
         toEmbodegar.selected.forEach(item => {
-            pyme += `110${item.codigoProducto}\t${item.loteOut}\n`;
+            pyme += `${item.ccostos}\t${item.loteOut}\n`;
         });
         toClipBoard(pyme);
         document.getElementById('lblEmbodegar').innerHTML = ' Guardar';

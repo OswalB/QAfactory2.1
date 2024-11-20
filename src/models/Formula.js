@@ -13,6 +13,11 @@ const FormulaSchema = new Schema({
         unique: true,
         alias:'Codigo de producto'
     },
+    ccostos:{
+        type: 'String',
+        require: true, 
+        alias:'Centro de costos'
+    },
     categoria: {
         type: 'String', 
         require: true,

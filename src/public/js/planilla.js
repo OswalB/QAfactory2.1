@@ -531,6 +531,7 @@ async function procesarPlanilla() {
         headers: { 'Content-Type': 'application/json' },
         method: "POST",
         body: JSON.stringify({
+            'ccostos' : selecProceso.ccostos,
             'codigoProducto': selecProceso.codigoProceso,
             'porcentaje': selecProceso.porcentaje,
             operario: docPlanilla.operario,

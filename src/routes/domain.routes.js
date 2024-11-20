@@ -19,7 +19,7 @@ const {
     pendientesResum,
     renderAlmacen,
     renderDespachos,
-    renderFormulas,
+    renderFormulas, renderInformes,
     renderLotes,
     renderPedidos,
     renderPlanillas,
@@ -50,6 +50,7 @@ router.get('/domain/almacen', isAdmin, renderAlmacen);
 router.get('/domain/despachos', isDispatcher, renderDespachos);
 router.get('/domain/embodegar', isAuthenticated, getEmbodegar);
 router.get('/domain/formulas', isAuthenticated, renderFormulas);
+router.get('/domain/informes', isAdmin, renderInformes);
 router.get('/domain/intercambiador', intercambiador);
 router.get('/domain/lotes', isAuthenticated, renderLotes);
 router.get('/domain/pedidos', isAuthenticated, renderPedidos);

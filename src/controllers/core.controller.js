@@ -714,7 +714,8 @@ coreCtrl.procesosList = async (req, res, next) => {
                     'categoria': 1,
                     'diasVence': 1,
                     prodMax: 1,
-                    prodMin: 1
+                    prodMin: 1, 
+                    ccostos:1
                 }
             }
         ];

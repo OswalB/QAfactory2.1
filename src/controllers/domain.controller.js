@@ -296,7 +296,8 @@ apiCtrl.getEmbodegar = async (req, res, next) => {
                     'operario': 1,
                     'producto': 1,
                     'codigoProducto': 1,
-                    'cantProd': 1
+                    'cantProd': 1,
+                    ccostos:1
                 }
             }, {
                 '$sort': {
@@ -565,6 +566,22 @@ apiCtrl.renderFormulas = async (req, res, next) => {
 
     try {
         res.render('produccion/formula', { panel });
+    } catch (error) {
+        next(error);
+    }
+};
+
+apiCtrl.renderInformes = async (req, res, next) => {
+    const panel = {
+        "boton-opciones": true,
+        "boton-xls": true,
+        "boton-pagination": true,
+        "boton-guardar": true,
+        "titulo": "Informes"
+    };
+
+    try {
+        res.render('produccion/informes', { panel });
     } catch (error) {
         next(error);
     }
@@ -959,10 +976,10 @@ apiCtrl.updateDespacho = async (req, res, next) => {
 apiCtrl.unaFormula = async (req, res, next) => {
     const {
         codigoProducto, porcentaje, operario,
-        producto
+        producto, ccostos
     } = req.body;
     const data = {};
-
+    console.log(req.body)
     try {
         //lista de ingredientes y cantidad de la formula:
         let pipeline = [
@@ -1082,6 +1099,7 @@ apiCtrl.unaFormula = async (req, res, next) => {
 
         data.documentos = [{
             categoria,
+            ccostos,
             vence,
             fecha1,
             timeRun: 0,
