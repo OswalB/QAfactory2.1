@@ -1,0 +1,115 @@
+<!-- ALERT -->
+<div id="alertNotification" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+    <strong>¡Atención! </strong><label id="labelNotification" for=""></label>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+</div>
+<!-- modal resumen-->
+<div class="modal fade" id="resumenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Insumos total por periodo:</h5>
+            </div>
+            <table class="table table-bordered border-danger">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyResumen">
+
+                </tbody>
+            </table>
+            <div class="modal-footer">
+                <button id="btnSaveResumen" type="button" class="btn btn-primary"><i class="fa fa-sign-out fa-lg"
+                        aria-hidden="true"></i><label id="lblResumen"></label></button>
+                <button id="btnExitE" type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+                        class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- modal consumo-->
+<div class="modal fade" id="consumoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Planilla de consumo:</h5>
+            </div>
+            <table class="table table-bordered border-primary">
+                <thead>
+                    <tr>
+                        <th scope="col">Codigo</th>
+                        <th scope="col">C. costos</th>
+                        <th scope="col">Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyConsumo">
+
+                </tbody>
+            </table>
+            <div class="modal-footer">
+                <button id="btnSaveConsumo" type="button" class="btn btn-primary"><i class="fa fa-sign-out fa-lg"
+                        aria-hidden="true"></i><label id="lblConsumo"></label></button>
+                <button id="btnExitE" type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+                        class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- modal embodegamiento-->
+<div class="modal fade" id="embodegarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Embodegamiento resumen:</h5>
+            </div>
+            <table class="table table-bordered border-primary">
+                <thead>
+                    <tr>
+                        <th scope="col">Codigo</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">C. costos</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyEmbodegar">
+
+                </tbody>
+            </table>
+            <div class="modal-footer">
+                <button id="btnSaveBodega" type="button" class="btn btn-primary"><i class="fa fa-sign-out fa-lg"
+                        aria-hidden="true"></i><label id="lblEmbodegar"></label></button>
+                <button id="btnExitE" type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+                        class="fa fa-sign-out2 fa-lg" aria-hidden="true"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- TABLA -->
+
+<table class="table table-striped table-hover table-sm">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Codigo</th>
+            <th scope="col">Producto</th>
+            <th scope="col">Lote</th>
+            <th scope="col">Completo</th>
+            <th scope="col">Embodegado</th>
+            <th scope="col">Operario</th>
+            <th scope="col">Cnt. prod.</th>
+            <th scope="col">Insumo</th>
+        </tr>
+    </thead>
+    <tbody id="bodyInfo">
+        
+    </tbody>
+</table>
+
+
+<script src="/js/costos.js"></script>

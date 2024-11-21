@@ -1,4 +1,61 @@
 <div id="nav-bar-top" class="navbar navbar-dark bg-dark d-flex justify-content-start px-2">
+      {{#if panel.boton-costos}}
+      <div class="dropdown">
+            <a class="btn btn-dark dropdown-toggle py-0 " type="button" id="btnopCostos" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  Herramientas
+            </a>
+            <ul id="listOpciones" class="dropdown-menu">
+                  <li class="nav-item">
+                        <a id="btnEditar" class="dropdown-item" href="#">
+                              <i class="fa fa-pencil-square "></i> Editar
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btnEmbodegamiento" class="dropdown-item" href="#">
+                              <i class="fa fa-table "></i> Embodegamiento
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btnConsumo" class="dropdown-item" href="#">
+                              <i class="fa fa-cutlery "></i> Planilla consumo
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btnResumen" class="dropdown-item" href="#">
+                              <i class="fa fa-bar-chart "></i> Insumos resumen
+                        </a>
+                  </li>
+                  <br>
+                  <li class="nav-item">
+                        <a id="btn-upload" class="dropdown-item" href="#">
+                              <i class="fa fa-download"></i> Importar
+                        </a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-download" class="dropdown-item" href="#">
+                              <i class="fa fa-file-excel-o"></i> Exportar
+                        </a>
+                  </li>
+                  <li class="nav-item"></li>
+                  <a id="btnArchivar" class="dropdown-item" href="#">
+                        <i class="fa fa-folder"></i> Archivar</a>
+                  </li>
+                  <li class="nav-item">
+                        <a id="btn-genPDF" class="dropdown-item" href="#">
+                              <i class="fa fa-file-pdf-o"></i> Gen. PDF
+                        </a>
+                  </li>
+
+            </ul>
+      </div>
+      <div class="dropdown">
+            <a id="btnChose" type="button" class="btn btn-dark dropdown-toggle py-0 "
+                  data-bs-toggle="dropdown">Documento</a>
+            <ul id="listDocuments" class="dropdown-menu">
+            </ul>
+      </div>
+      {{/if}}
       {{#if panel.boton-opciones}}
       <div class="dropdown">
             <a class="btn btn-dark dropdown-toggle py-0 " type="button" id="btnOpciones" data-bs-toggle="dropdown"

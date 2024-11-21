@@ -571,17 +571,15 @@ apiCtrl.renderFormulas = async (req, res, next) => {
     }
 };
 
-apiCtrl.renderInformes = async (req, res, next) => {
+apiCtrl.renderCostos = async (req, res, next) => {
     const panel = {
-        "boton-opciones": true,
-        "boton-xls": true,
+        "boton-costos": true,
+        "titulo": "Costos",
         "boton-pagination": true,
-        "boton-guardar": true,
-        "titulo": "Informes"
     };
 
     try {
-        res.render('produccion/informes', { panel });
+        res.render('produccion/costos', { panel });
     } catch (error) {
         next(error);
     }
