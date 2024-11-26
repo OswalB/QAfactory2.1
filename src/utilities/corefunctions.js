@@ -91,6 +91,11 @@ async function contenido(data) {
         pipeline.push({ $limit: limitValue });
     }
 
+    if (data.look){
+        pipeline.push({$lookup:data.look});
+        pipeline.push({$unwind:data.unwindLook});
+    }
+
     if (Array.isArray(data.proyectar)) {
         data.proyectar.forEach((stage) => {
             if (stage && typeof stage === 'object') {
@@ -103,7 +108,7 @@ async function contenido(data) {
         pipeline.push({ $project: proyeccion });
     }
 
-
+    console.log('pipe contenido')
     for (const cnt in pipeline) {
         console.log(pipeline[cnt]);
     }
@@ -231,11 +236,12 @@ async function keys(data) {
         return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && listk[key].type;
     }).map(key => {
         const alias = listk[key].alias || '';
-        const tipo = listk[key].type.toLowerCase();
+        //const tipo = listk[key].type.toLowerCase();
+        const type = typeof listk[key].type === 'string' ? listk[key].type.toLowerCase() : 'unknown';
         return {
             "campo": key,
             "alias": alias,
-            "tipo": tipo,
+            "tipo": type,
             "default": listk[key].default,
             "require": listk[key].require,
             "max": listk[key].max,

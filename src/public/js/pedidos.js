@@ -3,13 +3,42 @@ let esPedido = true, misAverias = [];
 const minHoras = 4;
 
 //=========================== sin revisar: =============================================
+const tableContainer = document.getElementById('accordionItems');
+
+tableContainer.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT') {
+        const row = e.target.closest('tr');
+        if (row) {
+            handleRowHighlight(row); // Llama a la función para manejar el resaltado
+        }
+    }
+});
+
 document.getElementById('accordionItems').addEventListener('click', async e => {
 
     let codeSelected = e.target.getAttribute('_idproduct');
+
+    const row = e.target.closest('tr');
+    if (row) {
+        handleRowHighlight(row);
+        /*
+        // 1. Enfocamos el input dentro del `<tr>` clicado
+        const input = row.querySelector('input');
+        if (input) input.focus();
+
+        // 2. Resaltamos el tr seleccionado y reseteamos los demás
+        const rows = tableContainer.querySelectorAll('tr');
+        rows.forEach(r => r.classList.remove('table-danger')); // Limpiamos estilos de todas las filas
+        row.classList.add('table-danger'); // Aplicamos el estilo al clicado
+    */
+    }
+
+
     if (!codeSelected || esPedido) return;
     currentCollection.code = codeSelected;
     const product = listProducts.find(list => list.codigo === codeSelected);
     currentCollection.product = product.nombre;
+    currentCollection.codeBar=product.codeBar;
     const res = await fetch("/core/lotes/vigentes", {
         headers: {
             'Content-Type': 'application/json'
@@ -24,6 +53,21 @@ document.getElementById('accordionItems').addEventListener('click', async e => {
     renderModalAverias(codeSelected, data);
 
 });
+
+function handleRowHighlight(row) {
+    // Reseteamos el estilo de todas las filas
+    const rows = tableContainer.querySelectorAll('tr');
+    rows.forEach(r => r.classList.remove('table-danger'));
+
+    // Aplicamos el estilo a la fila seleccionada
+    row.classList.add('table-danger');
+
+    // Opcional: también puedes enfocar el input si no proviene del evento `focusin`
+    const input = row.querySelector('input');
+    if (input && document.activeElement !== input) {
+        input.focus();
+    }
+}
 
 document.getElementById('btnAverias').addEventListener('click', async e => {
     esPedido = false;
@@ -194,8 +238,8 @@ document.getElementById('misPedidosBody').addEventListener('click', async e => {
         await renderAccordion();
 
     }
-    document.getElementById('btnFaltantes').style.display=order.siOrder?'':'none';
-    document.getElementById('btnCopiar').style.display=order.siOrder?'':'none';
+    document.getElementById('btnFaltantes').style.display = order.siOrder ? '' : 'none';
+    document.getElementById('btnCopiar').style.display = order.siOrder ? '' : 'none';
 });
 
 document.getElementById('btnSend').addEventListener('click', async e => {
@@ -234,6 +278,7 @@ document.getElementById('btn_guardar').addEventListener('click', () => {
     item.qty = parseInt(document.getElementById('qty').value);
     item.code = currentCollection.code;
     item.product = currentCollection.product;
+    item.codeBar = currentCollection.codeBar;
     item.causalAveria = document.getElementById('causal').value;
     docAverias.push(item);
     $('#modalEditor').modal('hide');
@@ -370,8 +415,8 @@ async function renderTable() {
         } else {
             estado = '';
         }
-        
-        const clientAv = (pedido.siOrder === false) ?`AVERIAS - ${pedido.client}`: pedido.client ;
+
+        const clientAv = (pedido.siOrder === false) ? `AVERIAS - ${pedido.client}` : pedido.client;
 
         const avr = Math.trunc((100 * pedido.TotalDisp) / pedido.totalReq);
         let entrega = new Date(pedido.delivery);
@@ -412,9 +457,9 @@ async function renderModalAverias(codeSelected, data) {
             alias: `${objeto.loteOut} ${objeto.vencido ? 'Vencido' : ''}`
         };
     });
-    dataOptions.unshift({campo:'', alias:'<Ninguno>',});
-    addOptionsSelect( 'loteVenta', dataOptions, 'campo', 'alias', false)
-    document.getElementById('modal-title').innerHTML = `Averias de ${data.nombre}`;
+    dataOptions.unshift({ campo: '', alias: '<Ninguno>', });
+    addOptionsSelect('loteVenta', dataOptions, 'campo', 'alias', false)
+    document.getElementById('modal-titleEdit').innerHTML = `Averias de ${data.nombre}`;
     const response = await fetch("/core/editor-content", {
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -433,8 +478,8 @@ async function renderModalAverias(codeSelected, data) {
             alias: objeto.titulo
         };
     });
-    dataOptions2.unshift({campo:'', alias:'<Ninguno>',});
-    addOptionsSelect('causal', dataOptions2, 'campo', 'alias',false);
+    dataOptions2.unshift({ campo: '', alias: '<Ninguno>', });
+    addOptionsSelect('causal', dataOptions2, 'campo', 'alias', false);
 
     return;
     $('#modalEditor').modal('show');
@@ -470,7 +515,13 @@ function renderModalVista() {
         const itemProduct = document.getElementById(product.codigo);
 
         if (itemProduct.value > 0) {
-            jsonPedido.push({ 'code': product.codigo, 'product': product.corto, 'qty': itemProduct.value, 'dispatch': 0 })
+            jsonPedido.push({
+                'code': product.codigo,
+                'codeBar': product.codeBar,
+                'product': product.corto,
+                'qty': itemProduct.value,
+                'dispatch': 0
+            })
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <th scope="row">*</th>
@@ -487,16 +538,13 @@ function renderModalVista() {
     tr.innerHTML = `
         
         <th scope="row"></th>
-        <th scope="col">TOTAL</td>
+        <th scope="col">Total productos</td>
         <th scope="col">${totalProducts}</td>
     `;
     vistaContainer.appendChild(tr);
     const tr2 = document.createElement('tr');
     tr2.innerHTML = `
-
-        <th scope="row"></th>
-        <th scope="col"></td>
-        <th scope="col">${precioF}</td>
+        <th scope="col">Base[${precioTotal}]</td>
     `;
     vistaContainer.appendChild(tr2);
     docPedido.totalReq = totalProducts;
@@ -540,6 +588,10 @@ async function backOrder(faltantes) {
         }
     })
 }
+
+document.getElementById('clientesModal').addEventListener('shown.bs.modal', () => {
+    document.getElementById('inSearch').focus();
+});
 
 async function renderAccordion() {
     const productsContainer = document.getElementById('accordionItems');

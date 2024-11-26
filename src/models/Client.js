@@ -1,16 +1,16 @@
-const {Schema, model}= require('mongoose');
+const { Schema, model } = require('mongoose');
 const ClientSchema = new Schema({
-    nombre:{
+    nombre: {
         type: 'string',
         required: true,
         alias: 'Nombre'
     },
-    idClient:{
+    idClient: {
         type: 'string',
         required: true,
         alias: 'ID o C.C.'
     },
-    idSeller:{
+    idSeller: {
         type: 'string',
         required: true,
         default: 0,
@@ -20,10 +20,22 @@ const ClientSchema = new Schema({
         type: 'Boolean',
         default: false,
         alias: 'Es proveedor'
-    }     
+    },
+    addres: {
+        type: 'string',
+        alias: 'Dirección'
+    },
+    city: {
+        type: 'string',
+        alias:'Ciudad'
+    },
+    tel: {
+        type: 'string',
+        alias:'Teléfono'
+    }
 
-},{
-    versionKey: false 
+}, {
+    versionKey: false
 })
 
-module.exports = model('Client',ClientSchema);
+module.exports = model('Client', ClientSchema);

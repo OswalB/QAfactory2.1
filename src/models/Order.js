@@ -13,9 +13,13 @@ const OrderSchema = new Schema({
         default: 'true'
     },
     createdAt:{
-        type: 'date',
+        type: Date,
         requiered: true,
         alias: 'Fecha creación'
+    },invoicedAt:{
+        type: Date,
+        alias: 'Fecha facturación',
+        default: null
     },seller:{
         type: 'string',
         requiered: true,
@@ -74,6 +78,10 @@ const OrderSchema = new Schema({
         code: {
             type: 'string',
             requiered: true
+        },
+        codeBar: {
+            type: 'string',
+            default:'--'
         },
         product: {
             type: 'string',

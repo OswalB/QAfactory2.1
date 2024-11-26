@@ -220,11 +220,12 @@ coreCtrl.getKeys = async (req, res, next) => {
             return key !== '_id' && key !== '__v' && key !== 'password' && key !== 'updatedAt' && listk[key].type;
         }).map(key => {
             const alias = listk[key].alias || '';
-            const tipo = listk[key].type.toLowerCase();
+            //const tipo = listk[key].type.toLowerCase();
+            const type = typeof listk[key].type === 'string' ? listk[key].type.toLowerCase() : 'unknown';
             return {
                 "campo": key,
                 "alias": alias,
-                "tipo": tipo,
+                "tipo": type,
                 "default": listk[key].default,
                 "require": listk[key].require,
                 "max": listk[key].max,
@@ -550,6 +551,11 @@ coreCtrl.getTraza = async (req, res, next) => {
 
 coreCtrl.intercambiador = async (req, res, next) => {
     try {
+        console.log('user:',req.user)
+        if(!req.user){
+            res.redirect('/signin');
+            return
+        }
         const { administrador, vendedor, password, operario, despachador } = req.user;
         const obsoletePass = await req.user.matchPassword('3210');
         if (obsoletePass) {

@@ -39,7 +39,7 @@ const errorHandler = require('../middlewares/errorHandler');
 router.delete('/core/document', authorization, deleteDocument);
 router.delete('/core/planilla/sub', isAuthenticated, deleteSubPlanilla);
 
-router.get('/', renderIndex);
+router.get('/', intercambiador);
 router.get('/change-pass', isAuthenticated, renderChangepass);
 router.get('/core/criterios', isAdmin, getCriterios);
 router.get('/core/editor', isAdmin, renderEditor);

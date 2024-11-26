@@ -5,6 +5,10 @@ const ProductSchema = new Schema({
         required: true,
         alias: 'Codigo'
     },
+    codeBar:{
+        type: 'string',
+        alias: 'Codigo de barras'
+    },
     nombre:{
         type: 'string',
         required: true,

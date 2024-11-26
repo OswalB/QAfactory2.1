@@ -34,7 +34,10 @@ const UserSchema = new Schema({
         type:'String', 
         alias: 'Grupo ventas', 
         require: true,
-        default: '0'
+        default: '',
+        failMsg: 'Su propio cc/nit o el de el grupo de ventas',
+        minlength: 8,
+        maxlength:64
     },
     pin:{
         type:'Number', 

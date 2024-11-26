@@ -19,7 +19,7 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
         boton.setAttribute('_model', modelo);
         boton.innerHTML = `<i class="fa fa-print" aria-hidden="true"></i> ${configLabel(modelo)}`;
         const hayCero = modelo === 'printEmpaque' && configPack.menor > 0;
-        boton.disabled = hayCero;
+        //boton.disabled = hayCero;
     }
     if (e.target.classList.contains('print')) {
         await loadTemplates();
@@ -47,6 +47,7 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
                 throw new Error('Error al facturar');
             }
             const data = await res.json();
+            localOrders[i].invoicedAt=Date();
             if (data.fail) {
                 toastr.error('Reintente!', 'No se ha podido facturar.', 'Pedido');
                 return false;

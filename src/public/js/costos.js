@@ -236,7 +236,7 @@ document.getElementById('btnSaveBodega').addEventListener('click', async e => {
     if (flags.funcionEmbodegar === 'paso1') {
         pyme = '';
         toEmbodegar.forEach(item => {
-            pyme += `${item.codigoProducto}\t\t\t${item.cantProd}\n`;
+            pyme += `${item.codigoProducto}\t\t\t${formatearDato(item.cantProd,'123.00')}\n`;
         });
         toClipBoard(pyme);
         document.getElementById('lblEmbodegar').innerHTML = ' Copiar c. costos';
@@ -315,7 +315,7 @@ document.getElementById('btnSaveConsumo').addEventListener('click', async e => {
     if (flags.funcionEmbodegar === 'paso2') {
         pyme = '';
         toEmbodegar.forEach(item => {
-            pyme += `${item.ccostos}\n`;
+            pyme += `${item.codigoInsumo}\t\t${item.ccostos}\t\t${formatearDato(item.cantidad,'123.00')}\n`;
         });
         toClipBoard(pyme);
         document.getElementById('lblConsumo').innerHTML = ' Guardar';
@@ -324,10 +324,10 @@ document.getElementById('btnSaveConsumo').addEventListener('click', async e => {
     if (flags.funcionEmbodegar === 'paso1') {
         pyme = '';
         toEmbodegar.forEach(item => {
-            pyme += `${item.codigoInsumo}\t\t${item.ccostos}\t\t${item.cantidad}\n`;
+            pyme += `${item.codigoInsumo}\t\t${item.ccostos}\t\t${formatearDato(item.cantidad,'123.00')}\n`;
         });
         toClipBoard(pyme);
-        document.getElementById('lblConsumo').innerHTML = ' Copiar c. costos';
+        document.getElementById('lblConsumo').innerHTML = ' Copiar código y cantidad.';
         flags.funcionEmbodegar = 'paso2';
     }
 
@@ -389,7 +389,7 @@ function agruparPorCodigoInsumo(data) {
 document.getElementById('btnSaveResumen').addEventListener('click', async e => {
         pyme = '';
         toEmbodegar.forEach(item => {
-            pyme += `${item.codigoInsumo}\t${item.nombreInsumo}\t${r2d(item.cantidad,2)}\n`;
+            pyme += `${item.codigoInsumo}\t${item.nombreInsumo}\t${formatearDato(item.cantidad,'123.000')}\n`;
         });
         toClipBoard(pyme);
         

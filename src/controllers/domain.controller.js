@@ -206,8 +206,22 @@ apiCtrl.despachos = async (req, res, next) => {
                 },
                 { sellerName: 1 }, { client: 1 }, { delivery: 1 }, { notes: 1 }, { state: 1 },
                 { createdAt: 1 }, { totalReq: 1 }, { TotalDisp: 1 }, { consecutivo: 1 }, { siOrder: 1 },
-                { id_compras: 1 }
+                { id_compras: 1 }, { invoicedAt: 1 }, { city: '$clientInfo.city' },
+                { addres: '$clientInfo.addres' }, { tel: '$clientInfo.tel', }
             ]
+
+            data.look = {
+                from: 'clients',              // Colección con la que se hará el join
+                localField: 'nit',            // Campo de Orders que se corresponde
+                foreignField: 'idClient',     // Campo de Clients con el que se relaciona
+                as: 'clientInfo'              // Nombre del array que contendrá los datos de Clients
+            };
+
+            data.unwindLook = {
+                path: '$clientInfo',
+                preserveNullAndEmptyArrays: true // Mantén las órdenes aunque no tengan cliente asociado
+            };
+
             response = await contenido(data);
 
             res.json(response);
@@ -297,7 +311,7 @@ apiCtrl.getEmbodegar = async (req, res, next) => {
                     'producto': 1,
                     'codigoProducto': 1,
                     'cantProd': 1,
-                    ccostos:1
+                    ccostos: 1
                 }
             }, {
                 '$sort': {
@@ -667,7 +681,11 @@ apiCtrl.salesProducts = async (req, res, next) => {
         data.modelo = 'Product';
         data.sortObject = { categoria: 1, nombre: 1 };
         data.otrosMatch = [];
-        data.proyectar = [{ nombre: 1 }, { _id: 0 }, { categoria: 1 }, { codigo: 1 }, { corto: 1 }];
+        data.proyectar = [{
+            nombre: 1
+        }, { _id: 0 }, { categoria: 1 }, { codigo: 1 }, { corto: 1 },
+        { codeBar: 1 }, { precio: 1 }
+        ];
         response = await contenido(data);
         res.json(response);
     } catch (error) {
@@ -874,10 +892,27 @@ apiCtrl.baseFormula = async (_id, req, res, next) => {
 apiCtrl.setState = async (req, res, next) => {
     try {
         const data = req.body;
-        let response;
         console.log(data);
-        await Order.findByIdAndUpdate(data._id, { state: data.newValue }, { new: true })
-        res.json({ msg: 'facturado:ok' });
+        const originalOrder = await Order.findById(data._id).select('invoicedAt');
+        if (!originalOrder) {
+            return res.status(404).json({ msg: 'Orden no encontrada' });
+        }
+        let invoicedAtUpdate = {};
+        if (data.newValue === 1 && !originalOrder.invoicedAt) {
+            invoicedAtUpdate = { invoicedAt: new Date() };
+        }
+        const updatedOrder = await Order.findByIdAndUpdate(
+            data._id,
+            {
+                state: data.newValue,
+                ...invoicedAtUpdate // Actualizar `invoicedAt` solo si corresponde
+            },
+            { new: true }
+        );
+
+        res.json({ msg: 'Estado actualizado', data: updatedOrder });
+
+
     } catch (error) {
         next(error);
     }
@@ -1016,7 +1051,7 @@ apiCtrl.unaFormula = async (req, res, next) => {
             }
         ];
         const formulacion = await Formula.aggregate(pipeline);
-        
+
         const categoria = formulacion[0].categoria;
         const vto = new Date;
         const vence = vto.setDate(vto.getDate() + formulacion[0].diasVence);
@@ -1033,13 +1068,13 @@ apiCtrl.unaFormula = async (req, res, next) => {
                     'vence': 1,
                     'lotesPool': 1,
                     'loteOut': 1,
-                    detalle:1
+                    detalle: 1
                 }
-                
+
             },
             {
                 '$addFields': {
-                
+
                     'copyPool': {
                         '$concatArrays': [
                             '$lotesPool',
@@ -1081,12 +1116,12 @@ apiCtrl.unaFormula = async (req, res, next) => {
                     detal[i].loteIn = aggPlanillas[0].loteOut;
                     detal[i].vence = aggPlanillas[0].vence;
                     detal[i].compuesto = true;
-                    
+
                     lotesP = [
-                        ...(lotesP || []), 
-                        ...(aggPlanillas[0].lotesPool || []),  
-                        ...(aggPlanillas[0].copyPool || [])  
-                    ]  
+                        ...(lotesP || []),
+                        ...(aggPlanillas[0].lotesPool || []),
+                        ...(aggPlanillas[0].copyPool || [])
+                    ]
                     //***aggres[i].copyPool = aggPlanillas[0].lotesPool;
                 }
             }

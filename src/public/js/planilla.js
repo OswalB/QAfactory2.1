@@ -138,11 +138,11 @@ async function renderOneCard(itemAcc, i) {
     //const hayCrono = itemAcc.timeRun;
     //if (hayCrono) {
     if (itemAcc.timeRun === 0) {      //crono corriendo
-        const timeStart = calcInterval(itemAcc.timeStart) ;
+        const timeStart = calcInterval(itemAcc.timeStart);
         toggleCronometro(itemAcc._id, timeStart, 'on');
         //cronometros[`crono${itemAcc._id}`].tiempo = timeStart;
     } else {                          //crono stop
-        toggleCronometro(itemAcc._id, itemAcc.timeRun,'off');
+        toggleCronometro(itemAcc._id, itemAcc.timeRun, 'off');
 
         //toggleCronometro(itemAcc._id);
         //cronometros[`crono${itemAcc._id}`].tiempo = itemAcc.timeRun;
@@ -531,7 +531,7 @@ async function procesarPlanilla() {
         headers: { 'Content-Type': 'application/json' },
         method: "POST",
         body: JSON.stringify({
-            'ccostos' : selecProceso.ccostos,
+            'ccostos': selecProceso.ccostos,
             'codigoProducto': selecProceso.codigoProceso,
             'porcentaje': selecProceso.porcentaje,
             operario: docPlanilla.operario,
@@ -548,6 +548,9 @@ async function procesarPlanilla() {
     toastr.remove();
     docPlanilla = {};
     document.getElementById('inCantidad').value = '';
+    setFilter();
+    paintFilter();
+    loadFilter();
     await renderTable();
     $('#cantidadModal').modal('hide');
 }
@@ -558,6 +561,35 @@ document.getElementById('cantidadModal').addEventListener('keypress', e => {
     if (e.key == 'Enter') {
         procesarPlanilla();
     }
+})
+
+document.getElementById('accordionMain').addEventListener('keypress', async e => {
+    const role = e.target.getAttribute('_role');
+    if (e.key == 'Enter') {
+        console.log('enter');
+        const value = e.target.value;
+        const indice = localTable.findIndex(({ _id }) => _id == flags.idDoc);
+        switch (role) {
+            case 'noEdit':
+                toastr.warning(`El Lote ${localTable[flags.index].loteOut} No se puede modificar, no se gurdaron los cambios`)
+                break;
+            case 'inCantProd':
+                localTable[indice].cantProd = value;
+                await updateDocument('Planilla', flags.idDoc, { cantProd: value });
+                break;
+            case 'inBrix':
+                localTable[indice].brix = value;
+                await updateDocument('Planilla', flags.idDoc, { brix: value });
+                break;
+            case 'inFecha':
+                localTable[indice].fecha1 = value;
+                await updateDocument('Planilla', flags.idDoc, { fecha1: value });
+                break;
+            default:
+        }
+        paint(localTable[indice]);
+    }
+    flags.siChangeH = false;
 })
 
 document.getElementById('accordionMain').addEventListener('change', async e => {
@@ -1078,7 +1110,7 @@ document.getElementById('accordionMain').addEventListener('click', async e => {
             toastr.warning(`El Lote ${localTable[flags.index].loteOut} No se puede modificar`)
             break;
         case 'crono':
-            toggleCronometro(idDoc, 0,'click');
+            toggleCronometro(idDoc, 0, 'click');
             paint(localTable[flags.index]);
             break;
         case 'edit':

@@ -704,7 +704,7 @@ async function afterLoad() {
     selectedTemplate = 0;
     workFilter.PDFmode = false;
     document.getElementById('btnArchivar').style.display='none';
-    await debugg(true);
+    //await debugg(true);
 };
 
 async function renderTable() {
