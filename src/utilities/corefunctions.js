@@ -108,10 +108,8 @@ async function contenido(data) {
         pipeline.push({ $project: proyeccion });
     }
 
-    console.log('pipe contenido')
-    for (const cnt in pipeline) {
-        console.log(pipeline[cnt]);
-    }
+    
+    
 
     let result = await dynamicModel.aggregate(pipeline);
 

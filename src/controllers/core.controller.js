@@ -138,7 +138,7 @@ coreCtrl.deleteSubPlanilla = async (req, res, next) => {
         data.subdocumentoPath = 'detalle';
         let response;
         response = await borrarSubdocumento(data);
-        console.log(response);
+        //console.log(response);
         res.json(response);
     } catch (error) {
         next(error);
@@ -267,7 +267,7 @@ coreCtrl.getPool = async (req, res, next) => {
         ];
 
         let aggRes = await Inalmacen.aggregate(pipeline);
-        console.log(aggRes)
+        //console.log(aggRes)
         if (aggRes.length > 0) {
             res.json(aggRes);
         } else {
@@ -551,7 +551,6 @@ coreCtrl.getTraza = async (req, res, next) => {
 
 coreCtrl.intercambiador = async (req, res, next) => {
     try {
-        console.log('user:',req.user)
         if(!req.user){
             res.redirect('/signin');
             return
@@ -811,7 +810,7 @@ coreCtrl.resetPass = async (req, res, next) => {
 
 coreCtrl.saveDocument = async (req, res, next) => {
     try {
-        console.log(req.body)
+        
         const { modelo, documentos } = req.body;
         if (!modelo || !documentos || !Array.isArray(documentos)) {
             return res.json({ fail: true, message: 'Se requiere el modelo y un array de documentos.' });
