@@ -14,7 +14,7 @@ const UserSchema = new Schema({
         type:'String', 
         alias: 'Alias',
         failMsg:'Máximo 4 caracteres',
-        minlength: 4,
+        minlength: 3,
         maxlength: 4
         
     },

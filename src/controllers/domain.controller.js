@@ -45,7 +45,6 @@ apiCtrl.actionsList = async (req, res, next) => {
 
 apiCtrl.almacenContent = async (req, res, next) => {
     try {
-        console.log('contenido')
         const data = req.body, user = req.user;
         let response;
         data.modelo = 'Inalmacen';
@@ -84,7 +83,7 @@ apiCtrl.deleteItemFormula = async (req, res, next) => {
 
 apiCtrl.almacenKeys = async (req, res, next) => {
     try {
-        console.log('keys')
+        
         const data = req.body, user = req.user;
         let response;
         data.modelo = 'Inalmacen';
@@ -155,7 +154,7 @@ apiCtrl.despachos = async (req, res, next) => {
     try {
 
         const data = req.body, user = req.user;
-        console.log('fx:', data.fx)
+        
         let response;
         data.modelo = 'Order';
         if (data.fx === 'l') {
@@ -165,6 +164,7 @@ apiCtrl.despachos = async (req, res, next) => {
             data.sortObject = { loteOut: 1 };
             data.proyectar = [{ loteOut: 1 }, { fecha1: 1 }]
             response = await contenido(data);
+            console.log(response)
             res.json(response);
         }
         if (data.fx === 'k') {
@@ -179,7 +179,7 @@ apiCtrl.despachos = async (req, res, next) => {
             if (data.oneId) {
                 data.otrosMatch = [];
                 data.otrosMatch.push({ _id: new ObjectId(data.oneId) });
-                console.log('un solo id')
+                
             }
             data.proyectar = [
                 {
@@ -726,7 +726,7 @@ apiCtrl.savePedido = async (req, res, next) => {
         data.documentos[0].seller = user.salesGroup;
         data.documentos[0].sellerName = user.name;
         data.documentos[0].consecutivo = siEsPedido ? `R-${counter}` : `A-${counter}`;
-        console.log('datos de pedido', data)
+        
         response = await guardar(data);
         res.json(response);
     } catch (error) {
@@ -762,9 +762,9 @@ apiCtrl.saveTemplate = async (req, res, next) => {
     try {
         const data = req.body, user = req.user;
         let response = { fail: true, message: 'error al grabar' };
-        console.log(data);
+        
         response = await Template.updateOne({ "idTemplate": data.idTemplate }, { $set: data });
-        console.log(response)
+        
         res.json(response);
     } catch (error) {
         next(error);
@@ -869,15 +869,15 @@ apiCtrl.baseFormula = async (_id, req, res, next) => {
         ]
 
         const aggres = await Formula.aggregate(pipeBase);
-        console.log(_id, 'resul', aggres, aggres.length);
+        
         resultado = 0;
         if (aggres.length == 1) {
-            console.log('si')
+           
 
             const re = await Formula.updateOne({ "_id": new ObjectId(_id) }, { $set: { "siFormulaOk": true } });
-            console.log('resultado', re)
+            
         } else {
-            console.log('no')
+            
             await Formula.updateOne({ "_id": new ObjectId(_id) }, { $set: { "siFormulaOk": false } });
         }
 
@@ -892,7 +892,7 @@ apiCtrl.baseFormula = async (_id, req, res, next) => {
 apiCtrl.setState = async (req, res, next) => {
     try {
         const data = req.body;
-        console.log(data);
+        
         const originalOrder = await Order.findById(data._id).select('invoicedAt');
         if (!originalOrder) {
             return res.status(404).json({ msg: 'Orden no encontrada' });
@@ -1012,7 +1012,7 @@ apiCtrl.unaFormula = async (req, res, next) => {
         producto, ccostos
     } = req.body;
     const data = {};
-    console.log(req.body)
+    
     try {
         //lista de ingredientes y cantidad de la formula:
         let pipeline = [
@@ -1144,7 +1144,7 @@ apiCtrl.unaFormula = async (req, res, next) => {
             detalle: detal,
             lotesPool: lotesP
         }];
-        console.log('currentFormula', data.documentos);
+        
 
         let lastId = await Serial.findOne();
         if (!lastId) {

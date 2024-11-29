@@ -33,7 +33,7 @@ const {
 
 } = require('../controllers/core.controller');
 
-const { isAuthenticated, isAdmin, authorization } = require('../helpers/auth');
+const { isAuthenticated, isAdmin, authorization, isOperator } = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
 router.delete('/core/document', authorization, deleteDocument);
@@ -41,7 +41,7 @@ router.delete('/core/planilla/sub', isAuthenticated, deleteSubPlanilla);
 
 router.get('/', intercambiador);
 router.get('/change-pass', isAuthenticated, renderChangepass);
-router.get('/core/criterios', isAdmin, getCriterios);
+router.get('/core/criterios', isOperator, getCriterios);
 router.get('/core/editor', isAdmin, renderEditor);
 //router.get('/core/insumos', isAuthenticated, insumosList);
 router.get('/core/insumos', isAuthenticated, getInsumos);
@@ -51,7 +51,7 @@ router.get('/core/operarios', isAuthenticated, operarios);
 
 router.get('/core/procesos', isAuthenticated, procesosList);
 
-router.get('/core/proveedores', isAdmin, proveedoresList);
+router.get('/core/proveedores', isOperator, proveedoresList);
 router.get('/core/pool/:id', isAuthenticated, getPool);
 router.get('/intercambiador', intercambiador);
 router.get('/logout', logout);

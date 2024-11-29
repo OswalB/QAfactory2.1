@@ -47,7 +47,7 @@ document.getElementById('accordionPanel').addEventListener('click', async e => {
                 throw new Error('Error al facturar');
             }
             const data = await res.json();
-            localOrders[i].invoicedAt=Date();
+            localOrders[i].invoicedAt = Date();
             if (data.fail) {
                 toastr.error('Reintente!', 'No se ha podido facturar.', 'Pedido');
                 return false;
@@ -238,7 +238,20 @@ document.getElementById('cardsContainer').addEventListener('focusout', async e =
         lotesList = await getLotes(itemSelected.code);
         if (lotesList.length < 1) {
             currentInput.placeholder = 'No hay disponibles';
-            toastr.error('No se hiceron cambios, reintente!')
+            toastr.warning('Ingrese lote manualmente');
+            const userInput = prompt("Por favor, ingresa el lote:");
+            if (userInput !== null) {
+                lotesList = [{
+                    fecha1: Date(),
+                    loteOut: userInput,
+                    _id: 0
+                }];
+                flags.siChangeH = false;
+                flags.historyModalHide = false;
+                renderLotes();
+            } else {
+                console.log("El usuario canceló el diálogo.");
+            }
         } else {
             flags.siChangeH = false;
             flags.historyModalHide = false;
@@ -359,22 +372,7 @@ document.getElementById('lotesListModal').addEventListener('hide.bs.modal', asyn
 
         return;
     }
-    // 
 
-    /*const modal = document.getElementById('historyModal');
-    if (modal) {
-        modal.style.display = 'block';
-    } else {
-        console.log('El elemento no existe en el DOM');
-    }
-
-        const modalElement = document.getElementById('historyModal');
-        if (modalElement) {
-            const myModal = new bootstrap.Modal(modalElement);
-            myModal.show();
-        } else {
-            console.log('El elemento no existe en el DOM');
-        }    */
 
 
     if (flags.actionModal === 'exit') {

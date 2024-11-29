@@ -41,12 +41,12 @@ const {
 
 } = require('../controllers/domain.controller');
 
-const { isAuthenticated, isAdmin, authorization, isDispatcher } = require('../helpers/auth');
+const { isAuthenticated, isAdmin, authorization, isDispatcher,isOperator } = require('../helpers/auth');
 const errorHandler = require('../middlewares/errorHandler');
 
 router.delete('/domain/formula/item', isAuthenticated, deleteItemFormula);
 
-router.get('/domain/almacen', isAdmin, renderAlmacen);
+router.get('/domain/almacen', isOperator, renderAlmacen);
 router.get('/domain/despachos', isDispatcher, renderDespachos);
 router.get('/domain/embodegar', isAuthenticated, getEmbodegar);
 router.get('/domain/formulas', isAuthenticated, renderFormulas);
@@ -60,7 +60,7 @@ router.get('/domain/planillas', isAuthenticated, renderPlanillas);
 router.get('/domain/trazabilidad', isDispatcher, renderTraza);
 
 router.post('/domain/actions-list', isAuthenticated, actionsList);
-router.post('/domain/almacen/content', isAdmin, almacenContent);
+router.post('/domain/almacen/content', isOperator, almacenContent);
 router.post('/domain/almacen/sinfacturar', isAuthenticated, almacenSinfacturar);
 router.post('/domain/almacen/keys', isAuthenticated, almacenKeys);
 router.post('/domain/despachos', isDispatcher, despachos);

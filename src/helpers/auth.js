@@ -4,7 +4,7 @@ helpers.authorization  = (req, res, next) => {
     if (!req.isAuthenticated()) {
         return res.redirect('/signin');
     }
-
+    
     const modelPermissions = {
         admin: ['Editable', 'Errorl', 'Order', 'User', 'Client', 'Product','Serial', 'Averia', 
             'Planilla', 'Reason', 'Store', 'Template', 'Action', 'Inalmacen', 'Insumo', 'Formula'],
@@ -36,7 +36,7 @@ helpers.authorization  = (req, res, next) => {
         return next();
     } else {
         console.log('n/a',modelName);
-        return res.status(403).send({message:'Acceso  no autorizado :-('});
+        return res.status(403).send({message:'Acceso [col] no autorizado :-('});
     }
 
 
@@ -67,6 +67,18 @@ helpers.isAdmin = (req, res, next) => {
 
     
     //req.flash('error_msg','No es administrador');
+    res.redirect('/signin');
+}
+
+helpers.isOperator = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        const user = req.user;
+        if(user.operario){
+            return next();
+        }else {
+            return res.status(403).send({message:'Acceso  no autorizado :-('});
+        }
+    }
     res.redirect('/signin');
 }
 
