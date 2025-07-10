@@ -196,6 +196,8 @@ function renderHeadTable(container, itemAcc) {
             <th scope="col">Tiempo transcurrido</th>
             <th scope="col">Cantidad prod.</th>
             <th scope="col">°Brix</th>
+            <th scope="col">Temp. min.</th>
+            <th scope="col">Temp. max.</th>
             
         </tr>
     </thead>
@@ -205,6 +207,8 @@ function renderHeadTable(container, itemAcc) {
             <td>${inputCronometer}</td>
             <td><input _role="inCantProd" _idDoc= ${itemAcc._id} id="inCantProd_${itemAcc._id}" value = "${itemAcc.cantProd}" type="number"></td>
             <td><input _role="inBrix" _idDoc= ${itemAcc._id} id="inBrix_${itemAcc._id}" value = "${itemAcc.brix}" type="number"></td>
+            <td><input _role="inTmin" _idDoc= ${itemAcc._id} id="inTmin_${itemAcc._id}" value = "${itemAcc.tmin}" type="number" placeholder="18°C"></td>
+            <td><input _role="inTmax" _idDoc= ${itemAcc._id} id="inTmax_${itemAcc._id}" value = "${itemAcc.tmax}" type="number"placeholder="78°C"></td>
             
         </tr>
         <tr>
